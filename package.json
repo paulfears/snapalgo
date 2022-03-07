@@ -1,0 +1,15 @@
+{
+  "name": "algorand",
+  "version": "1.0.0",
+  "description": "attempt to put algorand on metamask",
+  "main": "index.js",
+  "scripts": {
+    "test": "yarn build && yarn serve"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/runtime": "^7.17.2",
+    "algosdk": "^1.13.1"
+  }
+}

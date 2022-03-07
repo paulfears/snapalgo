@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0",
+  "description": "attempt to put algorand on metamask",
+  "proposedName": "algorand",
+  "source": {
+    "shasum": "mJWHeFQKhXTCvUJBaFr8tYyAzdWfW0Q4YywSTeQMlQw=",
+    "location": {
+      "npm": {
+        "filePath": "dist/bundle.js",
+        "packageName": "algorand",
+        "registry": "https://registry.npmjs.org"
+      }
+    }
+  },
+  "initialPermissions": {
+    "snap_confirm": {},
+    "snap_getBip44Entropy_283": {},
+    "endowment:network-access": {}
+  },
+  "manifestVersion": "0.1"
+}

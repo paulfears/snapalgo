@@ -1,0 +1,5 @@
+{
+  "dist": "dist",
+  "outfileName": "bundle.js",
+  "src": "index.js"
+}
