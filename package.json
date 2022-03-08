@@ -4,12 +4,17 @@
   "description": "attempt to put algorand on metamask",
   "main": "index.js",
   "scripts": {
-    "test": "yarn build && yarn serve"
+    "test": "yarn build && yarn serve",
+    "postinstall": "patch-package"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
     "@babel/runtime": "^7.17.2",
     "algosdk": "^1.13.1"
+  },
+  "devDependencies": {
+    "patch-package": "^6.4.7",
+    "postinstall-postinstall": "^2.1.0"
   }
 }

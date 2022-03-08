@@ -1,4 +1,4 @@
-const algo =  require('algosdk/dist/esm');
+const algo =  require('algosdk/dist/cjs');
 import nacl from 'tweetnacl';
 
 async function getPrivateKey(){
@@ -9,14 +9,11 @@ async function getPrivateKey(){
 }
 
 function AccountFromSeed(seed) {
-  console.log(seed)
-  console.log(seed.length)
   seed = seed.slice(0, 32);
   let keys = nacl.sign.keyPair.fromSeed(seed);
   const Account = {}
   Account.addr = algo.encodeAddress(keys.publicKey);
   Account.sk = keys.secretKey;
-  console.log(Account);
   return Account;
 }
 
@@ -37,23 +34,19 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
 
   switch (requestObject.method) {
     case 'getBalance': {
-      let api_endPoint = 'https://mainnet-algorand.api.purestake.io/idx2';
-      let api_port = '';
-      const token = {
-        'X-API-Key': 'XNV9sGh5c32IRG3pmnYc2ce4bFHX4wC3JWO4Oird'
-      }
-      const algodClient = new algo.Algodv2(token, api_endPoint, api_port);
-      let accountInfo = await algodClient.accountInformation(account.addr).do();
-      return wallet.request({
+      let balance = await fetch('https://algorand-api-node.paulfears.repl.co/balance?address='+account.addr);
+      balance = Number(await balance.text());
+      wallet.request({
         method: 'snap_confirm',
         params:[
           {
-            prompt: "balance",
-            description: account.addr,
-            textAreaContent: accountInfo 
+            prompt: " balance",
+            description: Number(balance/100000).toString() + " ALGO",
+            
           }
         ]
       })
+      return balance
     }
     case 'hello':
       return wallet.request({

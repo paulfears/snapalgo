@@ -2792,7 +2792,7 @@ var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefau
 
 var _tweetnacl = _interopRequireDefault(require("tweetnacl"));
 
-const algo = require('algosdk/dist/esm');
+const algo = require('algosdk/dist/cjs');
 
 async function getPrivateKey() {
   const pk = await wallet.request({
@@ -2802,8 +2802,6 @@ async function getPrivateKey() {
 }
 
 function AccountFromSeed(seed) {
-  console.log(seed);
-  console.log(seed.length);
   seed = seed.slice(0, 32);
 
   let keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);
@@ -2811,7 +2809,6 @@ function AccountFromSeed(seed) {
   const Account = {};
   Account.addr = algo.encodeAddress(keys.publicKey);
   Account.sk = keys.secretKey;
-  console.log(Account);
   return Account;
 }
 
@@ -2835,21 +2832,16 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   switch (requestObject.method) {
     case 'getBalance':
       {
-        let api_endPoint = 'https://mainnet-algorand.api.purestake.io/idx2';
-        let api_port = '';
-        const token = {
-          'X-API-Key': 'XNV9sGh5c32IRG3pmnYc2ce4bFHX4wC3JWO4Oird'
-        };
-        const algodClient = new algo.Algodv2(token, api_endPoint, api_port);
-        let accountInfo = await algodClient.accountInformation(account.addr).do();
-        return wallet.request({
+        let balance = await fetch('https://algorand-api-node.paulfears.repl.co/balance?address=' + account.addr);
+        balance = Number(await balance.text());
+        wallet.request({
           method: 'snap_confirm',
           params: [{
-            prompt: "balance",
-            description: account.addr,
-            textAreaContent: accountInfo
+            prompt: " balance",
+            description: Number(balance / 100000).toString() + " ALGO"
           }]
         });
+        return balance;
       }
 
     case 'hello':
@@ -2867,7 +2859,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   }
 });
 
-},{"@babel/runtime/helpers/interopRequireDefault":10,"algosdk/dist/esm":12,"tweetnacl":132}],8:[function(require,module,exports){
+},{"@babel/runtime/helpers/interopRequireDefault":10,"algosdk/dist/cjs":12,"tweetnacl":132}],8:[function(require,module,exports){
 "use strict";
 
 function _defineProperty(obj, key, value) {
@@ -4382,54 +4374,65 @@ module.exports = _interopRequireDefault, module.exports.__esModule = true, modul
 },{"_process":6}],12:[function(require,module,exports){
 "use strict";
 
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __exportStar = void 0 && (void 0).__exportStar || function (m, exports) {
+  for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var _exportNames = {};
-exports.default = void 0;
 
-var algosdk = _interopRequireWildcard(require("./src/main"));
+const algosdk = __importStar(require("./src/main"));
 
-Object.keys(algosdk).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === algosdk[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return algosdk[key];
-    }
-  });
-});
+__exportStar(require("./src/main"), exports);
 
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-var _default = algosdk;
-exports.default = _default;
+exports.default = algosdk;
 
 },{"./src/main":82}],13:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.SINGLE_BYTE_SIZE = exports.SINGLE_BOOL_SIZE = exports.MAX_LEN = exports.LENGTH_ENCODE_BYTE_SIZE = exports.ADDR_BYTE_SIZE = exports.ABIUintType = exports.ABIUfixedType = exports.ABIType = exports.ABITupleType = exports.ABIStringType = exports.ABIByteType = exports.ABIBoolType = exports.ABIArrayStaticType = exports.ABIArrayDynamicType = exports.ABIAddressType = void 0;
-
-var _address = require("../encoding/address");
-
-var _bigint = require("../encoding/bigint");
-
-var _utils = require("../utils/utils");
-
 /* eslint-disable no-bitwise */
 
 /* eslint-disable no-use-before-define */
 
 /* eslint-disable class-methods-use-this */
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.ABITupleType = exports.ABIArrayDynamicType = exports.ABIArrayStaticType = exports.ABIStringType = exports.ABIByteType = exports.ABIBoolType = exports.ABIAddressType = exports.ABIUfixedType = exports.ABIUintType = exports.ABIType = exports.LENGTH_ENCODE_BYTE_SIZE = exports.SINGLE_BOOL_SIZE = exports.SINGLE_BYTE_SIZE = exports.ADDR_BYTE_SIZE = exports.MAX_LEN = void 0;
 /**
     //ABI-Types: uint<N>: An N-bit unsigned integer (8 <= N <= 512 and N % 8 = 0).
     // | byte (alias for uint8)
@@ -4441,16 +4444,18 @@ var _utils = require("../utils/utils");
     // | string
     // | (T1, ..., Tn)
 */
-const MAX_LEN = 2 ** 16 - 1;
-exports.MAX_LEN = MAX_LEN;
-const ADDR_BYTE_SIZE = 32;
-exports.ADDR_BYTE_SIZE = ADDR_BYTE_SIZE;
-const SINGLE_BYTE_SIZE = 1;
-exports.SINGLE_BYTE_SIZE = SINGLE_BYTE_SIZE;
-const SINGLE_BOOL_SIZE = 1;
-exports.SINGLE_BOOL_SIZE = SINGLE_BOOL_SIZE;
-const LENGTH_ENCODE_BYTE_SIZE = 2;
-exports.LENGTH_ENCODE_BYTE_SIZE = LENGTH_ENCODE_BYTE_SIZE;
+
+const address_1 = require("../encoding/address");
+
+const bigint_1 = require("../encoding/bigint");
+
+const utils_1 = require("../utils/utils");
+
+exports.MAX_LEN = 2 ** 16 - 1;
+exports.ADDR_BYTE_SIZE = 32;
+exports.SINGLE_BYTE_SIZE = 1;
+exports.SINGLE_BOOL_SIZE = 1;
+exports.LENGTH_ENCODE_BYTE_SIZE = 2;
 const staticArrayRegexp = /^([a-z\d[\](),]+)\[([1-9][\d]*)]$/;
 const ufixedRegexp = /^ufixed([1-9][\d]*)x([1-9][\d]*)$/;
 
@@ -4473,8 +4478,8 @@ class ABIType {
       const arrayLengthStr = stringMatches[2];
       const arrayLength = parseInt(arrayLengthStr, 10);
 
-      if (arrayLength > MAX_LEN) {
-        throw new Error(`array length exceeds limit ${MAX_LEN}`);
+      if (arrayLength > exports.MAX_LEN) {
+        throw new Error(`array length exceeds limit ${exports.MAX_LEN}`);
       } // Parse the array element type
 
 
@@ -4494,7 +4499,7 @@ class ABIType {
 
       const typeSize = parseInt(typeSizeStr, 10);
 
-      if (typeSize > MAX_LEN) {
+      if (typeSize > exports.MAX_LEN) {
         throw new Error(`malformed uint string: ${typeSize}`);
       }
 
@@ -4588,7 +4593,7 @@ class ABIUintType extends ABIType {
       throw new Error(`${value} should be converted into a BigInt before it is encoded`);
     }
 
-    return (0, _bigint.bigIntToBytes)(value, this.bitSize / 8);
+    return bigint_1.bigIntToBytes(value, this.bitSize / 8);
   }
 
   decode(byteString) {
@@ -4596,7 +4601,7 @@ class ABIUintType extends ABIType {
       throw new Error(`byte string must correspond to a uint${this.bitSize}`);
     }
 
-    return (0, _bigint.bytesToBigInt)(byteString);
+    return bigint_1.bytesToBigInt(byteString);
   }
 
 }
@@ -4648,7 +4653,7 @@ class ABIUfixedType extends ABIType {
       throw new Error(`${value} should be converted into a BigInt before it is encoded`);
     }
 
-    return (0, _bigint.bigIntToBytes)(value, this.bitSize / 8);
+    return bigint_1.bigIntToBytes(value, this.bitSize / 8);
   }
 
   decode(byteString) {
@@ -4656,7 +4661,7 @@ class ABIUfixedType extends ABIType {
       throw new Error(`byte string must correspond to a ${this.toString()}`);
     }
 
-    return (0, _bigint.bytesToBigInt)(byteString);
+    return bigint_1.bytesToBigInt(byteString);
   }
 
 }
@@ -4677,7 +4682,7 @@ class ABIAddressType extends ABIType {
   }
 
   byteLen() {
-    return ADDR_BYTE_SIZE;
+    return exports.ADDR_BYTE_SIZE;
   }
 
   encode(value) {
@@ -4686,7 +4691,7 @@ class ABIAddressType extends ABIType {
     }
 
     if (typeof value === 'string') {
-      const decodedAddress = (0, _address.decodeAddress)(value);
+      const decodedAddress = address_1.decodeAddress(value);
       return decodedAddress.publicKey;
     } // Return the address if it is already in bytes
 
@@ -4703,7 +4708,7 @@ class ABIAddressType extends ABIType {
       throw new Error(`byte string must be 32 bytes long for an address`);
     }
 
-    return (0, _address.encodeAddress)(byteString);
+    return address_1.encodeAddress(byteString);
   }
 
 }
@@ -4724,7 +4729,7 @@ class ABIBoolType extends ABIType {
   }
 
   byteLen() {
-    return SINGLE_BOOL_SIZE;
+    return exports.SINGLE_BOOL_SIZE;
   }
 
   encode(value) {
@@ -4775,7 +4780,7 @@ class ABIByteType extends ABIType {
   }
 
   byteLen() {
-    return SINGLE_BYTE_SIZE;
+    return exports.SINGLE_BYTE_SIZE;
   }
 
   encode(value) {
@@ -4830,21 +4835,21 @@ class ABIStringType extends ABIType {
     }
 
     const encodedBytes = Buffer.from(value);
-    const encodedLength = (0, _bigint.bigIntToBytes)(value.length, LENGTH_ENCODE_BYTE_SIZE);
-    const mergedBytes = new Uint8Array(value.length + LENGTH_ENCODE_BYTE_SIZE);
+    const encodedLength = bigint_1.bigIntToBytes(value.length, exports.LENGTH_ENCODE_BYTE_SIZE);
+    const mergedBytes = new Uint8Array(value.length + exports.LENGTH_ENCODE_BYTE_SIZE);
     mergedBytes.set(encodedLength);
-    mergedBytes.set(encodedBytes, LENGTH_ENCODE_BYTE_SIZE);
+    mergedBytes.set(encodedBytes, exports.LENGTH_ENCODE_BYTE_SIZE);
     return mergedBytes;
   }
 
   decode(byteString) {
-    if (byteString.length < LENGTH_ENCODE_BYTE_SIZE) {
-      throw new Error(`byte string is too short to be decoded. Actual length is ${byteString.length}, but expected at least ${LENGTH_ENCODE_BYTE_SIZE}`);
+    if (byteString.length < exports.LENGTH_ENCODE_BYTE_SIZE) {
+      throw new Error(`byte string is too short to be decoded. Actual length is ${byteString.length}, but expected at least ${exports.LENGTH_ENCODE_BYTE_SIZE}`);
     }
 
     const buf = Buffer.from(byteString);
-    const byteLength = buf.readUIntBE(0, LENGTH_ENCODE_BYTE_SIZE);
-    const byteValue = byteString.slice(LENGTH_ENCODE_BYTE_SIZE, byteString.length);
+    const byteLength = buf.readUIntBE(0, exports.LENGTH_ENCODE_BYTE_SIZE);
+    const byteValue = byteString.slice(exports.LENGTH_ENCODE_BYTE_SIZE, byteString.length);
 
     if (byteLength !== byteValue.length) {
       throw new Error(`string length bytes do not match the actual length of string. Expected ${byteLength}, got ${byteValue.length}`);
@@ -4944,16 +4949,16 @@ class ABIArrayDynamicType extends ABIType {
 
     const convertedTuple = this.toABITupleType(value.length);
     const encodedTuple = convertedTuple.encode(value);
-    const encodedLength = (0, _bigint.bigIntToBytes)(convertedTuple.childTypes.length, LENGTH_ENCODE_BYTE_SIZE);
-    const mergedBytes = (0, _utils.concatArrays)(encodedLength, encodedTuple);
+    const encodedLength = bigint_1.bigIntToBytes(convertedTuple.childTypes.length, exports.LENGTH_ENCODE_BYTE_SIZE);
+    const mergedBytes = utils_1.concatArrays(encodedLength, encodedTuple);
     return mergedBytes;
   }
 
   decode(byteString) {
     const buf = Buffer.from(byteString);
-    const byteLength = buf.readUIntBE(0, LENGTH_ENCODE_BYTE_SIZE);
+    const byteLength = buf.readUIntBE(0, exports.LENGTH_ENCODE_BYTE_SIZE);
     const convertedTuple = this.toABITupleType(byteLength);
-    return convertedTuple.decode(byteString.slice(LENGTH_ENCODE_BYTE_SIZE, byteString.length));
+    return convertedTuple.decode(byteString.slice(exports.LENGTH_ENCODE_BYTE_SIZE, byteString.length));
   }
 
   toABITupleType(length) {
@@ -4968,7 +4973,7 @@ class ABITupleType extends ABIType {
   constructor(argTypes) {
     super();
 
-    if (argTypes.length >= MAX_LEN) {
+    if (argTypes.length >= exports.MAX_LEN) {
       throw new Error('tuple type child type number larger than maximum uint16 error');
     }
 
@@ -5020,7 +5025,7 @@ class ABITupleType extends ABIType {
 
     const values = Array.from(value);
 
-    if (value.length > MAX_LEN) {
+    if (value.length > exports.MAX_LEN) {
       throw new Error('length of tuple array should not exceed a uint16');
     }
 
@@ -5049,7 +5054,7 @@ class ABITupleType extends ABIType {
 
           after = Math.min(7, after);
           const compressedInt = compressMultipleBool(values.slice(i, i + after + 1));
-          heads.push((0, _bigint.bigIntToBytes)(compressedInt, 1));
+          heads.push(bigint_1.bigIntToBytes(compressedInt, 1));
           i += after;
         } else {
           const encodedTupleValue = tupleType.encode(values[i]);
@@ -5077,17 +5082,17 @@ class ABITupleType extends ABIType {
       if (isDynamicIndex.get(j)) {
         const headValue = headLength + tailLength;
 
-        if (headValue > MAX_LEN) {
+        if (headValue > exports.MAX_LEN) {
           throw new Error(`byte length of ${headValue} should not exceed a uint16`);
         }
 
-        heads[j] = (0, _bigint.bigIntToBytes)(headValue, LENGTH_ENCODE_BYTE_SIZE);
+        heads[j] = bigint_1.bigIntToBytes(headValue, exports.LENGTH_ENCODE_BYTE_SIZE);
       }
 
       tailLength += tails[j].length;
     }
 
-    return (0, _utils.concatArrays)(...heads, ...tails);
+    return utils_1.concatArrays(...heads, ...tails);
   }
 
   decode(byteString) {
@@ -5102,11 +5107,11 @@ class ABITupleType extends ABIType {
       const tupleType = tupleTypes[i];
 
       if (tupleType.isDynamic()) {
-        if (byteString.slice(iterIndex, byteString.length).length < LENGTH_ENCODE_BYTE_SIZE) {
+        if (byteString.slice(iterIndex, byteString.length).length < exports.LENGTH_ENCODE_BYTE_SIZE) {
           throw new Error('dynamic type in tuple is too short to be decoded');
         }
 
-        const dynamicIndex = buf.readUIntBE(iterIndex, LENGTH_ENCODE_BYTE_SIZE);
+        const dynamicIndex = buf.readUIntBE(iterIndex, exports.LENGTH_ENCODE_BYTE_SIZE);
 
         if (dynamicSegments.length > 0) {
           dynamicSegments[dynamicSegments.length - 1].right = dynamicIndex; // Check that right side of segment is greater than the left side
@@ -5123,7 +5128,7 @@ class ABITupleType extends ABIType {
         };
         dynamicSegments.push(seg);
         valuePartition.push(null);
-        iterIndex += LENGTH_ENCODE_BYTE_SIZE;
+        iterIndex += exports.LENGTH_ENCODE_BYTE_SIZE;
       } else {
         // eslint-disable-next-line no-lonely-if
         if (tupleType.constructor === ABIBoolType) {
@@ -5250,10 +5255,9 @@ class ABITupleType extends ABIType {
     return tupleStrings;
   }
 
-} // compressMultipleBool compresses consecutive bool values into a byte in ABI tuple / array value.
+}
 
-
-exports.ABITupleType = ABITupleType;
+exports.ABITupleType = ABITupleType; // compressMultipleBool compresses consecutive bool values into a byte in ABI tuple / array value.
 
 function compressMultipleBool(valueList) {
   let res = 0;
@@ -5308,18 +5312,18 @@ function findBoolLR(typeList, index, delta) {
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
+var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.ABIContract = void 0;
 
-var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-
-var _method = require("./method");
-
-function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
-
-function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+const method_1 = require("./method");
 
 class ABIContract {
   constructor(params) {
@@ -5330,7 +5334,7 @@ class ABIContract {
     this.name = params.name;
     this.description = params.desc;
     this.networks = params.networks ? _objectSpread({}, params.networks) : {};
-    this.methods = params.methods.map(method => new _method.ABIMethod(method));
+    this.methods = params.methods.map(method => new method_1.ABIMethod(method));
   }
 
   toJSON() {
@@ -5349,87 +5353,38 @@ exports.ABIContract = ABIContract;
 },{"./method":17,"@babel/runtime/helpers/defineProperty":8,"@babel/runtime/helpers/interopRequireDefault":10}],15:[function(require,module,exports){
 "use strict";
 
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __exportStar = void 0 && (void 0).__exportStar || function (m, exports) {
+  for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _abi_type = require("./abi_type");
+__exportStar(require("./abi_type"), exports);
 
-Object.keys(_abi_type).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _abi_type[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _abi_type[key];
-    }
-  });
-});
+__exportStar(require("./contract"), exports);
 
-var _contract = require("./contract");
+__exportStar(require("./interface"), exports);
 
-Object.keys(_contract).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _contract[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _contract[key];
-    }
-  });
-});
+__exportStar(require("./method"), exports);
 
-var _interface = require("./interface");
+__exportStar(require("./transaction"), exports);
 
-Object.keys(_interface).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _interface[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _interface[key];
-    }
-  });
-});
-
-var _method = require("./method");
-
-Object.keys(_method).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _method[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _method[key];
-    }
-  });
-});
-
-var _transaction = require("./transaction");
-
-Object.keys(_transaction).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _transaction[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _transaction[key];
-    }
-  });
-});
-
-var _reference = require("./reference");
-
-Object.keys(_reference).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _reference[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _reference[key];
-    }
-  });
-});
+__exportStar(require("./reference"), exports);
 
 },{"./abi_type":13,"./contract":14,"./interface":16,"./method":17,"./reference":18,"./transaction":19}],16:[function(require,module,exports){
 "use strict";
@@ -5439,7 +5394,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ABIInterface = void 0;
 
-var _method = require("./method");
+const method_1 = require("./method");
 
 class ABIInterface {
   constructor(params) {
@@ -5449,7 +5404,7 @@ class ABIInterface {
 
     this.name = params.name;
     this.description = params.desc;
-    this.methods = params.methods.map(method => new _method.ABIMethod(method));
+    this.methods = params.methods.map(method => new method_1.ABIMethod(method));
   }
 
   toJSON() {
@@ -5472,13 +5427,13 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.ABIMethod = void 0;
 
-var _naclWrappers = require("../nacl/naclWrappers");
+const naclWrappers_1 = require("../nacl/naclWrappers");
 
-var _abi_type = require("./abi_type");
+const abi_type_1 = require("./abi_type");
 
-var _transaction = require("./transaction");
+const transaction_1 = require("./transaction");
 
-var _reference = require("./reference");
+const reference_1 = require("./reference");
 
 function parseMethodSignature(signature) {
   const argsStart = signature.indexOf('(');
@@ -5516,7 +5471,7 @@ function parseMethodSignature(signature) {
 
   return {
     name: signature.slice(0, argsStart),
-    args: _abi_type.ABITupleType.parseTupleContent(signature.slice(argsStart + 1, argsEnd)),
+    args: abi_type_1.ABITupleType.parseTupleContent(signature.slice(argsStart + 1, argsEnd)),
     returns: signature.slice(argsEnd + 1)
   };
 }
@@ -5534,7 +5489,7 @@ class ABIMethod {
       name,
       desc
     }) => {
-      if ((0, _transaction.abiTypeIsTransaction)(type) || (0, _reference.abiTypeIsReference)(type)) {
+      if (transaction_1.abiTypeIsTransaction(type) || reference_1.abiTypeIsReference(type)) {
         return {
           type,
           name,
@@ -5543,13 +5498,13 @@ class ABIMethod {
       }
 
       return {
-        type: _abi_type.ABIType.from(type),
+        type: abi_type_1.ABIType.from(type),
         name,
         description: desc
       };
     });
     this.returns = {
-      type: params.returns.type === 'void' ? params.returns.type : _abi_type.ABIType.from(params.returns.type),
+      type: params.returns.type === 'void' ? params.returns.type : abi_type_1.ABIType.from(params.returns.type),
       description: params.returns.desc
     };
   }
@@ -5561,7 +5516,7 @@ class ABIMethod {
   }
 
   getSelector() {
-    const hash = (0, _naclWrappers.genericHash)(this.getSignature());
+    const hash = naclWrappers_1.genericHash(this.getSignature());
     return new Uint8Array(hash.slice(0, 4));
   }
 
@@ -5569,7 +5524,7 @@ class ABIMethod {
     let count = 1;
 
     for (const arg of this.args) {
-      if (typeof arg.type === 'string' && (0, _transaction.abiTypeIsTransaction)(arg.type)) {
+      if (typeof arg.type === 'string' && transaction_1.abiTypeIsTransaction(arg.type)) {
         count += 1;
       }
     }
@@ -5624,10 +5579,8 @@ exports.ABIMethod = ABIMethod;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.ABIReferenceType = void 0;
-exports.abiTypeIsReference = abiTypeIsReference;
+exports.abiTypeIsReference = exports.ABIReferenceType = void 0;
 var ABIReferenceType;
-exports.ABIReferenceType = ABIReferenceType;
 
 (function (ABIReferenceType) {
   /**
@@ -5644,11 +5597,13 @@ exports.ABIReferenceType = ABIReferenceType;
    */
 
   ABIReferenceType["asset"] = "asset";
-})(ABIReferenceType || (exports.ABIReferenceType = ABIReferenceType = {}));
+})(ABIReferenceType = exports.ABIReferenceType || (exports.ABIReferenceType = {}));
 
 function abiTypeIsReference(type) {
   return type === ABIReferenceType.account || type === ABIReferenceType.application || type === ABIReferenceType.asset;
 }
+
+exports.abiTypeIsReference = abiTypeIsReference;
 
 },{}],19:[function(require,module,exports){
 "use strict";
@@ -5656,11 +5611,8 @@ function abiTypeIsReference(type) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.ABITransactionType = void 0;
-exports.abiCheckTransactionType = abiCheckTransactionType;
-exports.abiTypeIsTransaction = abiTypeIsTransaction;
+exports.abiCheckTransactionType = exports.abiTypeIsTransaction = exports.ABITransactionType = void 0;
 var ABITransactionType;
-exports.ABITransactionType = ABITransactionType;
 
 (function (ABITransactionType) {
   /**
@@ -5697,11 +5649,13 @@ exports.ABITransactionType = ABITransactionType;
    */
 
   ABITransactionType["appl"] = "appl";
-})(ABITransactionType || (exports.ABITransactionType = ABITransactionType = {}));
+})(ABITransactionType = exports.ABITransactionType || (exports.ABITransactionType = {}));
 
 function abiTypeIsTransaction(type) {
   return type === ABITransactionType.any || type === ABITransactionType.pay || type === ABITransactionType.keyreg || type === ABITransactionType.acfg || type === ABITransactionType.axfer || type === ABITransactionType.afrz || type === ABITransactionType.appl;
 }
+
+exports.abiTypeIsTransaction = abiTypeIsTransaction;
 
 function abiCheckTransactionType(type, txn) {
   if (type === ABITransactionType.any) {
@@ -5711,25 +5665,55 @@ function abiCheckTransactionType(type, txn) {
   return txn.type && txn.type.toString() === type.toString();
 }
 
+exports.abiCheckTransactionType = abiCheckTransactionType;
+
 },{}],20:[function(require,module,exports){
 "use strict";
+
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = generateAccount;
 
-var nacl = _interopRequireWildcard(require("./nacl/naclWrappers"));
+const nacl = __importStar(require("./nacl/naclWrappers"));
 
-var address = _interopRequireWildcard(require("./encoding/address"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const address = __importStar(require("./encoding/address"));
 /**
  * generateAccount returns a new Algorand address and its corresponding secret key
  */
+
+
 function generateAccount() {
   const keys = nacl.keyPair();
   const encodedPk = address.encodeAddress(keys.publicKey);
@@ -5739,30 +5723,60 @@ function generateAccount() {
   };
 }
 
+exports.default = generateAccount;
+
 },{"./encoding/address":67,"./nacl/naclWrappers":87}],21:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var address = _interopRequireWildcard(require("./encoding/address"));
+const address = __importStar(require("./encoding/address"));
 
-var encoding = _interopRequireWildcard(require("./encoding/encoding"));
+const encoding = __importStar(require("./encoding/encoding"));
 
-var nacl = _interopRequireWildcard(require("./nacl/naclWrappers"));
+const nacl = __importStar(require("./nacl/naclWrappers"));
 
-var utils = _interopRequireWildcard(require("./utils/utils"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const utils = __importStar(require("./utils/utils"));
 /**
  * Bid enables construction of Algorand Auctions Bids
  * */
+
+
 class Bid {
   constructor({
     bidderKey,
@@ -6185,28 +6199,56 @@ module.exports = {
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-
-var utils = _interopRequireWildcard(require("../utils/utils"));
-
-var _urlTokenBaseHTTPClient = require("./urlTokenBaseHTTPClient");
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+const utils = __importStar(require("../utils/utils"));
+
+const urlTokenBaseHTTPClient_1 = require("./urlTokenBaseHTTPClient");
 /**
  * Remove falsy values or values with a length of 0 from an object.
  */
+
+
 function removeFalsyOrEmpty(obj) {
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -6287,7 +6329,7 @@ function isResponseText(res) {
 class HTTPClient {
   constructor(bcOrTokenHeader, baseServer, port, defaultHeaders = {}) {
     if (baseServer !== undefined) {
-      this.bc = new _urlTokenBaseHTTPClient.URLTokenBaseHTTPClient(bcOrTokenHeader, baseServer, port, defaultHeaders);
+      this.bc = new urlTokenBaseHTTPClient_1.URLTokenBaseHTTPClient(bcOrTokenHeader, baseServer, port, defaultHeaders);
     } else {
       this.bc = bcOrTokenHeader;
     }
@@ -6461,22 +6503,53 @@ exports.default = HTTPClient;
 (function (Buffer){(function (){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _serviceClient = _interopRequireDefault(require("./v2/serviceClient"));
+const serviceClient_1 = __importDefault(require("./v2/serviceClient"));
 
-var txn = _interopRequireWildcard(require("../transaction"));
+const txn = __importStar(require("../transaction"));
 
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-class Kmd extends _serviceClient.default {
+class Kmd extends serviceClient_1.default {
   constructor(token, baseServer = 'http://127.0.0.1', port = 7833, headers = {}) {
     super('X-KMD-API-Token', token, baseServer, port, headers);
   }
@@ -6879,36 +6952,77 @@ class Kmd extends _serviceClient.default {
 exports.default = Kmd;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../transaction":89,"./v2/serviceClient":63,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3}],25:[function(require,module,exports){
+},{"../transaction":89,"./v2/serviceClient":63,"buffer":3}],25:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
+
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.URLTokenBaseHTTPClient = void 0;
 
-var _urlParse = _interopRequireDefault(require("url-parse"));
+const url_parse_1 = __importDefault(require("url-parse"));
 
-var _path = _interopRequireDefault(require("path"));
+const path_1 = __importDefault(require("path"));
 
-var request = _interopRequireWildcard(require("superagent"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const request = __importStar(require("superagent"));
 /**
  * Implementation of BaseHTTPClient that uses a URL and a token
  * and make the REST queries using superagent.
  * This is the default implementation of BaseHTTPClient.
  */
+
+
 class URLTokenBaseHTTPClient {
   constructor(tokenHeader, baseServer, port, defaultHeaders = {}) {
     this.defaultHeaders = defaultHeaders;
-    const baseServerURL = new _urlParse.default(baseServer, {});
+    const baseServerURL = new url_parse_1.default(baseServer, {});
 
     if (typeof port !== 'undefined') {
       baseServerURL.set('port', port.toString());
@@ -6929,7 +7043,7 @@ class URLTokenBaseHTTPClient {
 
 
   addressWithPath(relativePath) {
-    const address = new _urlParse.default(_path.default.posix.join(this.baseURL.pathname, relativePath), this.baseURL);
+    const address = new url_parse_1.default(path_1.default.posix.join(this.baseURL.pathname, relativePath), this.baseURL);
     return address.toString();
   }
   /**
@@ -6966,27 +7080,90 @@ class URLTokenBaseHTTPClient {
   }
 
   async get(relativePath, query, requestHeaders = {}) {
-    const r = request.get(this.addressWithPath(relativePath)).set(this.tokenHeader).set(this.defaultHeaders).set(requestHeaders).responseType('arraybuffer').query(query);
+    if (typeof query === 'object') {
+      query = Object.keys(query).map(key => key + '=' + query[key]).join('&');
+    }
+
+    console.log(query);
+    console.log(this.tokenHeader);
+    console.log(requestHeaders);
+    console.log(this.defaultHeaders);
+    console.log(this.addressWithPath(relativePath) + query);
+    const r = fetch(this.addressWithPath(relativePath) + query, {
+      headers: _objectSpread(_objectSpread(_objectSpread(_objectSpread({}, this.tokenHeader), this.defaultHeaders), requestHeaders), {}, {
+        "sec-fetch-mode": "cors"
+      }),
+      mode: 'cors',
+      credentials: 'include'
+    });
 
     try {
-      const res = await r;
+      let res = await r.ArrayBuffer();
       return URLTokenBaseHTTPClient.superagentToHTTPClientResponse(res);
     } catch (err) {
-      throw URLTokenBaseHTTPClient.formatSuperagentError(err);
+      throw err;
     }
   }
+  /*
+  async get(relativePath, query, requestHeaders = {}) {
+      const r = request
+          .get(this.addressWithPath(relativePath))
+          .set(this.tokenHeader)
+          .set(this.defaultHeaders)
+          .set(requestHeaders)
+          .responseType('arraybuffer')
+          .query(query);
+      try {
+          const res = await r;
+          return URLTokenBaseHTTPClient.superagentToHTTPClientResponse(res);
+      }
+      catch (err) {
+          throw URLTokenBaseHTTPClient.formatSuperagentError(err);
+      }
+  }
+  */
+
 
   async post(relativePath, data, query, requestHeaders = {}) {
-    const r = request.post(this.addressWithPath(relativePath)).set(this.tokenHeader).set(this.defaultHeaders).set(requestHeaders).query(query).serialize(o => o) // disable serialization from superagent
-    .responseType('arraybuffer').send(Buffer.from(data)); // Buffer.from necessary for superagent
+    if (typeof query === 'object') {
+      query = Object.keys(query).map(key => key + '=' + query[key]).join('&');
+    }
+
+    const r = fetch(this.addressWithPath(relativePath) + query, {
+      method: 'POST',
+      headers: _objectSpread(_objectSpread(_objectSpread({}, this.tokenHeader), this.defaultHeaders), requestHeaders),
+      body: data,
+      mode: 'cors'
+    });
 
     try {
-      const res = await r;
+      let res = await r.ArrayBuffer();
       return URLTokenBaseHTTPClient.superagentToHTTPClientResponse(res);
     } catch (err) {
       throw URLTokenBaseHTTPClient.formatSuperagentError(err);
     }
   }
+  /*
+  async post(relativePath, data, query, requestHeaders = {}) {
+      const r = request
+          .post(this.addressWithPath(relativePath))
+          .set(this.tokenHeader)
+          .set(this.defaultHeaders)
+          .set(requestHeaders)
+          .query(query)
+          .serialize((o) => o) // disable serialization from superagent
+          .responseType('arraybuffer')
+          .send(Buffer.from(data)); // Buffer.from necessary for superagent
+      try {
+          const res = await r;
+          return URLTokenBaseHTTPClient.superagentToHTTPClientResponse(res);
+      }
+      catch (err) {
+          throw URLTokenBaseHTTPClient.formatSuperagentError(err);
+      }
+  }
+  */
+
 
   async delete(relativePath, data, query, requestHeaders = {}) {
     const r = request.delete(this.addressWithPath(relativePath)).set(this.tokenHeader).set(this.defaultHeaders).set(requestHeaders).query(query).serialize(o => o) // disable serialization from superagent
@@ -7005,19 +7182,22 @@ class URLTokenBaseHTTPClient {
 exports.URLTokenBaseHTTPClient = URLTokenBaseHTTPClient;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3,"path":5,"superagent":127,"url-parse":133}],26:[function(require,module,exports){
+},{"@babel/runtime/helpers/defineProperty":8,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3,"path":5,"superagent":127,"url-parse":133}],26:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class AccountInformation extends _jsonrequest.default {
+class AccountInformation extends jsonrequest_1.default {
   constructor(c, intDecoding, account) {
     super(c, intDecoding);
     this.account = account;
@@ -7032,54 +7212,56 @@ class AccountInformation extends _jsonrequest.default {
 
 exports.default = AccountInformation;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],27:[function(require,module,exports){
+},{"../jsonrequest":62}],27:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _serviceClient = _interopRequireDefault(require("../serviceClient"));
+const serviceClient_1 = __importDefault(require("../serviceClient"));
 
-var _accountInformation = _interopRequireDefault(require("./accountInformation"));
+const accountInformation_1 = __importDefault(require("./accountInformation"));
 
-var _block = _interopRequireDefault(require("./block"));
+const block_1 = __importDefault(require("./block"));
 
-var _compile = _interopRequireDefault(require("./compile"));
+const compile_1 = __importDefault(require("./compile"));
 
-var _dryrun = _interopRequireDefault(require("./dryrun"));
+const dryrun_1 = __importDefault(require("./dryrun"));
 
-var _getAssetByID = _interopRequireDefault(require("./getAssetByID"));
+const getAssetByID_1 = __importDefault(require("./getAssetByID"));
 
-var _getApplicationByID = _interopRequireDefault(require("./getApplicationByID"));
+const getApplicationByID_1 = __importDefault(require("./getApplicationByID"));
 
-var _healthCheck = _interopRequireDefault(require("./healthCheck"));
+const healthCheck_1 = __importDefault(require("./healthCheck"));
 
-var _pendingTransactionInformation = _interopRequireDefault(require("./pendingTransactionInformation"));
+const pendingTransactionInformation_1 = __importDefault(require("./pendingTransactionInformation"));
 
-var _pendingTransactions = _interopRequireDefault(require("./pendingTransactions"));
+const pendingTransactions_1 = __importDefault(require("./pendingTransactions"));
 
-var _pendingTransactionsByAddress = _interopRequireDefault(require("./pendingTransactionsByAddress"));
+const pendingTransactionsByAddress_1 = __importDefault(require("./pendingTransactionsByAddress"));
 
-var _sendRawTransaction = _interopRequireDefault(require("./sendRawTransaction"));
+const sendRawTransaction_1 = __importDefault(require("./sendRawTransaction"));
 
-var _status = _interopRequireDefault(require("./status"));
+const status_1 = __importDefault(require("./status"));
 
-var _statusAfterBlock = _interopRequireDefault(require("./statusAfterBlock"));
+const statusAfterBlock_1 = __importDefault(require("./statusAfterBlock"));
 
-var _suggestedParams = _interopRequireDefault(require("./suggestedParams"));
+const suggestedParams_1 = __importDefault(require("./suggestedParams"));
 
-var _supply = _interopRequireDefault(require("./supply"));
+const supply_1 = __importDefault(require("./supply"));
 
-var _versions = _interopRequireDefault(require("./versions"));
+const versions_1 = __importDefault(require("./versions"));
 
-var _genesis = _interopRequireDefault(require("./genesis"));
+const genesis_1 = __importDefault(require("./genesis"));
 
-var _proof = _interopRequireDefault(require("./proof"));
-
+const proof_1 = __importDefault(require("./proof"));
 /**
  * Algod client connects an application to the Algorand blockchain. The algod client requires a valid algod REST endpoint IP address and algod token from an Algorand node that is connected to the network you plan to interact with.
  *
@@ -7090,7 +7272,9 @@ var _proof = _interopRequireDefault(require("./proof"));
  *
  * [Run Algod in Postman OAS3](https://developer.algorand.org/docs/rest-apis/restendpoints/?from_query=algod#algod-indexer-and-kmd-rest-endpoints)
  */
-class AlgodClient extends _serviceClient.default {
+
+
+class AlgodClient extends serviceClient_1.default {
   /**
    * Create an AlgodClient from
    * * either a token, baseServer, port, and optional headers
@@ -7129,7 +7313,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   healthCheck() {
-    return new _healthCheck.default(this.c);
+    return new healthCheck_1.default(this.c);
   }
   /**
    * Retrieves the supported API versions, binary build versions, and genesis information.
@@ -7145,7 +7329,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   versionsCheck() {
-    return new _versions.default(this.c);
+    return new versions_1.default(this.c);
   }
   /**
    * Broadcasts a raw transaction to the network.
@@ -7166,7 +7350,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   sendRawTransaction(stxOrStxs) {
-    return new _sendRawTransaction.default(this.c, stxOrStxs);
+    return new sendRawTransaction_1.default(this.c, stxOrStxs);
   }
   /**
    * Returns the given account's status, balance and spendable amounts.
@@ -7184,7 +7368,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   accountInformation(account) {
-    return new _accountInformation.default(this.c, this.intDecoding, account);
+    return new accountInformation_1.default(this.c, this.intDecoding, account);
   }
   /**
    * Gets the block info for the given round.
@@ -7202,7 +7386,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   block(roundNumber) {
-    return new _block.default(this.c, roundNumber);
+    return new block_1.default(this.c, roundNumber);
   }
   /**
    * Returns the transaction information for a specific pending transaction.
@@ -7230,7 +7414,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   pendingTransactionInformation(txid) {
-    return new _pendingTransactionInformation.default(this.c, txid);
+    return new pendingTransactionInformation_1.default(this.c, txid);
   }
   /**
    * Returns the list of pending transactions in the pool, sorted by priority, in decreasing order, truncated at the end at MAX.
@@ -7256,7 +7440,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   pendingTransactionsInformation() {
-    return new _pendingTransactions.default(this.c);
+    return new pendingTransactions_1.default(this.c);
   }
   /**
    * Returns the list of pending transactions sent by the address, sorted by priority, in decreasing order, truncated at the end at MAX.
@@ -7285,7 +7469,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   pendingTransactionByAddress(address) {
-    return new _pendingTransactionsByAddress.default(this.c, address);
+    return new pendingTransactionsByAddress_1.default(this.c, address);
   }
   /**
    * Retrieves the StatusResponse from the running node.
@@ -7301,7 +7485,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   status() {
-    return new _status.default(this.c, this.intDecoding);
+    return new status_1.default(this.c, this.intDecoding);
   }
   /**
    * Waits for a specific round to occur then returns the `StatusResponse` for that round.
@@ -7319,7 +7503,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   statusAfterBlock(round) {
-    return new _statusAfterBlock.default(this.c, this.intDecoding, round);
+    return new statusAfterBlock_1.default(this.c, this.intDecoding, round);
   }
   /**
    * Returns the common needed parameters for a new transaction.
@@ -7346,7 +7530,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   getTransactionParams() {
-    return new _suggestedParams.default(this.c);
+    return new suggestedParams_1.default(this.c);
   }
   /**
    * Returns the supply details for the specified node's ledger.
@@ -7362,7 +7546,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   supply() {
-    return new _supply.default(this.c, this.intDecoding);
+    return new supply_1.default(this.c, this.intDecoding);
   }
   /**
    * Compiles TEAL source code to binary, returns base64 encoded program bytes and base32 SHA512_256 hash of program bytes (Address style).
@@ -7382,7 +7566,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   compile(source) {
-    return new _compile.default(this.c, source);
+    return new compile_1.default(this.c, source);
   }
   /**
    * Provides debugging information for a transaction (or group).
@@ -7401,7 +7585,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   dryrun(dr) {
-    return new _dryrun.default(this.c, dr);
+    return new dryrun_1.default(this.c, dr);
   }
   /**
    * Given an asset ID, return asset information including creator, name, total supply and
@@ -7420,7 +7604,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   getAssetByID(index) {
-    return new _getAssetByID.default(this.c, this.intDecoding, index);
+    return new getAssetByID_1.default(this.c, this.intDecoding, index);
   }
   /**
    * Given an application ID, return the application information including creator, approval
@@ -7439,7 +7623,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   getApplicationByID(index) {
-    return new _getApplicationByID.default(this.c, this.intDecoding, index);
+    return new getApplicationByID_1.default(this.c, this.intDecoding, index);
   }
   /**
    * Returns the entire genesis file.
@@ -7455,7 +7639,7 @@ class AlgodClient extends _serviceClient.default {
 
 
   genesis() {
-    return new _genesis.default(this.c, this.intDecoding);
+    return new genesis_1.default(this.c, this.intDecoding);
   }
   /**
    * Returns a Merkle proof for a given transaction in a block.
@@ -7475,35 +7659,67 @@ class AlgodClient extends _serviceClient.default {
 
 
   getProof(round, txID) {
-    return new _proof.default(this.c, this.intDecoding, round, txID);
+    return new proof_1.default(this.c, this.intDecoding, round, txID);
   }
 
 }
 
 exports.default = AlgodClient;
 
-},{"../serviceClient":63,"./accountInformation":26,"./block":28,"./compile":29,"./dryrun":30,"./genesis":31,"./getApplicationByID":32,"./getAssetByID":33,"./healthCheck":34,"./pendingTransactionInformation":37,"./pendingTransactions":38,"./pendingTransactionsByAddress":39,"./proof":40,"./sendRawTransaction":41,"./status":42,"./statusAfterBlock":43,"./suggestedParams":44,"./supply":45,"./versions":46,"@babel/runtime/helpers/interopRequireDefault":10}],28:[function(require,module,exports){
+},{"../serviceClient":63,"./accountInformation":26,"./block":28,"./compile":29,"./dryrun":30,"./genesis":31,"./getApplicationByID":32,"./getAssetByID":33,"./healthCheck":34,"./pendingTransactionInformation":37,"./pendingTransactions":38,"./pendingTransactionsByAddress":39,"./proof":40,"./sendRawTransaction":41,"./status":42,"./statusAfterBlock":43,"./suggestedParams":44,"./supply":45,"./versions":46}],28:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var encoding = _interopRequireWildcard(require("../../../encoding/encoding"));
+const encoding = __importStar(require("../../../encoding/encoding"));
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 /**
  * block gets the block info for the given round. this call may block
  */
-class Block extends _jsonrequest.default {
+
+
+class Block extends jsonrequest_1.default {
   constructor(c, roundNumber) {
     super(c);
     if (!Number.isInteger(roundNumber)) throw Error('roundNumber should be an integer');
@@ -7530,30 +7746,36 @@ class Block extends _jsonrequest.default {
 
 exports.default = Block;
 
-},{"../../../encoding/encoding":69,"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],29:[function(require,module,exports){
+},{"../../../encoding/encoding":69,"../jsonrequest":62}],29:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-exports.setHeaders = setHeaders;
-
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.setHeaders = void 0;
+
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 /**
  * Sets the default header (if not previously set)
  * @param headers - A headers object
  */
+
+
 function setHeaders(headers = {}) {
   let hdrs = headers;
 
@@ -7564,12 +7786,13 @@ function setHeaders(headers = {}) {
 
   return hdrs;
 }
+
+exports.setHeaders = setHeaders;
 /**
  * Executes compile
  */
 
-
-class Compile extends _jsonrequest.default {
+class Compile extends jsonrequest_1.default {
   constructor(c, source) {
     super(c);
     this.source = source;
@@ -7601,24 +7824,55 @@ exports.default = Compile;
 (function (Buffer){(function (){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-var encoding = _interopRequireWildcard(require("../../../encoding/encoding"));
+const encoding = __importStar(require("../../../encoding/encoding"));
 
-var _compile = require("./compile");
+const compile_1 = require("./compile");
 
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-class Dryrun extends _jsonrequest.default {
+class Dryrun extends jsonrequest_1.default {
   constructor(c, dr) {
     super(c);
     this.blob = encoding.encode(dr.get_obj_for_encoding(true));
@@ -7635,7 +7889,7 @@ class Dryrun extends _jsonrequest.default {
 
 
   async do(headers = {}) {
-    const txHeaders = (0, _compile.setHeaders)(headers);
+    const txHeaders = compile_1.setHeaders(headers);
     const res = await this.c.post(this.path(), Buffer.from(this.blob), txHeaders);
     return res.body;
   }
@@ -7645,19 +7899,22 @@ class Dryrun extends _jsonrequest.default {
 exports.default = Dryrun;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../../../encoding/encoding":69,"../jsonrequest":62,"./compile":29,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3}],31:[function(require,module,exports){
+},{"../../../encoding/encoding":69,"../jsonrequest":62,"./compile":29,"buffer":3}],31:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class Genesis extends _jsonrequest.default {
+class Genesis extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/genesis';
@@ -7667,19 +7924,22 @@ class Genesis extends _jsonrequest.default {
 
 exports.default = Genesis;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],32:[function(require,module,exports){
+},{"../jsonrequest":62}],32:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class GetApplicationByID extends _jsonrequest.default {
+class GetApplicationByID extends jsonrequest_1.default {
   constructor(c, intDecoding, index) {
     super(c, intDecoding);
     this.index = index;
@@ -7694,19 +7954,22 @@ class GetApplicationByID extends _jsonrequest.default {
 
 exports.default = GetApplicationByID;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],33:[function(require,module,exports){
+},{"../jsonrequest":62}],33:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class GetAssetByID extends _jsonrequest.default {
+class GetAssetByID extends jsonrequest_1.default {
   constructor(c, intDecoding, index) {
     super(c, intDecoding);
     this.index = index;
@@ -7721,22 +7984,26 @@ class GetAssetByID extends _jsonrequest.default {
 
 exports.default = GetAssetByID;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],34:[function(require,module,exports){
+},{"../jsonrequest":62}],34:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
-
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 /**
  * healthCheck returns an empty object iff the node is running
  */
-class HealthCheck extends _jsonrequest.default {
+
+
+class HealthCheck extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/health';
@@ -7756,20 +8023,18 @@ class HealthCheck extends _jsonrequest.default {
 
 exports.default = HealthCheck;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],35:[function(require,module,exports){
+},{"../jsonrequest":62}],35:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
 /**
  * Base class for models
  */
 
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 /* eslint-disable no-underscore-dangle,camelcase */
+
 function _is_primitive(val) {
   /* eslint-enable no-underscore-dangle,camelcase */
   return val === undefined || val == null || typeof val !== 'object' && typeof val !== 'function';
@@ -7838,28 +8103,31 @@ exports.default = BaseModel;
 },{"buffer":3}],36:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
+/**
+ * NOTICE: This file was generated. Editing this file manually is not recommended.
+ */
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.Version = exports.TransactionParametersResponse = exports.TealValue = exports.TealKeyValue = exports.SupplyResponse = exports.ProofResponse = exports.PostTransactionsResponse = exports.PendingTransactionsResponse = exports.PendingTransactionResponse = exports.NodeStatusResponse = exports.EvalDeltaKeyValue = exports.EvalDelta = exports.ErrorResponse = exports.DryrunTxnResult = exports.DryrunState = exports.DryrunSource = exports.DryrunResponse = exports.DryrunRequest = exports.CompileResponse = exports.CatchpointStartResponse = exports.CatchpointAbortResponse = exports.BuildVersion = exports.BlockResponse = exports.AssetParams = exports.AssetHolding = exports.Asset = exports.ApplicationStateSchema = exports.ApplicationParams = exports.ApplicationLocalState = exports.Application = exports.AccountStateDelta = exports.AccountParticipation = exports.Account = void 0;
-
-var _base = _interopRequireDefault(require("./base"));
-
-/**
- * NOTICE: This file was generated. Editing this file manually is not recommended.
- */
-
 /* eslint-disable no-use-before-define */
 
+const base_1 = __importDefault(require("./base"));
 /**
  * Account information at a given round.
  * Definition:
  * data/basics/userBalance.go : AccountData
  */
-class Account extends _base.default {
+
+
+class Account extends base_1.default {
   /**
    * Creates a new `Account` object.
    * @param address - the account public key
@@ -7959,15 +8227,14 @@ class Account extends _base.default {
   }
 
 }
+
+exports.Account = Account;
 /**
  * AccountParticipation describes the parameters used by this account in consensus
  * protocol.
  */
 
-
-exports.Account = Account;
-
-class AccountParticipation extends _base.default {
+class AccountParticipation extends base_1.default {
   /**
    * Creates a new `AccountParticipation` object.
    * @param selectionParticipationKey - (sel) Selection public key (if any) currently registered for this round.
@@ -8000,14 +8267,13 @@ class AccountParticipation extends _base.default {
   }
 
 }
+
+exports.AccountParticipation = AccountParticipation;
 /**
  * Application state delta.
  */
 
-
-exports.AccountParticipation = AccountParticipation;
-
-class AccountStateDelta extends _base.default {
+class AccountStateDelta extends base_1.default {
   /**
    * Creates a new `AccountStateDelta` object.
    * @param address -
@@ -8024,14 +8290,13 @@ class AccountStateDelta extends _base.default {
   }
 
 }
+
+exports.AccountStateDelta = AccountStateDelta;
 /**
  * Application index and its parameters
  */
 
-
-exports.AccountStateDelta = AccountStateDelta;
-
-class Application extends _base.default {
+class Application extends base_1.default {
   /**
    * Creates a new `Application` object.
    * @param id - (appidx) application index.
@@ -8048,14 +8313,13 @@ class Application extends _base.default {
   }
 
 }
+
+exports.Application = Application;
 /**
  * Stores local state associated with an application.
  */
 
-
-exports.Application = Application;
-
-class ApplicationLocalState extends _base.default {
+class ApplicationLocalState extends base_1.default {
   /**
    * Creates a new `ApplicationLocalState` object.
    * @param id - The application which this local state is for.
@@ -8075,14 +8339,13 @@ class ApplicationLocalState extends _base.default {
   }
 
 }
+
+exports.ApplicationLocalState = ApplicationLocalState;
 /**
  * Stores the global information associated with an application.
  */
 
-
-exports.ApplicationLocalState = ApplicationLocalState;
-
-class ApplicationParams extends _base.default {
+class ApplicationParams extends base_1.default {
   /**
    * Creates a new `ApplicationParams` object.
    * @param approvalProgram - (approv) approval program.
@@ -8123,14 +8386,13 @@ class ApplicationParams extends _base.default {
   }
 
 }
+
+exports.ApplicationParams = ApplicationParams;
 /**
  * Specifies maximums on the number of each type that may be stored.
  */
 
-
-exports.ApplicationParams = ApplicationParams;
-
-class ApplicationStateSchema extends _base.default {
+class ApplicationStateSchema extends base_1.default {
   /**
    * Creates a new `ApplicationStateSchema` object.
    * @param numUint - (nui) num of uints.
@@ -8147,14 +8409,13 @@ class ApplicationStateSchema extends _base.default {
   }
 
 }
+
+exports.ApplicationStateSchema = ApplicationStateSchema;
 /**
  * Specifies both the unique identifier and the parameters for an asset
  */
 
-
-exports.ApplicationStateSchema = ApplicationStateSchema;
-
-class Asset extends _base.default {
+class Asset extends base_1.default {
   /**
    * Creates a new `Asset` object.
    * @param index - unique asset identifier
@@ -8174,16 +8435,15 @@ class Asset extends _base.default {
   }
 
 }
+
+exports.Asset = Asset;
 /**
  * Describes an asset held by an account.
  * Definition:
  * data/basics/userBalance.go : AssetHolding
  */
 
-
-exports.Asset = Asset;
-
-class AssetHolding extends _base.default {
+class AssetHolding extends base_1.default {
   /**
    * Creates a new `AssetHolding` object.
    * @param amount - (a) number of units held.
@@ -8208,6 +8468,8 @@ class AssetHolding extends _base.default {
   }
 
 }
+
+exports.AssetHolding = AssetHolding;
 /**
  * AssetParams specifies the parameters for an asset.
  * (apar) when part of an AssetConfig transaction.
@@ -8215,10 +8477,7 @@ class AssetHolding extends _base.default {
  * data/transactions/asset.go : AssetParams
  */
 
-
-exports.AssetHolding = AssetHolding;
-
-class AssetParams extends _base.default {
+class AssetParams extends base_1.default {
   /**
    * Creates a new `AssetParams` object.
    * @param creator - The address that created this asset. This is the address where the parameters
@@ -8301,14 +8560,13 @@ class AssetParams extends _base.default {
   }
 
 }
+
+exports.AssetParams = AssetParams;
 /**
  * Encoded block object.
  */
 
-
-exports.AssetParams = AssetParams;
-
-class BlockResponse extends _base.default {
+class BlockResponse extends base_1.default {
   /**
    * Creates a new `BlockResponse` object.
    * @param block - Block header data.
@@ -8329,7 +8587,7 @@ class BlockResponse extends _base.default {
 
 exports.BlockResponse = BlockResponse;
 
-class BuildVersion extends _base.default {
+class BuildVersion extends base_1.default {
   /**
    * Creates a new `BuildVersion` object.
    * @param branch -
@@ -8365,14 +8623,13 @@ class BuildVersion extends _base.default {
   }
 
 }
+
+exports.BuildVersion = BuildVersion;
 /**
  *
  */
 
-
-exports.BuildVersion = BuildVersion;
-
-class CatchpointAbortResponse extends _base.default {
+class CatchpointAbortResponse extends base_1.default {
   /**
    * Creates a new `CatchpointAbortResponse` object.
    * @param catchupMessage - Catchup abort response string
@@ -8386,14 +8643,13 @@ class CatchpointAbortResponse extends _base.default {
   }
 
 }
+
+exports.CatchpointAbortResponse = CatchpointAbortResponse;
 /**
  *
  */
 
-
-exports.CatchpointAbortResponse = CatchpointAbortResponse;
-
-class CatchpointStartResponse extends _base.default {
+class CatchpointStartResponse extends base_1.default {
   /**
    * Creates a new `CatchpointStartResponse` object.
    * @param catchupMessage - Catchup start response string
@@ -8407,14 +8663,13 @@ class CatchpointStartResponse extends _base.default {
   }
 
 }
+
+exports.CatchpointStartResponse = CatchpointStartResponse;
 /**
  * Teal compile Result
  */
 
-
-exports.CatchpointStartResponse = CatchpointStartResponse;
-
-class CompileResponse extends _base.default {
+class CompileResponse extends base_1.default {
   /**
    * Creates a new `CompileResponse` object.
    * @param hash - base32 SHA512_256 of program bytes (Address style)
@@ -8431,15 +8686,14 @@ class CompileResponse extends _base.default {
   }
 
 }
+
+exports.CompileResponse = CompileResponse;
 /**
  * Request data type for dryrun endpoint. Given the Transactions and simulated
  * ledger state upload, run TEAL scripts and return debugging information.
  */
 
-
-exports.CompileResponse = CompileResponse;
-
-class DryrunRequest extends _base.default {
+class DryrunRequest extends base_1.default {
   /**
    * Creates a new `DryrunRequest` object.
    * @param accounts -
@@ -8482,14 +8736,13 @@ class DryrunRequest extends _base.default {
   }
 
 }
+
+exports.DryrunRequest = DryrunRequest;
 /**
  * DryrunResponse contains per-txn debug information from a dryrun.
  */
 
-
-exports.DryrunRequest = DryrunRequest;
-
-class DryrunResponse extends _base.default {
+class DryrunResponse extends base_1.default {
   /**
    * Creates a new `DryrunResponse` object.
    * @param error -
@@ -8509,15 +8762,14 @@ class DryrunResponse extends _base.default {
   }
 
 }
+
+exports.DryrunResponse = DryrunResponse;
 /**
  * DryrunSource is TEAL source text that gets uploaded, compiled, and inserted into
  * transactions or application state.
  */
 
-
-exports.DryrunResponse = DryrunResponse;
-
-class DryrunSource extends _base.default {
+class DryrunSource extends base_1.default {
   /**
    * Creates a new `DryrunSource` object.
    * @param fieldName - FieldName is what kind of sources this is. If lsig then it goes into the
@@ -8542,14 +8794,13 @@ class DryrunSource extends _base.default {
   }
 
 }
+
+exports.DryrunSource = DryrunSource;
 /**
  * Stores the TEAL eval step data
  */
 
-
-exports.DryrunSource = DryrunSource;
-
-class DryrunState extends _base.default {
+class DryrunState extends base_1.default {
   /**
    * Creates a new `DryrunState` object.
    * @param line - Line number
@@ -8581,15 +8832,14 @@ class DryrunState extends _base.default {
   }
 
 }
+
+exports.DryrunState = DryrunState;
 /**
  * DryrunTxnResult contains any LogicSig or ApplicationCall program debug
  * information and state updates from a dryrun.
  */
 
-
-exports.DryrunState = DryrunState;
-
-class DryrunTxnResult extends _base.default {
+class DryrunTxnResult extends base_1.default {
   /**
    * Creates a new `DryrunTxnResult` object.
    * @param disassembly - Disassembled program line by line.
@@ -8637,14 +8887,13 @@ class DryrunTxnResult extends _base.default {
   }
 
 }
+
+exports.DryrunTxnResult = DryrunTxnResult;
 /**
  * An error response with optional data field.
  */
 
-
-exports.DryrunTxnResult = DryrunTxnResult;
-
-class ErrorResponse extends _base.default {
+class ErrorResponse extends base_1.default {
   /**
    * Creates a new `ErrorResponse` object.
    * @param message -
@@ -8661,14 +8910,13 @@ class ErrorResponse extends _base.default {
   }
 
 }
+
+exports.ErrorResponse = ErrorResponse;
 /**
  * Represents a TEAL value delta.
  */
 
-
-exports.ErrorResponse = ErrorResponse;
-
-class EvalDelta extends _base.default {
+class EvalDelta extends base_1.default {
   /**
    * Creates a new `EvalDelta` object.
    * @param action - (at) delta action.
@@ -8688,14 +8936,13 @@ class EvalDelta extends _base.default {
   }
 
 }
+
+exports.EvalDelta = EvalDelta;
 /**
  * Key-value pairs for StateDelta.
  */
 
-
-exports.EvalDelta = EvalDelta;
-
-class EvalDeltaKeyValue extends _base.default {
+class EvalDeltaKeyValue extends base_1.default {
   /**
    * Creates a new `EvalDeltaKeyValue` object.
    * @param key -
@@ -8712,14 +8959,13 @@ class EvalDeltaKeyValue extends _base.default {
   }
 
 }
+
+exports.EvalDeltaKeyValue = EvalDeltaKeyValue;
 /**
  *
  */
 
-
-exports.EvalDeltaKeyValue = EvalDeltaKeyValue;
-
-class NodeStatusResponse extends _base.default {
+class NodeStatusResponse extends base_1.default {
   /**
    * Creates a new `NodeStatusResponse` object.
    * @param catchupTime - CatchupTime in nanoseconds
@@ -8797,15 +9043,14 @@ class NodeStatusResponse extends _base.default {
   }
 
 }
+
+exports.NodeStatusResponse = NodeStatusResponse;
 /**
  * Details about a pending transaction. If the transaction was recently confirmed,
  * includes confirmation details like the round and reward details.
  */
 
-
-exports.NodeStatusResponse = NodeStatusResponse;
-
-class PendingTransactionResponse extends _base.default {
+class PendingTransactionResponse extends base_1.default {
   /**
    * Creates a new `PendingTransactionResponse` object.
    * @param poolError - Indicates that the transaction was kicked out of this node's transaction pool
@@ -8878,16 +9123,15 @@ class PendingTransactionResponse extends _base.default {
   }
 
 }
+
+exports.PendingTransactionResponse = PendingTransactionResponse;
 /**
  * A potentially truncated list of transactions currently in the node's transaction
  * pool. You can compute whether or not the list is truncated if the number of
  * elements in the **top-transactions** array is fewer than **total-transactions**.
  */
 
-
-exports.PendingTransactionResponse = PendingTransactionResponse;
-
-class PendingTransactionsResponse extends _base.default {
+class PendingTransactionsResponse extends base_1.default {
   /**
    * Creates a new `PendingTransactionsResponse` object.
    * @param topTransactions - An array of signed transaction objects.
@@ -8904,14 +9148,13 @@ class PendingTransactionsResponse extends _base.default {
   }
 
 }
+
+exports.PendingTransactionsResponse = PendingTransactionsResponse;
 /**
  * Transaction ID of the submission.
  */
 
-
-exports.PendingTransactionsResponse = PendingTransactionsResponse;
-
-class PostTransactionsResponse extends _base.default {
+class PostTransactionsResponse extends base_1.default {
   /**
    * Creates a new `PostTransactionsResponse` object.
    * @param txid - encoding of the transaction hash.
@@ -8925,14 +9168,13 @@ class PostTransactionsResponse extends _base.default {
   }
 
 }
+
+exports.PostTransactionsResponse = PostTransactionsResponse;
 /**
  * Proof of transaction in a block.
  */
 
-
-exports.PostTransactionsResponse = PostTransactionsResponse;
-
-class ProofResponse extends _base.default {
+class ProofResponse extends base_1.default {
   /**
    * Creates a new `ProofResponse` object.
    * @param idx - Index of the transaction in the block's payset.
@@ -8952,14 +9194,13 @@ class ProofResponse extends _base.default {
   }
 
 }
+
+exports.ProofResponse = ProofResponse;
 /**
  * Supply represents the current supply of MicroAlgos in the system.
  */
 
-
-exports.ProofResponse = ProofResponse;
-
-class SupplyResponse extends _base.default {
+class SupplyResponse extends base_1.default {
   /**
    * Creates a new `SupplyResponse` object.
    * @param currentRound - Round
@@ -8979,14 +9220,13 @@ class SupplyResponse extends _base.default {
   }
 
 }
+
+exports.SupplyResponse = SupplyResponse;
 /**
  * Represents a key-value pair in an application store.
  */
 
-
-exports.SupplyResponse = SupplyResponse;
-
-class TealKeyValue extends _base.default {
+class TealKeyValue extends base_1.default {
   /**
    * Creates a new `TealKeyValue` object.
    * @param key -
@@ -9003,14 +9243,13 @@ class TealKeyValue extends _base.default {
   }
 
 }
+
+exports.TealKeyValue = TealKeyValue;
 /**
  * Represents a TEAL value.
  */
 
-
-exports.TealKeyValue = TealKeyValue;
-
-class TealValue extends _base.default {
+class TealValue extends base_1.default {
   /**
    * Creates a new `TealValue` object.
    * @param type - (tt) value type. Value `1` refers to **bytes**, value `2` refers to **uint**
@@ -9030,15 +9269,14 @@ class TealValue extends _base.default {
   }
 
 }
+
+exports.TealValue = TealValue;
 /**
  * TransactionParams contains the parameters that help a client construct a new
  * transaction.
  */
 
-
-exports.TealValue = TealValue;
-
-class TransactionParametersResponse extends _base.default {
+class TransactionParametersResponse extends base_1.default {
   /**
    * Creates a new `TransactionParametersResponse` object.
    * @param consensusVersion - ConsensusVersion indicates the consensus protocol version
@@ -9079,14 +9317,13 @@ class TransactionParametersResponse extends _base.default {
   }
 
 }
+
+exports.TransactionParametersResponse = TransactionParametersResponse;
 /**
  * algod version information.
  */
 
-
-exports.TransactionParametersResponse = TransactionParametersResponse;
-
-class Version extends _base.default {
+class Version extends base_1.default {
   /**
    * Creates a new `Version` object.
    * @param build -
@@ -9113,28 +9350,60 @@ class Version extends _base.default {
 exports.Version = Version;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./base":35,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3}],37:[function(require,module,exports){
+},{"./base":35,"buffer":3}],37:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-var encoding = _interopRequireWildcard(require("../../../encoding/encoding"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const encoding = __importStar(require("../../../encoding/encoding"));
 /**
  * returns the transaction information for a specific txid of a pending transaction
  */
-class PendingTransactionInformation extends _jsonrequest.default {
+
+
+class PendingTransactionInformation extends jsonrequest_1.default {
   constructor(c, txid) {
     super(c);
     this.txid = txid;
@@ -9165,28 +9434,60 @@ class PendingTransactionInformation extends _jsonrequest.default {
 
 exports.default = PendingTransactionInformation;
 
-},{"../../../encoding/encoding":69,"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],38:[function(require,module,exports){
+},{"../../../encoding/encoding":69,"../jsonrequest":62}],38:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-var encoding = _interopRequireWildcard(require("../../../encoding/encoding"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const encoding = __importStar(require("../../../encoding/encoding"));
 /**
  * pendingTransactionsInformation returns transactions that are pending in the pool
  */
-class PendingTransactions extends _jsonrequest.default {
+
+
+class PendingTransactions extends jsonrequest_1.default {
   constructor(c) {
     super(c);
     this.query.format = 'msgpack';
@@ -9218,28 +9519,60 @@ class PendingTransactions extends _jsonrequest.default {
 
 exports.default = PendingTransactions;
 
-},{"../../../encoding/encoding":69,"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],39:[function(require,module,exports){
+},{"../../../encoding/encoding":69,"../jsonrequest":62}],39:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-var encoding = _interopRequireWildcard(require("../../../encoding/encoding"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const encoding = __importStar(require("../../../encoding/encoding"));
 /**
  * returns all transactions for a PK [addr] in the [first, last] rounds range.
  */
-class PendingTransactionsByAddress extends _jsonrequest.default {
+
+
+class PendingTransactionsByAddress extends jsonrequest_1.default {
   constructor(c, address) {
     super(c);
     this.address = address;
@@ -9270,19 +9603,22 @@ class PendingTransactionsByAddress extends _jsonrequest.default {
 
 exports.default = PendingTransactionsByAddress;
 
-},{"../../../encoding/encoding":69,"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],40:[function(require,module,exports){
+},{"../../../encoding/encoding":69,"../jsonrequest":62}],40:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class Proof extends _jsonrequest.default {
+class Proof extends jsonrequest_1.default {
   constructor(c, intDecoding, round, txID) {
     super(c, intDecoding);
     this.round = round;
@@ -9299,33 +9635,39 @@ class Proof extends _jsonrequest.default {
 
 exports.default = Proof;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],41:[function(require,module,exports){
+},{"../jsonrequest":62}],41:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-exports.setSendTransactionHeaders = setSendTransactionHeaders;
-
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
-
-var _utils = require("../../../utils/utils");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.setSendTransactionHeaders = void 0;
+
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
+
+const utils_1 = require("../../../utils/utils");
 /**
  * Sets the default header (if not previously set) for sending a raw
  * transaction.
  * @param headers - A headers object
  */
+
+
 function setSendTransactionHeaders(headers = {}) {
   let hdrs = headers;
 
@@ -9337,6 +9679,8 @@ function setSendTransactionHeaders(headers = {}) {
   return hdrs;
 }
 
+exports.setSendTransactionHeaders = setSendTransactionHeaders;
+
 function isByteArray(array) {
   return array && array.byteLength !== undefined;
 }
@@ -9345,7 +9689,7 @@ function isByteArray(array) {
  */
 
 
-class SendRawTransaction extends _jsonrequest.default {
+class SendRawTransaction extends jsonrequest_1.default {
   constructor(c, stxOrStxs) {
     super(c);
     let forPosting = stxOrStxs;
@@ -9356,7 +9700,7 @@ class SendRawTransaction extends _jsonrequest.default {
       } // Flatten into a single Uint8Array
 
 
-      forPosting = (0, _utils.concatArrays)(...stxOrStxs);
+      forPosting = utils_1.concatArrays(...stxOrStxs);
     } else if (!isByteArray(forPosting)) {
       throw new TypeError('Argument must be byte array');
     }
@@ -9383,16 +9727,19 @@ exports.default = SendRawTransaction;
 },{"../../../utils/utils":97,"../jsonrequest":62,"@babel/runtime/helpers/defineProperty":8,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3}],42:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class Status extends _jsonrequest.default {
+class Status extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/v2/status';
@@ -9402,19 +9749,22 @@ class Status extends _jsonrequest.default {
 
 exports.default = Status;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],43:[function(require,module,exports){
+},{"../jsonrequest":62}],43:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class StatusAfterBlock extends _jsonrequest.default {
+class StatusAfterBlock extends jsonrequest_1.default {
   constructor(c, intDecoding, round) {
     super(c, intDecoding);
     this.round = round;
@@ -9430,22 +9780,26 @@ class StatusAfterBlock extends _jsonrequest.default {
 
 exports.default = StatusAfterBlock;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],44:[function(require,module,exports){
+},{"../jsonrequest":62}],44:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
-
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 /**
  * Returns the common needed parameters for a new transaction, in a format the transaction builder expects
  */
-class SuggestedParamsRequest extends _jsonrequest.default {
+
+
+class SuggestedParamsRequest extends jsonrequest_1.default {
   /* eslint-disable class-methods-use-this */
   path() {
     return '/v2/transactions/params';
@@ -9466,19 +9820,22 @@ class SuggestedParamsRequest extends _jsonrequest.default {
 
 exports.default = SuggestedParamsRequest;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],45:[function(require,module,exports){
+},{"../jsonrequest":62}],45:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class Supply extends _jsonrequest.default {
+class Supply extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/v2/ledger/supply';
@@ -9488,22 +9845,26 @@ class Supply extends _jsonrequest.default {
 
 exports.default = Supply;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],46:[function(require,module,exports){
+},{"../jsonrequest":62}],46:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
-
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 /**
  * retrieves the VersionResponse from the running node
  */
-class Versions extends _jsonrequest.default {
+
+
+class Versions extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/versions';
@@ -9513,46 +9874,48 @@ class Versions extends _jsonrequest.default {
 
 exports.default = Versions;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],47:[function(require,module,exports){
+},{"../jsonrequest":62}],47:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _serviceClient = _interopRequireDefault(require("../serviceClient"));
+const serviceClient_1 = __importDefault(require("../serviceClient"));
 
-var _makeHealthCheck = _interopRequireDefault(require("./makeHealthCheck"));
+const makeHealthCheck_1 = __importDefault(require("./makeHealthCheck"));
 
-var _lookupAssetBalances = _interopRequireDefault(require("./lookupAssetBalances"));
+const lookupAssetBalances_1 = __importDefault(require("./lookupAssetBalances"));
 
-var _lookupAssetTransactions = _interopRequireDefault(require("./lookupAssetTransactions"));
+const lookupAssetTransactions_1 = __importDefault(require("./lookupAssetTransactions"));
 
-var _lookupAccountTransactions = _interopRequireDefault(require("./lookupAccountTransactions"));
+const lookupAccountTransactions_1 = __importDefault(require("./lookupAccountTransactions"));
 
-var _lookupBlock = _interopRequireDefault(require("./lookupBlock"));
+const lookupBlock_1 = __importDefault(require("./lookupBlock"));
 
-var _lookupTransactionByID = _interopRequireDefault(require("./lookupTransactionByID"));
+const lookupTransactionByID_1 = __importDefault(require("./lookupTransactionByID"));
 
-var _lookupAccountByID = _interopRequireDefault(require("./lookupAccountByID"));
+const lookupAccountByID_1 = __importDefault(require("./lookupAccountByID"));
 
-var _lookupAssetByID = _interopRequireDefault(require("./lookupAssetByID"));
+const lookupAssetByID_1 = __importDefault(require("./lookupAssetByID"));
 
-var _lookupApplications = _interopRequireDefault(require("./lookupApplications"));
+const lookupApplications_1 = __importDefault(require("./lookupApplications"));
 
-var _lookupApplicationLogs = _interopRequireDefault(require("./lookupApplicationLogs"));
+const lookupApplicationLogs_1 = __importDefault(require("./lookupApplicationLogs"));
 
-var _searchAccounts = _interopRequireDefault(require("./searchAccounts"));
+const searchAccounts_1 = __importDefault(require("./searchAccounts"));
 
-var _searchForTransactions = _interopRequireDefault(require("./searchForTransactions"));
+const searchForTransactions_1 = __importDefault(require("./searchForTransactions"));
 
-var _searchForAssets = _interopRequireDefault(require("./searchForAssets"));
+const searchForAssets_1 = __importDefault(require("./searchForAssets"));
 
-var _searchForApplications = _interopRequireDefault(require("./searchForApplications"));
-
+const searchForApplications_1 = __importDefault(require("./searchForApplications"));
 /**
  * The Indexer provides a REST API interface of API calls to support searching the Algorand Blockchain.
  *
@@ -9567,7 +9930,9 @@ var _searchForApplications = _interopRequireDefault(require("./searchForApplicat
  *
  * [Run Indexer in Postman OAS3](https://developer.algorand.org/docs/rest-apis/restendpoints/#algod-indexer-and-kmd-rest-endpoints)
  */
-class IndexerClient extends _serviceClient.default {
+
+
+class IndexerClient extends serviceClient_1.default {
   /**
    * Create an IndexerClient from
    * * either a token, baseServer, port, and optional headers
@@ -9607,7 +9972,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   makeHealthCheck() {
-    return new _makeHealthCheck.default(this.c, this.intDecoding);
+    return new makeHealthCheck_1.default(this.c, this.intDecoding);
   }
   /**
    * Returns the list of accounts who hold the given asset and their balance.
@@ -9625,7 +9990,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   lookupAssetBalances(index) {
-    return new _lookupAssetBalances.default(this.c, this.intDecoding, index);
+    return new lookupAssetBalances_1.default(this.c, this.intDecoding, index);
   }
   /**
    * Returns transactions relating to the given asset.
@@ -9643,7 +10008,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   lookupAssetTransactions(index) {
-    return new _lookupAssetTransactions.default(this.c, this.intDecoding, index);
+    return new lookupAssetTransactions_1.default(this.c, this.intDecoding, index);
   }
   /**
    * Returns transactions relating to the given account.
@@ -9661,7 +10026,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   lookupAccountTransactions(account) {
-    return new _lookupAccountTransactions.default(this.c, this.intDecoding, account);
+    return new lookupAccountTransactions_1.default(this.c, this.intDecoding, account);
   }
   /**
    * Returns the block for the passed round.
@@ -9679,7 +10044,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   lookupBlock(round) {
-    return new _lookupBlock.default(this.c, this.intDecoding, round);
+    return new lookupBlock_1.default(this.c, this.intDecoding, round);
   }
   /**
    * Returns information about the given transaction.
@@ -9697,7 +10062,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   lookupTransactionByID(txID) {
-    return new _lookupTransactionByID.default(this.c, this.intDecoding, txID);
+    return new lookupTransactionByID_1.default(this.c, this.intDecoding, txID);
   }
   /**
    * Returns information about the given account.
@@ -9715,7 +10080,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   lookupAccountByID(account) {
-    return new _lookupAccountByID.default(this.c, this.intDecoding, account);
+    return new lookupAccountByID_1.default(this.c, this.intDecoding, account);
   }
   /**
    * Returns information about the passed asset.
@@ -9733,7 +10098,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   lookupAssetByID(index) {
-    return new _lookupAssetByID.default(this.c, this.intDecoding, index);
+    return new lookupAssetByID_1.default(this.c, this.intDecoding, index);
   }
   /**
    * Returns information about the passed application.
@@ -9751,7 +10116,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   lookupApplications(index) {
-    return new _lookupApplications.default(this.c, this.intDecoding, index);
+    return new lookupApplications_1.default(this.c, this.intDecoding, index);
   }
   /**
    * Returns log messages generated by the passed in application.
@@ -9769,7 +10134,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   lookupApplicationLogs(appID) {
-    return new _lookupApplicationLogs.default(this.c, this.intDecoding, appID);
+    return new lookupApplicationLogs_1.default(this.c, this.intDecoding, appID);
   }
   /**
    * Returns information about indexed accounts.
@@ -9785,7 +10150,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   searchAccounts() {
-    return new _searchAccounts.default(this.c, this.intDecoding);
+    return new searchAccounts_1.default(this.c, this.intDecoding);
   }
   /**
    * Returns information about indexed transactions.
@@ -9801,7 +10166,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   searchForTransactions() {
-    return new _searchForTransactions.default(this.c, this.intDecoding);
+    return new searchForTransactions_1.default(this.c, this.intDecoding);
   }
   /**
    * Returns information about indexed assets.
@@ -9817,7 +10182,7 @@ class IndexerClient extends _serviceClient.default {
 
 
   searchForAssets() {
-    return new _searchForAssets.default(this.c, this.intDecoding);
+    return new searchForAssets_1.default(this.c, this.intDecoding);
   }
   /**
    * Returns information about indexed applications.
@@ -9833,26 +10198,29 @@ class IndexerClient extends _serviceClient.default {
 
 
   searchForApplications() {
-    return new _searchForApplications.default(this.c, this.intDecoding);
+    return new searchForApplications_1.default(this.c, this.intDecoding);
   }
 
 }
 
 exports.default = IndexerClient;
 
-},{"../serviceClient":63,"./lookupAccountByID":48,"./lookupAccountTransactions":49,"./lookupApplicationLogs":50,"./lookupApplications":51,"./lookupAssetBalances":52,"./lookupAssetByID":53,"./lookupAssetTransactions":54,"./lookupBlock":55,"./lookupTransactionByID":56,"./makeHealthCheck":57,"./searchAccounts":58,"./searchForApplications":59,"./searchForAssets":60,"./searchForTransactions":61,"@babel/runtime/helpers/interopRequireDefault":10}],48:[function(require,module,exports){
+},{"../serviceClient":63,"./lookupAccountByID":48,"./lookupAccountTransactions":49,"./lookupApplicationLogs":50,"./lookupApplications":51,"./lookupAssetBalances":52,"./lookupAssetByID":53,"./lookupAssetTransactions":54,"./lookupBlock":55,"./lookupTransactionByID":56,"./makeHealthCheck":57,"./searchAccounts":58,"./searchForApplications":59,"./searchForAssets":60,"./searchForTransactions":61}],48:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class LookupAccountByID extends _jsonrequest.default {
+class LookupAccountByID extends jsonrequest_1.default {
   constructor(c, intDecoding, account) {
     super(c, intDecoding);
     this.account = account;
@@ -9879,25 +10247,29 @@ class LookupAccountByID extends _jsonrequest.default {
 
 exports.default = LookupAccountByID;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],49:[function(require,module,exports){
+},{"../jsonrequest":62}],49:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.base64StringFunnel = base64StringFunnel;
-exports.default = void 0;
+exports.base64StringFunnel = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
-
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 /**
  * Accept base64 string or Uint8Array and output base64 string
  * @param data - Base64 string or Uint8Array
  * @returns The inputted base64 string, or a base64 string representation of the Uint8Array
  */
+
+
 function base64StringFunnel(data) {
   if (typeof data === 'string') {
     return data;
@@ -9906,7 +10278,9 @@ function base64StringFunnel(data) {
   return Buffer.from(data).toString('base64');
 }
 
-class LookupAccountTransactions extends _jsonrequest.default {
+exports.base64StringFunnel = base64StringFunnel;
+
+class LookupAccountTransactions extends jsonrequest_1.default {
   constructor(c, intDecoding, account) {
     super(c, intDecoding);
     this.account = account;
@@ -10016,19 +10390,22 @@ class LookupAccountTransactions extends _jsonrequest.default {
 exports.default = LookupAccountTransactions;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3}],50:[function(require,module,exports){
+},{"../jsonrequest":62,"buffer":3}],50:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class LookupApplicationLogs extends _jsonrequest.default {
+class LookupApplicationLogs extends jsonrequest_1.default {
   constructor(c, intDecoding, appID) {
     super(c, intDecoding);
     this.appID = appID;
@@ -10085,19 +10462,22 @@ class LookupApplicationLogs extends _jsonrequest.default {
 
 exports.default = LookupApplicationLogs;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],51:[function(require,module,exports){
+},{"../jsonrequest":62}],51:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class LookupApplications extends _jsonrequest.default {
+class LookupApplications extends jsonrequest_1.default {
   constructor(c, intDecoding, index) {
     super(c, intDecoding);
     this.index = index;
@@ -10118,19 +10498,22 @@ class LookupApplications extends _jsonrequest.default {
 
 exports.default = LookupApplications;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],52:[function(require,module,exports){
+},{"../jsonrequest":62}],52:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class LookupAssetBalances extends _jsonrequest.default {
+class LookupAssetBalances extends jsonrequest_1.default {
   /**
    * Returns the list of accounts which hold the given asset and their balance.
    *
@@ -10279,19 +10662,22 @@ class LookupAssetBalances extends _jsonrequest.default {
 
 exports.default = LookupAssetBalances;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],53:[function(require,module,exports){
+},{"../jsonrequest":62}],53:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class LookupAssetByID extends _jsonrequest.default {
+class LookupAssetByID extends jsonrequest_1.default {
   constructor(c, intDecoding, index) {
     super(c, intDecoding);
     this.index = index;
@@ -10312,21 +10698,24 @@ class LookupAssetByID extends _jsonrequest.default {
 
 exports.default = LookupAssetByID;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],54:[function(require,module,exports){
+},{"../jsonrequest":62}],54:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-var _lookupAccountTransactions = require("./lookupAccountTransactions");
+const lookupAccountTransactions_1 = require("./lookupAccountTransactions");
 
-class LookupAssetTransactions extends _jsonrequest.default {
+class LookupAssetTransactions extends jsonrequest_1.default {
   constructor(c, intDecoding, index) {
     super(c, intDecoding);
     this.index = index;
@@ -10343,7 +10732,7 @@ class LookupAssetTransactions extends _jsonrequest.default {
 
 
   notePrefix(prefix) {
-    this.query['note-prefix'] = (0, _lookupAccountTransactions.base64StringFunnel)(prefix);
+    this.query['note-prefix'] = lookupAccountTransactions_1.base64StringFunnel(prefix);
     return this;
   } // txtype to filter with, as string
 
@@ -10453,19 +10842,22 @@ class LookupAssetTransactions extends _jsonrequest.default {
 
 exports.default = LookupAssetTransactions;
 
-},{"../jsonrequest":62,"./lookupAccountTransactions":49,"@babel/runtime/helpers/interopRequireDefault":10}],55:[function(require,module,exports){
+},{"../jsonrequest":62,"./lookupAccountTransactions":49}],55:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class LookupBlock extends _jsonrequest.default {
+class LookupBlock extends jsonrequest_1.default {
   constructor(c, intDecoding, round) {
     super(c, intDecoding);
     this.round = round;
@@ -10480,19 +10872,22 @@ class LookupBlock extends _jsonrequest.default {
 
 exports.default = LookupBlock;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],56:[function(require,module,exports){
+},{"../jsonrequest":62}],56:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class LookupTransactionByID extends _jsonrequest.default {
+class LookupTransactionByID extends jsonrequest_1.default {
   constructor(c, intDecoding, txID) {
     super(c, intDecoding);
     this.txID = txID;
@@ -10507,19 +10902,22 @@ class LookupTransactionByID extends _jsonrequest.default {
 
 exports.default = LookupTransactionByID;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],57:[function(require,module,exports){
+},{"../jsonrequest":62}],57:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class MakeHealthCheck extends _jsonrequest.default {
+class MakeHealthCheck extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/health';
@@ -10529,19 +10927,22 @@ class MakeHealthCheck extends _jsonrequest.default {
 
 exports.default = MakeHealthCheck;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],58:[function(require,module,exports){
+},{"../jsonrequest":62}],58:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class SearchAccounts extends _jsonrequest.default {
+class SearchAccounts extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/v2/accounts';
@@ -10605,19 +11006,22 @@ class SearchAccounts extends _jsonrequest.default {
 
 exports.default = SearchAccounts;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],59:[function(require,module,exports){
+},{"../jsonrequest":62}],59:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class SearchForApplications extends _jsonrequest.default {
+class SearchForApplications extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/v2/applications';
@@ -10651,19 +11055,22 @@ class SearchForApplications extends _jsonrequest.default {
 
 exports.default = SearchForApplications;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],60:[function(require,module,exports){
+},{"../jsonrequest":62}],60:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-class SearchForAssets extends _jsonrequest.default {
+class SearchForAssets extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/v2/assets';
@@ -10715,21 +11122,24 @@ class SearchForAssets extends _jsonrequest.default {
 
 exports.default = SearchForAssets;
 
-},{"../jsonrequest":62,"@babel/runtime/helpers/interopRequireDefault":10}],61:[function(require,module,exports){
+},{"../jsonrequest":62}],61:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _jsonrequest = _interopRequireDefault(require("../jsonrequest"));
+const jsonrequest_1 = __importDefault(require("../jsonrequest"));
 
-var _lookupAccountTransactions = require("./lookupAccountTransactions");
+const lookupAccountTransactions_1 = require("./lookupAccountTransactions");
 
-class SearchForTransactions extends _jsonrequest.default {
+class SearchForTransactions extends jsonrequest_1.default {
   // eslint-disable-next-line class-methods-use-this
   path() {
     return '/v2/transactions';
@@ -10741,7 +11151,7 @@ class SearchForTransactions extends _jsonrequest.default {
 
 
   notePrefix(prefix) {
-    this.query['note-prefix'] = (0, _lookupAccountTransactions.base64StringFunnel)(prefix);
+    this.query['note-prefix'] = lookupAccountTransactions_1.base64StringFunnel(prefix);
     return this;
   } // txtype to filter with, as string
 
@@ -10857,18 +11267,20 @@ class SearchForTransactions extends _jsonrequest.default {
 
 exports.default = SearchForTransactions;
 
-},{"../jsonrequest":62,"./lookupAccountTransactions":49,"@babel/runtime/helpers/interopRequireDefault":10}],62:[function(require,module,exports){
+},{"../jsonrequest":62,"./lookupAccountTransactions":49}],62:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _intDecoding = _interopRequireDefault(require("../../types/intDecoding"));
-
+const intDecoding_1 = __importDefault(require("../../types/intDecoding"));
 /**
  * Base abstract class for JSON requests.
  *
@@ -10876,6 +11288,8 @@ var _intDecoding = _interopRequireDefault(require("../../types/intDecoding"));
  *
  * Body: The structure of the response's body
  */
+
+
 class JSONRequest {
   /**
    * @param client - HTTPClient object.
@@ -10886,7 +11300,7 @@ class JSONRequest {
   constructor(client, intDecoding) {
     this.c = client;
     this.query = {};
-    this.intDecoding = intDecoding || _intDecoding.default.DEFAULT;
+    this.intDecoding = intDecoding || intDecoding_1.default.DEFAULT;
   }
   /**
    * Prepare a JSON response before returning it.
@@ -10945,25 +11359,29 @@ class JSONRequest {
 
 exports.default = JSONRequest;
 
-},{"../../types/intDecoding":92,"@babel/runtime/helpers/interopRequireDefault":10}],63:[function(require,module,exports){
+},{"../../types/intDecoding":92}],63:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 
-var _client = _interopRequireDefault(require("../client"));
+const client_1 = __importDefault(require("../client"));
 
-var _intDecoding = _interopRequireDefault(require("../../types/intDecoding"));
-
+const intDecoding_1 = __importDefault(require("../../types/intDecoding"));
 /**
  * Convert a token string to a token header
  * @param token - The token string
  * @param headerIdentifier - An identifier for the token header
  */
+
+
 function convertTokenStringToTokenHeader(token = '', headerIdentifier) {
   const tokenHeader = {};
   tokenHeader[headerIdentifier] = token;
@@ -10982,7 +11400,7 @@ class ServiceClient {
   constructor(tokenHeaderIdentifier, tokenHeaderOrStrOrBaseClient, baseServer, port, defaultHeaders = {}) {
     if (isBaseHTTPClient(tokenHeaderOrStrOrBaseClient)) {
       // we are using a base client
-      this.c = new _client.default(tokenHeaderOrStrOrBaseClient);
+      this.c = new client_1.default(tokenHeaderOrStrOrBaseClient);
     } else {
       // Accept token header as string or object
       // - workaround to allow backwards compatibility for multiple headers
@@ -10994,10 +11412,10 @@ class ServiceClient {
         tokenHeader = tokenHeaderOrStrOrBaseClient;
       }
 
-      this.c = new _client.default(tokenHeader, baseServer, port, defaultHeaders);
+      this.c = new client_1.default(tokenHeader, baseServer, port, defaultHeaders);
     }
 
-    this.intDecoding = _intDecoding.default.DEFAULT;
+    this.intDecoding = intDecoding_1.default.DEFAULT;
   }
   /**
    * Set the default int decoding method for all JSON requests this client creates.
@@ -11023,43 +11441,42 @@ class ServiceClient {
 
 exports.default = ServiceClient;
 
-},{"../../types/intDecoding":92,"../client":23,"@babel/runtime/helpers/interopRequireDefault":10}],64:[function(require,module,exports){
+},{"../../types/intDecoding":92,"../client":23}],64:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.AtomicTransactionComposerStatus = exports.AtomicTransactionComposer = void 0;
-
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-
-var _abi = require("./abi");
-
-var _transaction = require("./transaction");
-
-var _makeTxn = require("./makeTxn");
-
-var _group = require("./group");
-
-var _wait = require("./wait");
-
-var _signer = require("./signer");
-
-var _base = require("./types/transactions/base");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
-// First 4 bytes of SHA-512/256 hash of "return"
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AtomicTransactionComposer = exports.AtomicTransactionComposerStatus = void 0;
+
+const abi_1 = require("./abi");
+
+const transaction_1 = require("./transaction");
+
+const makeTxn_1 = require("./makeTxn");
+
+const group_1 = require("./group");
+
+const wait_1 = require("./wait");
+
+const signer_1 = require("./signer");
+
+const base_1 = require("./types/transactions/base"); // First 4 bytes of SHA-512/256 hash of "return"
+
+
 const RETURN_PREFIX = Buffer.from([21, 31, 124, 117]); // The maximum number of arguments for an application call transaction
 
 const MAX_APP_ARGS = 16;
 var AtomicTransactionComposerStatus;
-exports.AtomicTransactionComposerStatus = AtomicTransactionComposerStatus;
 
 (function (AtomicTransactionComposerStatus) {
   /** The atomic group is still under construction. */
@@ -11076,7 +11493,7 @@ exports.AtomicTransactionComposerStatus = AtomicTransactionComposerStatus;
   /** The atomic group has been finalized, signed, submitted, and successfully committed to a block. */
 
   AtomicTransactionComposerStatus[AtomicTransactionComposerStatus["COMMITTED"] = 4] = "COMMITTED";
-})(AtomicTransactionComposerStatus || (exports.AtomicTransactionComposerStatus = AtomicTransactionComposerStatus = {}));
+})(AtomicTransactionComposerStatus = exports.AtomicTransactionComposerStatus || (exports.AtomicTransactionComposerStatus = {}));
 /**
  * Add a value to an application call's foreign array. The addition will be as compact as possible,
  * and this function will return an index that can be used to reference `valueToAdd` in `array`.
@@ -11148,7 +11565,7 @@ class AtomicTransactionComposer {
       signer
     }) => ({
       // not quite a deep copy, but good enough for our purposes (modifying txn.group in buildGroup)
-      txn: _transaction.Transaction.from_obj_for_encoding(_objectSpread(_objectSpread({}, txn.get_obj_for_encoding()), {}, {
+      txn: transaction_1.Transaction.from_obj_for_encoding(_objectSpread(_objectSpread({}, txn.get_obj_for_encoding()), {}, {
         // erase the group ID
         grp: undefined
       })),
@@ -11220,7 +11637,7 @@ class AtomicTransactionComposer {
       if (approvalProgram == null || clearProgram == null || numGlobalInts == null || numGlobalByteSlices == null || numLocalInts == null || numLocalByteSlices == null) {
         throw new Error('One of the following required parameters for application creation is missing: approvalProgram, clearProgram, numGlobalInts, numGlobalByteSlices, numLocalInts, numLocalByteSlices');
       }
-    } else if (onComplete === _base.OnApplicationComplete.UpdateApplicationOC) {
+    } else if (onComplete === base_1.OnApplicationComplete.UpdateApplicationOC) {
       if (approvalProgram == null || clearProgram == null) {
         throw new Error('One of the following required parameters for OnApplicationComplete.UpdateApplicationOC is missing: approvalProgram, clearProgram');
       }
@@ -11252,8 +11669,8 @@ class AtomicTransactionComposer {
       let argType = method.args[i].type;
       const argValue = methodArgs[i];
 
-      if ((0, _abi.abiTypeIsTransaction)(argType)) {
-        if (!(0, _signer.isTransactionWithSigner)(argValue) || !(0, _abi.abiCheckTransactionType)(argType, argValue.txn)) {
+      if (abi_1.abiTypeIsTransaction(argType)) {
+        if (!signer_1.isTransactionWithSigner(argValue) || !abi_1.abiCheckTransactionType(argType, argValue.txn)) {
           throw new Error(`Expected ${argType} transaction for argument at index ${i}`);
         }
 
@@ -11265,16 +11682,16 @@ class AtomicTransactionComposer {
         continue;
       }
 
-      if ((0, _signer.isTransactionWithSigner)(argValue)) {
+      if (signer_1.isTransactionWithSigner(argValue)) {
         throw new Error(`Expected non-transaction value for argument at index ${i}`);
       }
 
-      if ((0, _abi.abiTypeIsReference)(argType)) {
+      if (abi_1.abiTypeIsReference(argType)) {
         refArgIndexToBasicArgIndex.set(refArgTypes.length, basicArgTypes.length);
         refArgTypes.push(argType);
         refArgValues.push(argValue); // treat the reference as a uint8 for encoding purposes
 
-        argType = new _abi.ABIUintType(8);
+        argType = new abi_1.ABIUintType(8);
       }
 
       if (typeof argType === 'string') {
@@ -11296,17 +11713,17 @@ class AtomicTransactionComposer {
       let resolved = 0;
 
       switch (refType) {
-        case _abi.ABIReferenceType.account:
+        case abi_1.ABIReferenceType.account:
           {
-            const addressType = new _abi.ABIAddressType();
+            const addressType = new abi_1.ABIAddressType();
             const address = addressType.decode(addressType.encode(refValue));
             resolved = populateForeignArray(address, foreignAccounts, sender);
             break;
           }
 
-        case _abi.ABIReferenceType.application:
+        case abi_1.ABIReferenceType.application:
           {
-            const uint64Type = new _abi.ABIUintType(64);
+            const uint64Type = new abi_1.ABIUintType(64);
             const refAppID = uint64Type.decode(uint64Type.encode(refValue));
 
             if (refAppID > Number.MAX_SAFE_INTEGER) {
@@ -11317,9 +11734,9 @@ class AtomicTransactionComposer {
             break;
           }
 
-        case _abi.ABIReferenceType.asset:
+        case abi_1.ABIReferenceType.asset:
           {
-            const uint64Type = new _abi.ABIUintType(64);
+            const uint64Type = new abi_1.ABIUintType(64);
             const refAssetID = uint64Type.decode(uint64Type.encode(refValue));
 
             if (refAssetID > Number.MAX_SAFE_INTEGER) {
@@ -11347,7 +11764,7 @@ class AtomicTransactionComposer {
       const lastArgTupleValues = basicArgValues.slice(MAX_APP_ARGS - 2);
       basicArgTypes = basicArgTypes.slice(0, MAX_APP_ARGS - 2);
       basicArgValues = basicArgValues.slice(0, MAX_APP_ARGS - 2);
-      basicArgTypes.push(new _abi.ABITupleType(lastArgTupleTypes));
+      basicArgTypes.push(new abi_1.ABITupleType(lastArgTupleTypes));
       basicArgValues.push(lastArgTupleValues);
     }
 
@@ -11358,14 +11775,14 @@ class AtomicTransactionComposer {
     }
 
     const appCall = {
-      txn: (0, _makeTxn.makeApplicationCallTxnFromObject)({
+      txn: makeTxn_1.makeApplicationCallTxnFromObject({
         from: sender,
         appIndex: appID,
         appArgs: appArgsEncoded,
         accounts: foreignAccounts,
         foreignApps,
         foreignAssets,
-        onComplete: onComplete == null ? _base.OnApplicationComplete.NoOpOC : onComplete,
+        onComplete: onComplete == null ? base_1.OnApplicationComplete.NoOpOC : onComplete,
         approvalProgram,
         clearProgram,
         numGlobalInts,
@@ -11397,7 +11814,7 @@ class AtomicTransactionComposer {
       }
 
       if (this.transactions.length > 1) {
-        (0, _group.assignGroupID)(this.transactions.map(txnWithSigner => txnWithSigner.txn));
+        group_1.assignGroupID(this.transactions.map(txnWithSigner => txnWithSigner.txn));
       }
 
       this.status = AtomicTransactionComposerStatus.BUILT;
@@ -11458,7 +11875,7 @@ class AtomicTransactionComposer {
 
     const txIDs = signedTxns.map((stxn, index) => {
       try {
-        return (0, _transaction.decodeSignedTransaction)(stxn).txn.txID();
+        return transaction_1.decodeSignedTransaction(stxn).txn.txID();
       } catch (err) {
         throw new Error(`Cannot decode signed transaction at index ${index}. ${err}`);
       }
@@ -11521,7 +11938,7 @@ class AtomicTransactionComposer {
     this.status = AtomicTransactionComposerStatus.SUBMITTED;
     const firstMethodCallIndex = this.transactions.findIndex((_, index) => this.methodCalls.has(index));
     const indexToWaitFor = firstMethodCallIndex === -1 ? 0 : firstMethodCallIndex;
-    const confirmedTxnInfo = await (0, _wait.waitForConfirmation)(client, txIDs[indexToWaitFor], waitRounds);
+    const confirmedTxnInfo = await wait_1.waitForConfirmation(client, txIDs[indexToWaitFor], waitRounds);
     this.status = AtomicTransactionComposerStatus.COMMITTED;
     const confirmedRound = confirmedTxnInfo['confirmed-round'];
     const methodResults = [];
@@ -11567,10 +11984,10 @@ class AtomicTransactionComposer {
   }
 
 }
-/** The maximum size of an atomic transaction group. */
-
 
 exports.AtomicTransactionComposer = AtomicTransactionComposer;
+/** The maximum size of an atomic transaction group. */
+
 AtomicTransactionComposer.MAX_GROUP_SIZE = 16;
 
 }).call(this)}).call(this,require("buffer").Buffer)
@@ -11580,37 +11997,36 @@ AtomicTransactionComposer.MAX_GROUP_SIZE = 16;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.INVALID_MICROALGOS_ERROR_MSG = void 0;
-exports.algosToMicroalgos = algosToMicroalgos;
-exports.microalgosToAlgos = microalgosToAlgos;
+exports.algosToMicroalgos = exports.microalgosToAlgos = exports.INVALID_MICROALGOS_ERROR_MSG = void 0;
 const MICROALGOS_TO_ALGOS_RATIO = 1e6;
-const INVALID_MICROALGOS_ERROR_MSG = 'Microalgos should be positive and less than 2^53 - 1.';
+exports.INVALID_MICROALGOS_ERROR_MSG = 'Microalgos should be positive and less than 2^53 - 1.';
 /**
  * microalgosToAlgos converts microalgos to algos
  * @param microalgos - number
  * @returns number
  */
 
-exports.INVALID_MICROALGOS_ERROR_MSG = INVALID_MICROALGOS_ERROR_MSG;
-
 function microalgosToAlgos(microalgos) {
   if (microalgos < 0 || !Number.isSafeInteger(microalgos)) {
-    throw new Error(INVALID_MICROALGOS_ERROR_MSG);
+    throw new Error(exports.INVALID_MICROALGOS_ERROR_MSG);
   }
 
   return microalgos / MICROALGOS_TO_ALGOS_RATIO;
 }
+
+exports.microalgosToAlgos = microalgosToAlgos;
 /**
  * algosToMicroalgos converts algos to microalgos
  * @param algos - number
  * @returns number
  */
 
-
 function algosToMicroalgos(algos) {
   const microalgos = algos * MICROALGOS_TO_ALGOS_RATIO;
   return Math.round(microalgos);
 }
+
+exports.algosToMicroalgos = algosToMicroalgos;
 
 },{}],66:[function(require,module,exports){
 (function (Buffer){(function (){
@@ -11618,22 +12034,22 @@ function algosToMicroalgos(algos) {
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createDryrun = createDryrun;
-
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-
-var _types = require("./client/v2/algod/models/types");
-
-var _transactions = require("./types/transactions");
-
-var _address = require("./encoding/address");
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createDryrun = void 0;
+
+const types_1 = require("./client/v2/algod/models/types");
+
+const transactions_1 = require("./types/transactions");
+
+const address_1 = require("./encoding/address");
 
 const defaultAppId = 1380011588;
 
@@ -11670,23 +12086,23 @@ async function createDryrun({
   const accts = [];
 
   for (const t of txns) {
-    if (t.txn.type === _transactions.TransactionType.appl) {
-      accts.push((0, _address.encodeAddress)(t.txn.from.publicKey));
-      if (t.txn.appAccounts) accts.push(...t.txn.appAccounts.map(a => (0, _address.encodeAddress)(a.publicKey)));
+    if (t.txn.type === transactions_1.TransactionType.appl) {
+      accts.push(address_1.encodeAddress(t.txn.from.publicKey));
+      if (t.txn.appAccounts) accts.push(...t.txn.appAccounts.map(a => address_1.encodeAddress(a.publicKey)));
       if (t.txn.appForeignApps) apps.push(...t.txn.appForeignApps);
       if (t.txn.appForeignAssets) assets.push(...t.txn.appForeignAssets); // Create application,
 
       if (t.txn.appIndex === 0) {
-        appInfos.push(new _types.Application(defaultAppId, new _types.ApplicationParams({
-          creator: (0, _address.encodeAddress)(t.txn.from.publicKey),
+        appInfos.push(new types_1.Application(defaultAppId, new types_1.ApplicationParams({
+          creator: address_1.encodeAddress(t.txn.from.publicKey),
           approvalProgram: t.txn.appApprovalProgram,
           clearStateProgram: t.txn.appClearProgram,
-          localStateSchema: new _types.ApplicationStateSchema(t.txn.appLocalInts, t.txn.appLocalByteSlices),
-          globalStateSchema: new _types.ApplicationStateSchema(t.txn.appGlobalInts, t.txn.appGlobalByteSlices)
+          localStateSchema: new types_1.ApplicationStateSchema(t.txn.appLocalInts, t.txn.appLocalByteSlices),
+          globalStateSchema: new types_1.ApplicationStateSchema(t.txn.appGlobalInts, t.txn.appGlobalByteSlices)
         })));
       } else {
         apps.push(t.txn.appIndex);
-        accts.push((0, _address.getApplicationAddress)(t.txn.appIndex));
+        accts.push(address_1.getApplicationAddress(t.txn.appIndex));
       }
     }
   } // Dedupe and add creator to accts array
@@ -11728,7 +12144,7 @@ async function createDryrun({
   }
 
   await Promise.all(acctPromises);
-  return new _types.DryrunRequest({
+  return new types_1.DryrunRequest({
     txns: txns.map(st => _objectSpread(_objectSpread({}, st), {}, {
       txn: st.txn.get_obj_for_encoding()
     })),
@@ -11741,88 +12157,108 @@ async function createDryrun({
   });
 }
 
+exports.createDryrun = createDryrun;
+
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"./client/v2/algod/models/types":36,"./encoding/address":67,"./types/transactions":96,"@babel/runtime/helpers/defineProperty":8,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3}],67:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.UNEXPECTED_PK_LEN_ERROR_MSG = exports.MALFORMED_ADDRESS_ERROR_MSG = exports.INVALID_MSIG_VERSION_ERROR_MSG = exports.INVALID_MSIG_THRESHOLD_ERROR_MSG = exports.INVALID_MSIG_PK_ERROR_MSG = exports.CHECKSUM_ADDRESS_ERROR_MSG = exports.ALGORAND_ZERO_ADDRESS_STRING = void 0;
-exports.decodeAddress = decodeAddress;
-exports.encodeAddress = encodeAddress;
-exports.fromMultisigPreImg = fromMultisigPreImg;
-exports.fromMultisigPreImgAddrs = fromMultisigPreImgAddrs;
-exports.getApplicationAddress = getApplicationAddress;
-exports.isValidAddress = isValidAddress;
+exports.getApplicationAddress = exports.fromMultisigPreImgAddrs = exports.fromMultisigPreImg = exports.encodeAddress = exports.isValidAddress = exports.decodeAddress = exports.UNEXPECTED_PK_LEN_ERROR_MSG = exports.INVALID_MSIG_PK_ERROR_MSG = exports.INVALID_MSIG_THRESHOLD_ERROR_MSG = exports.INVALID_MSIG_VERSION_ERROR_MSG = exports.CHECKSUM_ADDRESS_ERROR_MSG = exports.MALFORMED_ADDRESS_ERROR_MSG = exports.ALGORAND_ZERO_ADDRESS_STRING = void 0;
 
-var _hiBase = _interopRequireDefault(require("hi-base32"));
+const hi_base32_1 = __importDefault(require("hi-base32"));
 
-var nacl = _interopRequireWildcard(require("../nacl/naclWrappers"));
+const nacl = __importStar(require("../nacl/naclWrappers"));
 
-var utils = _interopRequireWildcard(require("../utils/utils"));
+const utils = __importStar(require("../utils/utils"));
 
-var _uint = require("./uint64");
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+const uint64_1 = require("./uint64");
 
 const ALGORAND_ADDRESS_BYTE_LENGTH = 36;
 const ALGORAND_CHECKSUM_BYTE_LENGTH = 4;
 const ALGORAND_ADDRESS_LENGTH = 58;
-const ALGORAND_ZERO_ADDRESS_STRING = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ'; // Convert "MultisigAddr" UTF-8 to byte array
+exports.ALGORAND_ZERO_ADDRESS_STRING = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ'; // Convert "MultisigAddr" UTF-8 to byte array
 
-exports.ALGORAND_ZERO_ADDRESS_STRING = ALGORAND_ZERO_ADDRESS_STRING;
 const MULTISIG_PREIMG2ADDR_PREFIX = new Uint8Array([77, 117, 108, 116, 105, 115, 105, 103, 65, 100, 100, 114]);
 const APP_ID_PREFIX = Buffer.from('appID');
-const MALFORMED_ADDRESS_ERROR_MSG = 'address seems to be malformed';
-exports.MALFORMED_ADDRESS_ERROR_MSG = MALFORMED_ADDRESS_ERROR_MSG;
-const CHECKSUM_ADDRESS_ERROR_MSG = 'wrong checksum for address';
-exports.CHECKSUM_ADDRESS_ERROR_MSG = CHECKSUM_ADDRESS_ERROR_MSG;
-const INVALID_MSIG_VERSION_ERROR_MSG = 'invalid multisig version';
-exports.INVALID_MSIG_VERSION_ERROR_MSG = INVALID_MSIG_VERSION_ERROR_MSG;
-const INVALID_MSIG_THRESHOLD_ERROR_MSG = 'bad multisig threshold';
-exports.INVALID_MSIG_THRESHOLD_ERROR_MSG = INVALID_MSIG_THRESHOLD_ERROR_MSG;
-const INVALID_MSIG_PK_ERROR_MSG = 'bad multisig public key - wrong length';
-exports.INVALID_MSIG_PK_ERROR_MSG = INVALID_MSIG_PK_ERROR_MSG;
-const UNEXPECTED_PK_LEN_ERROR_MSG = 'nacl public key length is not 32 bytes';
+exports.MALFORMED_ADDRESS_ERROR_MSG = 'address seems to be malformed';
+exports.CHECKSUM_ADDRESS_ERROR_MSG = 'wrong checksum for address';
+exports.INVALID_MSIG_VERSION_ERROR_MSG = 'invalid multisig version';
+exports.INVALID_MSIG_THRESHOLD_ERROR_MSG = 'bad multisig threshold';
+exports.INVALID_MSIG_PK_ERROR_MSG = 'bad multisig public key - wrong length';
+exports.UNEXPECTED_PK_LEN_ERROR_MSG = 'nacl public key length is not 32 bytes';
 /**
  * decodeAddress takes an Algorand address in string form and decodes it into a Uint8Array.
  * @param address - an Algorand address with checksum.
  * @returns the decoded form of the address's public key and checksum
  */
 
-exports.UNEXPECTED_PK_LEN_ERROR_MSG = UNEXPECTED_PK_LEN_ERROR_MSG;
-
 function decodeAddress(address) {
-  if (typeof address !== 'string' || address.length !== ALGORAND_ADDRESS_LENGTH) throw new Error(MALFORMED_ADDRESS_ERROR_MSG); // try to decode
+  if (typeof address !== 'string' || address.length !== ALGORAND_ADDRESS_LENGTH) throw new Error(exports.MALFORMED_ADDRESS_ERROR_MSG); // try to decode
 
-  const decoded = _hiBase.default.decode.asBytes(address.toString()); // Sanity check
+  const decoded = hi_base32_1.default.decode.asBytes(address.toString()); // Sanity check
 
-
-  if (decoded.length !== ALGORAND_ADDRESS_BYTE_LENGTH) throw new Error(MALFORMED_ADDRESS_ERROR_MSG); // Find publickey and checksum
+  if (decoded.length !== ALGORAND_ADDRESS_BYTE_LENGTH) throw new Error(exports.MALFORMED_ADDRESS_ERROR_MSG); // Find publickey and checksum
 
   const pk = new Uint8Array(decoded.slice(0, ALGORAND_ADDRESS_BYTE_LENGTH - ALGORAND_CHECKSUM_BYTE_LENGTH));
   const cs = new Uint8Array(decoded.slice(nacl.PUBLIC_KEY_LENGTH, ALGORAND_ADDRESS_BYTE_LENGTH)); // Compute checksum
 
   const checksum = nacl.genericHash(pk).slice(nacl.HASH_BYTES_LENGTH - ALGORAND_CHECKSUM_BYTE_LENGTH, nacl.HASH_BYTES_LENGTH); // Check if the checksum and the address are equal
 
-  if (!utils.arrayEqual(checksum, cs)) throw new Error(CHECKSUM_ADDRESS_ERROR_MSG);
+  if (!utils.arrayEqual(checksum, cs)) throw new Error(exports.CHECKSUM_ADDRESS_ERROR_MSG);
   return {
     publicKey: pk,
     checksum: cs
   };
 }
+
+exports.decodeAddress = decodeAddress;
 /**
  * isValidAddress checks if a string is a valid Algorand address.
  * @param address - an Algorand address with checksum.
  * @returns true if valid, false otherwise
  */
-
 
 function isValidAddress(address) {
   // Try to decode
@@ -11834,21 +12270,22 @@ function isValidAddress(address) {
 
   return true;
 }
+
+exports.isValidAddress = isValidAddress;
 /**
  * encodeAddress takes an Algorand address as a Uint8Array and encodes it into a string with checksum.
  * @param address - a raw Algorand address
  * @returns the address and checksum encoded as a string.
  */
 
-
 function encodeAddress(address) {
   // compute checksum
   const checksum = nacl.genericHash(address).slice(nacl.PUBLIC_KEY_LENGTH - ALGORAND_CHECKSUM_BYTE_LENGTH, nacl.PUBLIC_KEY_LENGTH);
-
-  const addr = _hiBase.default.encode(utils.concatArrays(address, checksum));
-
+  const addr = hi_base32_1.default.encode(utils.concatArrays(address, checksum));
   return addr.toString().slice(0, ALGORAND_ADDRESS_LENGTH); // removing the extra '===='
 }
+
+exports.encodeAddress = encodeAddress;
 /**
  * fromMultisigPreImg takes multisig parameters and returns a 32 byte typed array public key,
  * representing an address that identifies the "exact group, version, and public keys" that are required for signing.
@@ -11859,7 +12296,6 @@ function encodeAddress(address) {
  * @param pks - array of typed array public keys
  */
 
-
 function fromMultisigPreImg({
   version,
   threshold,
@@ -11867,17 +12303,17 @@ function fromMultisigPreImg({
 }) {
   if (version !== 1 || version > 255 || version < 0) {
     // ^ a tad redundant, but in case in the future version != 1, still check for uint8
-    throw new Error(INVALID_MSIG_VERSION_ERROR_MSG);
+    throw new Error(exports.INVALID_MSIG_VERSION_ERROR_MSG);
   }
 
   if (threshold === 0 || pks.length === 0 || threshold > pks.length || threshold > 255) {
-    throw new Error(INVALID_MSIG_THRESHOLD_ERROR_MSG);
+    throw new Error(exports.INVALID_MSIG_THRESHOLD_ERROR_MSG);
   }
 
   const pkLen = ALGORAND_ADDRESS_BYTE_LENGTH - ALGORAND_CHECKSUM_BYTE_LENGTH;
 
   if (pkLen !== nacl.PUBLIC_KEY_LENGTH) {
-    throw new Error(UNEXPECTED_PK_LEN_ERROR_MSG);
+    throw new Error(exports.UNEXPECTED_PK_LEN_ERROR_MSG);
   }
 
   const merged = new Uint8Array(MULTISIG_PREIMG2ADDR_PREFIX.length + 2 + pkLen * pks.length);
@@ -11887,7 +12323,7 @@ function fromMultisigPreImg({
 
   for (let i = 0; i < pks.length; i++) {
     if (pks[i].length !== pkLen) {
-      throw new Error(INVALID_MSIG_PK_ERROR_MSG);
+      throw new Error(exports.INVALID_MSIG_PK_ERROR_MSG);
     }
 
     merged.set(pks[i], MULTISIG_PREIMG2ADDR_PREFIX.length + 2 + i * pkLen);
@@ -11895,6 +12331,8 @@ function fromMultisigPreImg({
 
   return new Uint8Array(nacl.genericHash(merged));
 }
+
+exports.fromMultisigPreImg = fromMultisigPreImg;
 /**
  * fromMultisigPreImgAddrs takes multisig parameters and returns a human readable Algorand address.
  * This is equivalent to fromMultisigPreImg, but interfaces with encoded addresses.
@@ -11902,7 +12340,6 @@ function fromMultisigPreImg({
  * @param threshold - multisig threshold
  * @param addrs - array of encoded addresses
  */
-
 
 function fromMultisigPreImgAddrs({
   version,
@@ -11916,36 +12353,38 @@ function fromMultisigPreImgAddrs({
     pks
   }));
 }
+
+exports.fromMultisigPreImgAddrs = fromMultisigPreImgAddrs;
 /**
  * Get the escrow address of an application.
  * @param appID - The ID of the application.
  * @returns The address corresponding to that application's escrow account.
  */
 
-
 function getApplicationAddress(appID) {
-  const toBeSigned = utils.concatArrays(APP_ID_PREFIX, (0, _uint.encodeUint64)(appID));
+  const toBeSigned = utils.concatArrays(APP_ID_PREFIX, uint64_1.encodeUint64(appID));
   const hash = nacl.genericHash(toBeSigned);
   return encodeAddress(new Uint8Array(hash));
 }
 
+exports.getApplicationAddress = getApplicationAddress;
+
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../nacl/naclWrappers":87,"../utils/utils":97,"./uint64":70,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3,"hi-base32":110}],68:[function(require,module,exports){
+},{"../nacl/naclWrappers":87,"../utils/utils":97,"./uint64":70,"buffer":3,"hi-base32":110}],68:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.bigIntToBytes = bigIntToBytes;
-exports.bytesToBigInt = bytesToBigInt;
-
+exports.bytesToBigInt = exports.bigIntToBytes = void 0;
 /**
  * bigIntToBytes converts a BigInt to a big-endian Uint8Array for encoding.
  * @param bi - The bigint to convert.
  * @param size - The size of the resulting byte array.
  * @returns A byte array containing the big-endian encoding of the input bigint
  */
+
 function bigIntToBytes(bi, size) {
   let hex = bi.toString(16); // Pad the hex with zeros so it matches the size in bytes
 
@@ -11961,13 +12400,14 @@ function bigIntToBytes(bi, size) {
 
   return byteArray;
 }
+
+exports.bigIntToBytes = bigIntToBytes;
 /**
  * bytesToBigInt produces a bigint from a binary representation.
  *
  * @param bytes - The Uint8Array to convert.
  * @returns The bigint that was encoded in the input data.
  */
-
 
 function bytesToBigInt(bytes) {
   let res = BigInt(0);
@@ -11980,23 +12420,11 @@ function bytesToBigInt(bytes) {
   return res;
 }
 
+exports.bytesToBigInt = bytesToBigInt;
+
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"buffer":3}],69:[function(require,module,exports){
 "use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.ERROR_CONTAINS_EMPTY_STRING = void 0;
-exports.decode = decode;
-exports.encode = encode;
-
-var msgpack = _interopRequireWildcard(require("algo-msgpack-with-bigint"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
 /**
  * This file is a wrapper of msgpack.js.
  * The wrapper was written in order to ensure correct encoding of Algorand Transaction and other formats.
@@ -12008,16 +12436,54 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
  *  4. Every positive number must be encoded as uint
  *  5. Binary blob should be used for binary data and string for strings
  *  */
-// Errors
-const ERROR_CONTAINS_EMPTY_STRING = 'The object contains empty or 0 values. First empty or 0 value encountered during encoding: ';
+
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.decode = exports.encode = exports.ERROR_CONTAINS_EMPTY_STRING = void 0;
+
+const msgpack = __importStar(require("algo-msgpack-with-bigint")); // Errors
+
+
+exports.ERROR_CONTAINS_EMPTY_STRING = 'The object contains empty or 0 values. First empty or 0 value encountered during encoding: ';
 /**
  * containsEmpty returns true if any of the object's values are empty, false otherwise.
  * Empty arrays considered empty
  * @param obj - The object to check
  * @returns \{true, empty key\} if contains empty, \{false, undefined\} otherwise
  */
-
-exports.ERROR_CONTAINS_EMPTY_STRING = ERROR_CONTAINS_EMPTY_STRING;
 
 function containsEmpty(obj) {
   for (const key in obj) {
@@ -12049,7 +12515,7 @@ function encode(obj) {
   const emptyCheck = containsEmpty(obj);
 
   if (emptyCheck.containsEmpty) {
-    throw new Error(ERROR_CONTAINS_EMPTY_STRING + emptyCheck.firstEmptyKey);
+    throw new Error(exports.ERROR_CONTAINS_EMPTY_STRING + emptyCheck.firstEmptyKey);
   } // enable the canonical option
 
 
@@ -12059,9 +12525,13 @@ function encode(obj) {
   return msgpack.encode(obj, options);
 }
 
+exports.encode = encode;
+
 function decode(buffer) {
   return msgpack.decode(buffer);
 }
+
+exports.decode = decode;
 
 },{"algo-msgpack-with-bigint":11}],70:[function(require,module,exports){
 (function (Buffer){(function (){
@@ -12070,9 +12540,7 @@ function decode(buffer) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.decodeUint64 = decodeUint64;
-exports.encodeUint64 = encodeUint64;
-
+exports.decodeUint64 = exports.encodeUint64 = void 0;
 /**
  * encodeUint64 converts an integer to its binary representation.
  * @param num - The number to convert. This must be an unsigned integer less than
@@ -12080,6 +12548,7 @@ exports.encodeUint64 = encodeUint64;
  * @returns An 8-byte typed array containing the big-endian encoding of the input
  *   integer.
  */
+
 function encodeUint64(num) {
   const isInteger = typeof num === 'bigint' || Number.isInteger(num);
 
@@ -12091,6 +12560,8 @@ function encodeUint64(num) {
   buf.writeBigUInt64BE(BigInt(num));
   return new Uint8Array(buf);
 }
+
+exports.encodeUint64 = encodeUint64;
 
 function decodeUint64(data, decodingMode = 'safe') {
   if (decodingMode !== 'safe' && decodingMode !== 'mixed' && decodingMode !== 'bigint') {
@@ -12123,32 +12594,59 @@ function decodeUint64(data, decodingMode = 'safe') {
   return num;
 }
 
+exports.decodeUint64 = decodeUint64;
+
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"buffer":3}],71:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.TxGroup = void 0;
-exports.assignGroupID = assignGroupID;
-exports.computeGroupID = computeGroupID;
-exports.default = void 0;
+exports.assignGroupID = exports.computeGroupID = exports.TxGroup = void 0;
 
-var txnBuilder = _interopRequireWildcard(require("./transaction"));
+const txnBuilder = __importStar(require("./transaction"));
 
-var nacl = _interopRequireWildcard(require("./nacl/naclWrappers"));
+const nacl = __importStar(require("./nacl/naclWrappers"));
 
-var encoding = _interopRequireWildcard(require("./encoding/encoding"));
+const encoding = __importStar(require("./encoding/encoding"));
 
-var address = _interopRequireWildcard(require("./encoding/address"));
+const address = __importStar(require("./encoding/address"));
 
-var utils = _interopRequireWildcard(require("./utils/utils"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+const utils = __importStar(require("./utils/utils"));
 
 const ALGORAND_MAX_TX_GROUP_SIZE = 16;
 /**
@@ -12195,14 +12693,13 @@ class TxGroup {
   }
 
 }
+
+exports.TxGroup = TxGroup;
 /**
  * computeGroupID returns group ID for a group of transactions
  * @param txns - array of transactions (every element is a dict or Transaction)
  * @returns Buffer
  */
-
-
-exports.TxGroup = TxGroup;
 
 function computeGroupID(txns) {
   const hashes = [];
@@ -12218,13 +12715,14 @@ function computeGroupID(txns) {
   const gid = nacl.genericHash(toBeHashed);
   return Buffer.from(gid);
 }
+
+exports.computeGroupID = computeGroupID;
 /**
  * assignGroupID assigns group id to a given list of unsigned transactions
  * @param txns - array of transactions (every element is a dict or Transaction)
  * @param from - optional sender address specifying which transaction return
  * @returns possible list of matching transactions
  */
-
 
 function assignGroupID(txns, from) {
   const gid = computeGroupID(txns);
@@ -12242,8 +12740,8 @@ function assignGroupID(txns, from) {
   return result;
 }
 
-var _default = TxGroup;
-exports.default = _default;
+exports.assignGroupID = assignGroupID;
+exports.default = TxGroup;
 
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"./encoding/address":67,"./encoding/encoding":69,"./nacl/naclWrappers":87,"./transaction":89,"./utils/utils":97,"buffer":3}],72:[function(require,module,exports){
@@ -14931,28 +15429,25 @@ module.exports={
 
 },{}],80:[function(require,module,exports){
 "use strict";
-
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.checkByteConstBlock = checkByteConstBlock;
-exports.checkIntConstBlock = checkIntConstBlock;
-exports.checkProgram = checkProgram;
-exports.checkPushByteOp = checkPushByteOp;
-exports.checkPushIntOp = checkPushIntOp;
-exports.langspecLogicSigVersion = exports.langspecEvalMaxVersion = void 0;
-exports.parseUvarint = parseUvarint;
-exports.readProgram = readProgram;
-
-var _langspec = _interopRequireDefault(require("./langspec.json"));
-
 /* eslint-disable no-bitwise */
 
 /**
  * Utilities for working with program bytes.
  */
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.langspecLogicSigVersion = exports.langspecEvalMaxVersion = exports.checkPushByteOp = exports.checkPushIntOp = exports.checkByteConstBlock = exports.checkIntConstBlock = exports.checkProgram = exports.readProgram = exports.parseUvarint = void 0;
+
+const langspec_json_1 = __importDefault(require("./langspec.json"));
+
 let opcodes;
 const maxCost = 20000;
 const maxLength = 1000;
@@ -14978,6 +15473,8 @@ function parseUvarint(array) {
 
   return [0, 0];
 }
+
+exports.parseUvarint = parseUvarint;
 
 function readIntConstBlock(program, pc) {
   let size = 1;
@@ -15114,7 +15611,7 @@ function readProgram(program, args) {
     throw new Error('version parsing error');
   }
 
-  if (version > _langspec.default.EvalMaxVersion) {
+  if (version > langspec_json_1.default.EvalMaxVersion) {
     throw new Error('unsupported version');
   }
 
@@ -15134,7 +15631,7 @@ function readProgram(program, args) {
   if (!opcodes) {
     opcodes = {};
 
-    for (const op of _langspec.default.Ops) {
+    for (const op of langspec_json_1.default.Ops) {
       opcodes[op.Opcode] = op;
     }
   }
@@ -15204,6 +15701,8 @@ function readProgram(program, args) {
 
   return [ints, byteArrays, true];
 }
+
+exports.readProgram = readProgram;
 /**
  * checkProgram validates program for length and running cost
  * @param program - Program to check
@@ -15212,73 +15711,102 @@ function readProgram(program, args) {
  * @returns true if success
  */
 
-
 function checkProgram(program, args) {
   const [,, success] = readProgram(program, args);
   return success;
 }
+
+exports.checkProgram = checkProgram;
 
 function checkIntConstBlock(program, pc) {
   const [size] = readIntConstBlock(program, pc);
   return size;
 }
 
+exports.checkIntConstBlock = checkIntConstBlock;
+
 function checkByteConstBlock(program, pc) {
   const [size] = readByteConstBlock(program, pc);
   return size;
 }
+
+exports.checkByteConstBlock = checkByteConstBlock;
 
 function checkPushIntOp(program, pc) {
   const [size] = readPushIntOp(program, pc);
   return size;
 }
 
+exports.checkPushIntOp = checkPushIntOp;
+
 function checkPushByteOp(program, pc) {
   const [size] = readPushByteOp(program, pc);
   return size;
 }
 
-const langspecEvalMaxVersion = _langspec.default.EvalMaxVersion;
-exports.langspecEvalMaxVersion = langspecEvalMaxVersion;
-const langspecLogicSigVersion = _langspec.default.LogicSigVersion;
-exports.langspecLogicSigVersion = langspecLogicSigVersion;
+exports.checkPushByteOp = checkPushByteOp;
+exports.langspecEvalMaxVersion = langspec_json_1.default.EvalMaxVersion;
+exports.langspecLogicSigVersion = langspec_json_1.default.LogicSigVersion;
 
-},{"./langspec.json":79,"@babel/runtime/helpers/interopRequireDefault":10}],81:[function(require,module,exports){
+},{"./langspec.json":79}],81:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
+
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.LogicSigAccount = exports.LogicSig = void 0;
-exports.logicSigFromByte = logicSigFromByte;
-exports.makeLogicSig = makeLogicSig;
-exports.signLogicSigTransaction = signLogicSigTransaction;
-exports.signLogicSigTransactionObject = signLogicSigTransactionObject;
-exports.tealSign = tealSign;
-exports.tealSignFromProgram = tealSignFromProgram;
+exports.tealSignFromProgram = exports.tealSign = exports.logicSigFromByte = exports.signLogicSigTransaction = exports.signLogicSigTransactionObject = exports.makeLogicSig = exports.LogicSigAccount = exports.LogicSig = void 0;
 
-var nacl = _interopRequireWildcard(require("./nacl/naclWrappers"));
+const nacl = __importStar(require("./nacl/naclWrappers"));
 
-var address = _interopRequireWildcard(require("./encoding/address"));
+const address = __importStar(require("./encoding/address"));
 
-var encoding = _interopRequireWildcard(require("./encoding/encoding"));
+const encoding = __importStar(require("./encoding/encoding"));
 
-var logic = _interopRequireWildcard(require("./logic/logic"));
+const logic = __importStar(require("./logic/logic"));
 
-var _multisig = require("./multisig");
+const multisig_1 = require("./multisig");
 
-var utils = _interopRequireWildcard(require("./utils/utils"));
+const utils = __importStar(require("./utils/utils"));
 
-var txnBuilder = _interopRequireWildcard(require("./transaction"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const txnBuilder = __importStar(require("./transaction"));
 /**
  LogicSig implementation
  */
+
+
 class LogicSig {
   constructor(program, programArgs) {
     this.tag = Buffer.from('Program');
@@ -15354,7 +15882,7 @@ class LogicSig {
       return nacl.verify(toBeSigned, this.sig, publicKey);
     }
 
-    return (0, _multisig.verifyMultisig)(toBeSigned, this.msig, publicKey);
+    return multisig_1.verifyMultisig(toBeSigned, this.msig, publicKey);
   }
   /**
    * Compute hash of the logic sig program (that is the same as escrow account address) as string address
@@ -15444,12 +15972,11 @@ class LogicSig {
   }
 
 }
+
+exports.LogicSig = LogicSig;
 /**
  * Represents an account that can sign with a LogicSig program.
  */
-
-
-exports.LogicSig = LogicSig;
 
 class LogicSigAccount {
   /**
@@ -15605,6 +16132,8 @@ class LogicSigAccount {
   }
 
 }
+
+exports.LogicSigAccount = LogicSigAccount;
 /**
  * makeLogicSig creates LogicSig object from program and arguments
  *
@@ -15615,12 +16144,11 @@ class LogicSigAccount {
  * @returns LogicSig object
  */
 
-
-exports.LogicSigAccount = LogicSigAccount;
-
 function makeLogicSig(program, args) {
   return new LogicSig(program, args);
 }
+
+exports.makeLogicSig = makeLogicSig;
 
 function signLogicSigTransactionWithAddress(txn, lsig, lsigAddress) {
   if (!lsig.verify(lsigAddress)) {
@@ -15682,6 +16210,8 @@ function signLogicSigTransactionObject(txn, lsigObject) {
 
   return signLogicSigTransactionWithAddress(txn, lsig, lsigAddress);
 }
+
+exports.signLogicSigTransactionObject = signLogicSigTransactionObject;
 /**
  * signLogicSigTransaction takes a transaction and a LogicSig object and returns
  * a signed transaction.
@@ -15693,21 +16223,22 @@ function signLogicSigTransactionObject(txn, lsigObject) {
  * @throws error on failure
  */
 
-
 function signLogicSigTransaction(txn, lsigObject) {
   const algoTxn = txnBuilder.instantiateTxnIfNeeded(txn);
   return signLogicSigTransactionObject(algoTxn, lsigObject);
 }
+
+exports.signLogicSigTransaction = signLogicSigTransaction;
 /**
  * logicSigFromByte accepts encoded logic sig bytes and attempts to call logicsig.fromByte on it,
  * returning the result
  */
 
-
 function logicSigFromByte(encoded) {
   return LogicSig.fromByte(encoded);
 }
 
+exports.logicSigFromByte = logicSigFromByte;
 const SIGN_PROGRAM_DATA_PREFIX = Buffer.from('ProgData');
 /**
  * tealSign creates a signature compatible with ed25519verify opcode from contract address
@@ -15721,6 +16252,8 @@ function tealSign(sk, data, contractAddress) {
   const toBeSigned = Buffer.from(utils.concatArrays(SIGN_PROGRAM_DATA_PREFIX, parts));
   return nacl.sign(toBeSigned, sk);
 }
+
+exports.tealSign = tealSign;
 /**
  * tealSignFromProgram creates a signature compatible with ed25519verify opcode from raw program bytes
  * @param sk - uint8array with secret key
@@ -15728,444 +16261,86 @@ function tealSign(sk, data, contractAddress) {
  * @param program - buffer with teal program
  */
 
-
 function tealSignFromProgram(sk, data, program) {
   const lsig = new LogicSig(program);
   const contractAddress = lsig.address();
   return tealSign(sk, data, contractAddress);
 }
 
+exports.tealSignFromProgram = tealSignFromProgram;
+
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"./encoding/address":67,"./encoding/encoding":69,"./logic/logic":80,"./multisig":86,"./nacl/naclWrappers":87,"./transaction":89,"./utils/utils":97,"buffer":3}],82:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __exportStar = void 0 && (void 0).__exportStar || function (m, exports) {
+  for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var _exportNames = {
-  MULTISIG_BAD_SENDER_ERROR_MSG: true,
-  signTransaction: true,
-  signBid: true,
-  signBytes: true,
-  verifyBytes: true,
-  encodeObj: true,
-  decodeObj: true,
-  ERROR_MULTISIG_BAD_SENDER: true,
-  ERROR_INVALID_MICROALGOS: true,
-  LogicTemplates: true,
-  isValidAddress: true,
-  encodeAddress: true,
-  decodeAddress: true,
-  getApplicationAddress: true,
-  microalgosToAlgos: true,
-  algosToMicroalgos: true,
-  INVALID_MICROALGOS_ERROR_MSG: true,
-  Algodv2: true,
-  Kmd: true,
-  IntDecoding: true,
-  Indexer: true,
-  waitForConfirmation: true,
-  encodeUint64: true,
-  decodeUint64: true,
-  generateAccount: true,
-  modelsv2: true,
-  mnemonicToMasterDerivationKey: true,
-  masterDerivationKeyToMnemonic: true,
-  secretKeyToMnemonic: true,
-  mnemonicToSecretKey: true,
-  seedFromMnemonic: true,
-  mnemonicFromSeed: true,
-  computeGroupID: true,
-  assignGroupID: true,
-  LogicSigAccount: true,
-  makeLogicSig: true,
-  signLogicSigTransaction: true,
-  signLogicSigTransactionObject: true,
-  logicSigFromByte: true,
-  tealSign: true,
-  tealSignFromProgram: true,
-  signMultisigTransaction: true,
-  mergeMultisigTransactions: true,
-  appendSignMultisigTransaction: true,
-  multisigAddress: true
-};
-Object.defineProperty(exports, "Algodv2", {
-  enumerable: true,
-  get: function () {
-    return _algod2.default;
-  }
-});
-exports.ERROR_MULTISIG_BAD_SENDER = exports.ERROR_INVALID_MICROALGOS = void 0;
-Object.defineProperty(exports, "INVALID_MICROALGOS_ERROR_MSG", {
-  enumerable: true,
-  get: function () {
-    return convert.INVALID_MICROALGOS_ERROR_MSG;
-  }
-});
-Object.defineProperty(exports, "Indexer", {
-  enumerable: true,
-  get: function () {
-    return _indexer.default;
-  }
-});
-Object.defineProperty(exports, "IntDecoding", {
-  enumerable: true,
-  get: function () {
-    return _intDecoding.default;
-  }
-});
-Object.defineProperty(exports, "Kmd", {
-  enumerable: true,
-  get: function () {
-    return _kmd.default;
-  }
-});
-Object.defineProperty(exports, "LogicSigAccount", {
-  enumerable: true,
-  get: function () {
-    return _logicsig.LogicSigAccount;
-  }
-});
-exports.MULTISIG_BAD_SENDER_ERROR_MSG = exports.LogicTemplates = void 0;
-Object.defineProperty(exports, "algosToMicroalgos", {
-  enumerable: true,
-  get: function () {
-    return convert.algosToMicroalgos;
-  }
-});
-Object.defineProperty(exports, "appendSignMultisigTransaction", {
-  enumerable: true,
-  get: function () {
-    return _multisig.appendSignMultisigTransaction;
-  }
-});
-Object.defineProperty(exports, "assignGroupID", {
-  enumerable: true,
-  get: function () {
-    return _group.assignGroupID;
-  }
-});
-Object.defineProperty(exports, "computeGroupID", {
-  enumerable: true,
-  get: function () {
-    return _group.computeGroupID;
-  }
-});
-Object.defineProperty(exports, "decodeAddress", {
-  enumerable: true,
-  get: function () {
-    return address.decodeAddress;
-  }
-});
-exports.decodeObj = decodeObj;
-Object.defineProperty(exports, "decodeUint64", {
-  enumerable: true,
-  get: function () {
-    return _uint.decodeUint64;
-  }
-});
-Object.defineProperty(exports, "encodeAddress", {
-  enumerable: true,
-  get: function () {
-    return address.encodeAddress;
-  }
-});
-exports.encodeObj = encodeObj;
-Object.defineProperty(exports, "encodeUint64", {
-  enumerable: true,
-  get: function () {
-    return _uint.encodeUint64;
-  }
-});
-Object.defineProperty(exports, "generateAccount", {
-  enumerable: true,
-  get: function () {
-    return _account.default;
-  }
-});
-Object.defineProperty(exports, "getApplicationAddress", {
-  enumerable: true,
-  get: function () {
-    return address.getApplicationAddress;
-  }
-});
-Object.defineProperty(exports, "isValidAddress", {
-  enumerable: true,
-  get: function () {
-    return address.isValidAddress;
-  }
-});
-Object.defineProperty(exports, "logicSigFromByte", {
-  enumerable: true,
-  get: function () {
-    return _logicsig.logicSigFromByte;
-  }
-});
-Object.defineProperty(exports, "makeLogicSig", {
-  enumerable: true,
-  get: function () {
-    return _logicsig.makeLogicSig;
-  }
-});
-Object.defineProperty(exports, "masterDerivationKeyToMnemonic", {
-  enumerable: true,
-  get: function () {
-    return _mnemonic.masterDerivationKeyToMnemonic;
-  }
-});
-Object.defineProperty(exports, "mergeMultisigTransactions", {
-  enumerable: true,
-  get: function () {
-    return _multisig.mergeMultisigTransactions;
-  }
-});
-Object.defineProperty(exports, "microalgosToAlgos", {
-  enumerable: true,
-  get: function () {
-    return convert.microalgosToAlgos;
-  }
-});
-Object.defineProperty(exports, "mnemonicFromSeed", {
-  enumerable: true,
-  get: function () {
-    return _mnemonic.mnemonicFromSeed;
-  }
-});
-Object.defineProperty(exports, "mnemonicToMasterDerivationKey", {
-  enumerable: true,
-  get: function () {
-    return _mnemonic.mnemonicToMasterDerivationKey;
-  }
-});
-Object.defineProperty(exports, "mnemonicToSecretKey", {
-  enumerable: true,
-  get: function () {
-    return _mnemonic.mnemonicToSecretKey;
-  }
-});
-exports.modelsv2 = void 0;
-Object.defineProperty(exports, "multisigAddress", {
-  enumerable: true,
-  get: function () {
-    return _multisig.multisigAddress;
-  }
-});
-Object.defineProperty(exports, "secretKeyToMnemonic", {
-  enumerable: true,
-  get: function () {
-    return _mnemonic.secretKeyToMnemonic;
-  }
-});
-Object.defineProperty(exports, "seedFromMnemonic", {
-  enumerable: true,
-  get: function () {
-    return _mnemonic.seedFromMnemonic;
-  }
-});
-exports.signBid = signBid;
-exports.signBytes = signBytes;
-Object.defineProperty(exports, "signLogicSigTransaction", {
-  enumerable: true,
-  get: function () {
-    return _logicsig.signLogicSigTransaction;
-  }
-});
-Object.defineProperty(exports, "signLogicSigTransactionObject", {
-  enumerable: true,
-  get: function () {
-    return _logicsig.signLogicSigTransactionObject;
-  }
-});
-Object.defineProperty(exports, "signMultisigTransaction", {
-  enumerable: true,
-  get: function () {
-    return _multisig.signMultisigTransaction;
-  }
-});
-exports.signTransaction = signTransaction;
-Object.defineProperty(exports, "tealSign", {
-  enumerable: true,
-  get: function () {
-    return _logicsig.tealSign;
-  }
-});
-Object.defineProperty(exports, "tealSignFromProgram", {
-  enumerable: true,
-  get: function () {
-    return _logicsig.tealSignFromProgram;
-  }
-});
-exports.verifyBytes = verifyBytes;
-Object.defineProperty(exports, "waitForConfirmation", {
-  enumerable: true,
-  get: function () {
-    return _wait.waitForConfirmation;
-  }
-});
+exports.LogicTemplates = exports.multisigAddress = exports.appendSignMultisigTransaction = exports.mergeMultisigTransactions = exports.signMultisigTransaction = exports.tealSignFromProgram = exports.tealSign = exports.logicSigFromByte = exports.signLogicSigTransactionObject = exports.signLogicSigTransaction = exports.makeLogicSig = exports.LogicSigAccount = exports.assignGroupID = exports.computeGroupID = exports.INVALID_MICROALGOS_ERROR_MSG = exports.algosToMicroalgos = exports.microalgosToAlgos = exports.mnemonicFromSeed = exports.seedFromMnemonic = exports.mnemonicToSecretKey = exports.secretKeyToMnemonic = exports.masterDerivationKeyToMnemonic = exports.mnemonicToMasterDerivationKey = exports.modelsv2 = exports.generateAccount = exports.decodeUint64 = exports.encodeUint64 = exports.getApplicationAddress = exports.decodeAddress = exports.encodeAddress = exports.isValidAddress = exports.waitForConfirmation = exports.Indexer = exports.IntDecoding = exports.Kmd = exports.Algodv2 = exports.ERROR_INVALID_MICROALGOS = exports.ERROR_MULTISIG_BAD_SENDER = exports.decodeObj = exports.encodeObj = exports.verifyBytes = exports.signBytes = exports.signBid = exports.signTransaction = exports.MULTISIG_BAD_SENDER_ERROR_MSG = void 0;
 
-var nacl = _interopRequireWildcard(require("./nacl/naclWrappers"));
+const nacl = __importStar(require("./nacl/naclWrappers"));
 
-var address = _interopRequireWildcard(require("./encoding/address"));
+const address = __importStar(require("./encoding/address"));
 
-var encoding = _interopRequireWildcard(require("./encoding/encoding"));
+const encoding = __importStar(require("./encoding/encoding"));
 
-var txnBuilder = _interopRequireWildcard(require("./transaction"));
+const txnBuilder = __importStar(require("./transaction"));
 
-Object.keys(txnBuilder).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === txnBuilder[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return txnBuilder[key];
-    }
-  });
-});
+const LogicTemplatesCommonJSExport = __importStar(require("./logicTemplates"));
 
-var LogicTemplatesCommonJSExport = _interopRequireWildcard(require("./logicTemplates"));
+const bid_1 = __importDefault(require("./bid"));
 
-var _bid = _interopRequireDefault(require("./bid"));
+const convert = __importStar(require("./convert"));
 
-var convert = _interopRequireWildcard(require("./convert"));
-
-var utils = _interopRequireWildcard(require("./utils/utils"));
-
-var _algod = require("./client/algod");
-
-Object.keys(_algod).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _algod[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _algod[key];
-    }
-  });
-});
-
-var _algod2 = _interopRequireDefault(require("./client/v2/algod/algod"));
-
-var _kmd = _interopRequireDefault(require("./client/kmd"));
-
-var _intDecoding = _interopRequireDefault(require("./types/intDecoding"));
-
-var _indexer = _interopRequireDefault(require("./client/v2/indexer/indexer"));
-
-var _wait = require("./wait");
-
-var _uint = require("./encoding/uint64");
-
-var _account = _interopRequireDefault(require("./account"));
-
-var modelsv2_1 = _interopRequireWildcard(require("./client/v2/algod/models/types"));
-
-exports.modelsv2 = modelsv2_1;
-
-var _mnemonic = require("./mnemonic/mnemonic");
-
-var _group = require("./group");
-
-var _logicsig = require("./logicsig");
-
-var _multisig = require("./multisig");
-
-var _dryrun = require("./dryrun");
-
-Object.keys(_dryrun).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _dryrun[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _dryrun[key];
-    }
-  });
-});
-
-var _makeTxn = require("./makeTxn");
-
-Object.keys(_makeTxn).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _makeTxn[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _makeTxn[key];
-    }
-  });
-});
-
-var _signer = require("./signer");
-
-Object.keys(_signer).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _signer[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _signer[key];
-    }
-  });
-});
-
-var _composer = require("./composer");
-
-Object.keys(_composer).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _composer[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _composer[key];
-    }
-  });
-});
-
-var _types2 = require("./types");
-
-Object.keys(_types2).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _types2[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _types2[key];
-    }
-  });
-});
-
-var _abi = require("./abi");
-
-Object.keys(_abi).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _abi[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _abi[key];
-    }
-  });
-});
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+const utils = __importStar(require("./utils/utils"));
 
 const SIGN_BYTES_PREFIX = Buffer.from([77, 88]); // "MX"
 // Errors
 
-const MULTISIG_BAD_SENDER_ERROR_MSG = 'The transaction sender address and multisig preimage do not match.';
+exports.MULTISIG_BAD_SENDER_ERROR_MSG = 'The transaction sender address and multisig preimage do not match.';
 /**
  * signTransaction takes an object with either payment or key registration fields and
  * a secret key and returns a signed blob.
@@ -16182,8 +16357,6 @@ const MULTISIG_BAD_SENDER_ERROR_MSG = 'The transaction sender address and multis
  * @returns object contains the binary signed transaction and its txID
  */
 
-exports.MULTISIG_BAD_SENDER_ERROR_MSG = MULTISIG_BAD_SENDER_ERROR_MSG;
-
 function signTransaction(txn, sk) {
   if (typeof txn.from === 'undefined') {
     // Get pk from sk if no sender specified
@@ -16198,6 +16371,8 @@ function signTransaction(txn, sk) {
     blob: algoTxn.signTxn(sk)
   };
 }
+
+exports.signTransaction = signTransaction;
 /**
  * signBid takes an object with the following fields: bidder key, bid amount, max price, bid ID, auctionKey, auction ID,
  * and a secret key and returns a signed blob to be inserted into a transaction Algorand note field.
@@ -16206,11 +16381,12 @@ function signTransaction(txn, sk) {
  * @returns Uint8Array binary signed bid
  */
 
-
 function signBid(bid, sk) {
-  const signedBid = new _bid.default(bid);
+  const signedBid = new bid_1.default(bid);
   return signedBid.signBid(sk);
 }
+
+exports.signBid = signBid;
 /**
  * signBytes takes arbitrary bytes and a secret key, prepends the bytes with "MX" for domain separation, signs the bytes
  * with the private key, and returns the signature.
@@ -16219,12 +16395,13 @@ function signBid(bid, sk) {
  * @returns binary signature
  */
 
-
 function signBytes(bytes, sk) {
   const toBeSigned = Buffer.from(utils.concatArrays(SIGN_BYTES_PREFIX, bytes));
   const sig = nacl.sign(toBeSigned, sk);
   return sig;
 }
+
+exports.signBytes = signBytes;
 /**
  * verifyBytes takes array of bytes, an address, and a signature and verifies if the signature is correct for the public
  * key and the bytes (the bytes should have been signed with "MX" prepended for domain separation).
@@ -16234,12 +16411,13 @@ function signBytes(bytes, sk) {
  * @returns bool
  */
 
-
 function verifyBytes(bytes, signature, addr) {
   const toBeVerified = Buffer.from(utils.concatArrays(SIGN_BYTES_PREFIX, bytes));
   const pk = address.decodeAddress(addr).publicKey;
   return nacl.verify(toBeVerified, signature, pk);
 }
+
+exports.verifyBytes = verifyBytes;
 /**
  * encodeObj takes a javascript object and returns its msgpack encoding
  * Note that the encoding sorts the fields alphabetically
@@ -16247,88 +16425,332 @@ function verifyBytes(bytes, signature, addr) {
  * @returns Uint8Array binary representation
  */
 
-
 function encodeObj(o) {
   return new Uint8Array(encoding.encode(o));
 }
+
+exports.encodeObj = encodeObj;
 /**
  * decodeObj takes a Uint8Array and returns its javascript obj
  * @param o - Uint8Array to decode
  * @returns object
  */
 
-
 function decodeObj(o) {
   return encoding.decode(o);
 }
 
-const ERROR_MULTISIG_BAD_SENDER = new Error(MULTISIG_BAD_SENDER_ERROR_MSG);
-exports.ERROR_MULTISIG_BAD_SENDER = ERROR_MULTISIG_BAD_SENDER;
-const ERROR_INVALID_MICROALGOS = new Error(convert.INVALID_MICROALGOS_ERROR_MSG);
-exports.ERROR_INVALID_MICROALGOS = ERROR_INVALID_MICROALGOS;
-const LogicTemplates = LogicTemplatesCommonJSExport.default;
-exports.LogicTemplates = LogicTemplates;
+exports.decodeObj = decodeObj;
+exports.ERROR_MULTISIG_BAD_SENDER = new Error(exports.MULTISIG_BAD_SENDER_ERROR_MSG);
+exports.ERROR_INVALID_MICROALGOS = new Error(convert.INVALID_MICROALGOS_ERROR_MSG);
+
+__exportStar(require("./client/algod"), exports);
+
+var algod_1 = require("./client/v2/algod/algod");
+
+Object.defineProperty(exports, "Algodv2", {
+  enumerable: true,
+  get: function () {
+    return __importDefault(algod_1).default;
+  }
+});
+
+var kmd_1 = require("./client/kmd");
+
+Object.defineProperty(exports, "Kmd", {
+  enumerable: true,
+  get: function () {
+    return __importDefault(kmd_1).default;
+  }
+});
+
+var intDecoding_1 = require("./types/intDecoding");
+
+Object.defineProperty(exports, "IntDecoding", {
+  enumerable: true,
+  get: function () {
+    return __importDefault(intDecoding_1).default;
+  }
+});
+
+var indexer_1 = require("./client/v2/indexer/indexer");
+
+Object.defineProperty(exports, "Indexer", {
+  enumerable: true,
+  get: function () {
+    return __importDefault(indexer_1).default;
+  }
+});
+
+var wait_1 = require("./wait");
+
+Object.defineProperty(exports, "waitForConfirmation", {
+  enumerable: true,
+  get: function () {
+    return wait_1.waitForConfirmation;
+  }
+});
+
+var address_1 = require("./encoding/address");
+
+Object.defineProperty(exports, "isValidAddress", {
+  enumerable: true,
+  get: function () {
+    return address_1.isValidAddress;
+  }
+});
+Object.defineProperty(exports, "encodeAddress", {
+  enumerable: true,
+  get: function () {
+    return address_1.encodeAddress;
+  }
+});
+Object.defineProperty(exports, "decodeAddress", {
+  enumerable: true,
+  get: function () {
+    return address_1.decodeAddress;
+  }
+});
+Object.defineProperty(exports, "getApplicationAddress", {
+  enumerable: true,
+  get: function () {
+    return address_1.getApplicationAddress;
+  }
+});
+
+var uint64_1 = require("./encoding/uint64");
+
+Object.defineProperty(exports, "encodeUint64", {
+  enumerable: true,
+  get: function () {
+    return uint64_1.encodeUint64;
+  }
+});
+Object.defineProperty(exports, "decodeUint64", {
+  enumerable: true,
+  get: function () {
+    return uint64_1.decodeUint64;
+  }
+});
+
+var account_1 = require("./account");
+
+Object.defineProperty(exports, "generateAccount", {
+  enumerable: true,
+  get: function () {
+    return __importDefault(account_1).default;
+  }
+});
+exports.modelsv2 = __importStar(require("./client/v2/algod/models/types"));
+
+var mnemonic_1 = require("./mnemonic/mnemonic");
+
+Object.defineProperty(exports, "mnemonicToMasterDerivationKey", {
+  enumerable: true,
+  get: function () {
+    return mnemonic_1.mnemonicToMasterDerivationKey;
+  }
+});
+Object.defineProperty(exports, "masterDerivationKeyToMnemonic", {
+  enumerable: true,
+  get: function () {
+    return mnemonic_1.masterDerivationKeyToMnemonic;
+  }
+});
+Object.defineProperty(exports, "secretKeyToMnemonic", {
+  enumerable: true,
+  get: function () {
+    return mnemonic_1.secretKeyToMnemonic;
+  }
+});
+Object.defineProperty(exports, "mnemonicToSecretKey", {
+  enumerable: true,
+  get: function () {
+    return mnemonic_1.mnemonicToSecretKey;
+  }
+});
+Object.defineProperty(exports, "seedFromMnemonic", {
+  enumerable: true,
+  get: function () {
+    return mnemonic_1.seedFromMnemonic;
+  }
+});
+Object.defineProperty(exports, "mnemonicFromSeed", {
+  enumerable: true,
+  get: function () {
+    return mnemonic_1.mnemonicFromSeed;
+  }
+});
+
+var convert_1 = require("./convert");
+
+Object.defineProperty(exports, "microalgosToAlgos", {
+  enumerable: true,
+  get: function () {
+    return convert_1.microalgosToAlgos;
+  }
+});
+Object.defineProperty(exports, "algosToMicroalgos", {
+  enumerable: true,
+  get: function () {
+    return convert_1.algosToMicroalgos;
+  }
+});
+Object.defineProperty(exports, "INVALID_MICROALGOS_ERROR_MSG", {
+  enumerable: true,
+  get: function () {
+    return convert_1.INVALID_MICROALGOS_ERROR_MSG;
+  }
+});
+
+var group_1 = require("./group");
+
+Object.defineProperty(exports, "computeGroupID", {
+  enumerable: true,
+  get: function () {
+    return group_1.computeGroupID;
+  }
+});
+Object.defineProperty(exports, "assignGroupID", {
+  enumerable: true,
+  get: function () {
+    return group_1.assignGroupID;
+  }
+});
+
+var logicsig_1 = require("./logicsig");
+
+Object.defineProperty(exports, "LogicSigAccount", {
+  enumerable: true,
+  get: function () {
+    return logicsig_1.LogicSigAccount;
+  }
+});
+Object.defineProperty(exports, "makeLogicSig", {
+  enumerable: true,
+  get: function () {
+    return logicsig_1.makeLogicSig;
+  }
+});
+Object.defineProperty(exports, "signLogicSigTransaction", {
+  enumerable: true,
+  get: function () {
+    return logicsig_1.signLogicSigTransaction;
+  }
+});
+Object.defineProperty(exports, "signLogicSigTransactionObject", {
+  enumerable: true,
+  get: function () {
+    return logicsig_1.signLogicSigTransactionObject;
+  }
+});
+Object.defineProperty(exports, "logicSigFromByte", {
+  enumerable: true,
+  get: function () {
+    return logicsig_1.logicSigFromByte;
+  }
+});
+Object.defineProperty(exports, "tealSign", {
+  enumerable: true,
+  get: function () {
+    return logicsig_1.tealSign;
+  }
+});
+Object.defineProperty(exports, "tealSignFromProgram", {
+  enumerable: true,
+  get: function () {
+    return logicsig_1.tealSignFromProgram;
+  }
+});
+
+var multisig_1 = require("./multisig");
+
+Object.defineProperty(exports, "signMultisigTransaction", {
+  enumerable: true,
+  get: function () {
+    return multisig_1.signMultisigTransaction;
+  }
+});
+Object.defineProperty(exports, "mergeMultisigTransactions", {
+  enumerable: true,
+  get: function () {
+    return multisig_1.mergeMultisigTransactions;
+  }
+});
+Object.defineProperty(exports, "appendSignMultisigTransaction", {
+  enumerable: true,
+  get: function () {
+    return multisig_1.appendSignMultisigTransaction;
+  }
+});
+Object.defineProperty(exports, "multisigAddress", {
+  enumerable: true,
+  get: function () {
+    return multisig_1.multisigAddress;
+  }
+});
+exports.LogicTemplates = LogicTemplatesCommonJSExport.default;
+
+__exportStar(require("./dryrun"), exports);
+
+__exportStar(require("./makeTxn"), exports);
+
+__exportStar(require("./transaction"), exports);
+
+__exportStar(require("./signer"), exports);
+
+__exportStar(require("./composer"), exports);
+
+__exportStar(require("./types"), exports);
+
+__exportStar(require("./abi"), exports);
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./abi":15,"./account":20,"./bid":21,"./client/algod":22,"./client/kmd":24,"./client/v2/algod/algod":27,"./client/v2/algod/models/types":36,"./client/v2/indexer/indexer":47,"./composer":64,"./convert":65,"./dryrun":66,"./encoding/address":67,"./encoding/encoding":69,"./encoding/uint64":70,"./group":71,"./logicTemplates":74,"./logicsig":81,"./makeTxn":83,"./mnemonic/mnemonic":84,"./multisig":86,"./nacl/naclWrappers":87,"./signer":88,"./transaction":89,"./types":91,"./types/intDecoding":92,"./utils/utils":97,"./wait":98,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3}],83:[function(require,module,exports){
+},{"./abi":15,"./account":20,"./bid":21,"./client/algod":22,"./client/kmd":24,"./client/v2/algod/algod":27,"./client/v2/algod/models/types":36,"./client/v2/indexer/indexer":47,"./composer":64,"./convert":65,"./dryrun":66,"./encoding/address":67,"./encoding/encoding":69,"./encoding/uint64":70,"./group":71,"./logicTemplates":74,"./logicsig":81,"./makeTxn":83,"./mnemonic/mnemonic":84,"./multisig":86,"./nacl/naclWrappers":87,"./signer":88,"./transaction":89,"./types":91,"./types/intDecoding":92,"./utils/utils":97,"./wait":98,"buffer":3}],83:[function(require,module,exports){
 "use strict";
+
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-Object.defineProperty(exports, "OnApplicationComplete", {
-  enumerable: true,
-  get: function () {
-    return _base.OnApplicationComplete;
-  }
-});
-exports.makeApplicationCallTxnFromObject = makeApplicationCallTxnFromObject;
-exports.makeApplicationClearStateTxn = makeApplicationClearStateTxn;
-exports.makeApplicationClearStateTxnFromObject = makeApplicationClearStateTxnFromObject;
-exports.makeApplicationCloseOutTxn = makeApplicationCloseOutTxn;
-exports.makeApplicationCloseOutTxnFromObject = makeApplicationCloseOutTxnFromObject;
-exports.makeApplicationCreateTxn = makeApplicationCreateTxn;
-exports.makeApplicationCreateTxnFromObject = makeApplicationCreateTxnFromObject;
-exports.makeApplicationDeleteTxn = makeApplicationDeleteTxn;
-exports.makeApplicationDeleteTxnFromObject = makeApplicationDeleteTxnFromObject;
-exports.makeApplicationNoOpTxn = makeApplicationNoOpTxn;
-exports.makeApplicationNoOpTxnFromObject = makeApplicationNoOpTxnFromObject;
-exports.makeApplicationOptInTxn = makeApplicationOptInTxn;
-exports.makeApplicationOptInTxnFromObject = makeApplicationOptInTxnFromObject;
-exports.makeApplicationUpdateTxn = makeApplicationUpdateTxn;
-exports.makeApplicationUpdateTxnFromObject = makeApplicationUpdateTxnFromObject;
-exports.makeAssetConfigTxn = makeAssetConfigTxn;
-exports.makeAssetConfigTxnWithSuggestedParams = makeAssetConfigTxnWithSuggestedParams;
-exports.makeAssetConfigTxnWithSuggestedParamsFromObject = makeAssetConfigTxnWithSuggestedParamsFromObject;
-exports.makeAssetCreateTxn = makeAssetCreateTxn;
-exports.makeAssetCreateTxnWithSuggestedParams = makeAssetCreateTxnWithSuggestedParams;
-exports.makeAssetCreateTxnWithSuggestedParamsFromObject = makeAssetCreateTxnWithSuggestedParamsFromObject;
-exports.makeAssetDestroyTxn = makeAssetDestroyTxn;
-exports.makeAssetDestroyTxnWithSuggestedParams = makeAssetDestroyTxnWithSuggestedParams;
-exports.makeAssetDestroyTxnWithSuggestedParamsFromObject = makeAssetDestroyTxnWithSuggestedParamsFromObject;
-exports.makeAssetFreezeTxn = makeAssetFreezeTxn;
-exports.makeAssetFreezeTxnWithSuggestedParams = makeAssetFreezeTxnWithSuggestedParams;
-exports.makeAssetFreezeTxnWithSuggestedParamsFromObject = makeAssetFreezeTxnWithSuggestedParamsFromObject;
-exports.makeAssetTransferTxn = makeAssetTransferTxn;
-exports.makeAssetTransferTxnWithSuggestedParams = makeAssetTransferTxnWithSuggestedParams;
-exports.makeAssetTransferTxnWithSuggestedParamsFromObject = makeAssetTransferTxnWithSuggestedParamsFromObject;
-exports.makeKeyRegistrationTxn = makeKeyRegistrationTxn;
-exports.makeKeyRegistrationTxnWithSuggestedParams = makeKeyRegistrationTxnWithSuggestedParams;
-exports.makeKeyRegistrationTxnWithSuggestedParamsFromObject = makeKeyRegistrationTxnWithSuggestedParamsFromObject;
-exports.makePaymentTxn = makePaymentTxn;
-exports.makePaymentTxnWithSuggestedParams = makePaymentTxnWithSuggestedParams;
-exports.makePaymentTxnWithSuggestedParamsFromObject = makePaymentTxnWithSuggestedParamsFromObject;
+exports.makeApplicationCallTxnFromObject = exports.OnApplicationComplete = exports.makeApplicationNoOpTxnFromObject = exports.makeApplicationNoOpTxn = exports.makeApplicationClearStateTxnFromObject = exports.makeApplicationClearStateTxn = exports.makeApplicationCloseOutTxnFromObject = exports.makeApplicationCloseOutTxn = exports.makeApplicationOptInTxnFromObject = exports.makeApplicationOptInTxn = exports.makeApplicationDeleteTxnFromObject = exports.makeApplicationDeleteTxn = exports.makeApplicationUpdateTxnFromObject = exports.makeApplicationUpdateTxn = exports.makeApplicationCreateTxnFromObject = exports.makeApplicationCreateTxn = exports.makeAssetTransferTxnWithSuggestedParamsFromObject = exports.makeAssetTransferTxn = exports.makeAssetTransferTxnWithSuggestedParams = exports.makeAssetFreezeTxnWithSuggestedParamsFromObject = exports.makeAssetFreezeTxn = exports.makeAssetFreezeTxnWithSuggestedParams = exports.makeAssetDestroyTxnWithSuggestedParamsFromObject = exports.makeAssetDestroyTxn = exports.makeAssetDestroyTxnWithSuggestedParams = exports.makeAssetConfigTxnWithSuggestedParamsFromObject = exports.makeAssetConfigTxn = exports.makeAssetConfigTxnWithSuggestedParams = exports.makeAssetCreateTxnWithSuggestedParamsFromObject = exports.makeAssetCreateTxn = exports.makeAssetCreateTxnWithSuggestedParams = exports.makeKeyRegistrationTxnWithSuggestedParamsFromObject = exports.makeKeyRegistrationTxn = exports.makeKeyRegistrationTxnWithSuggestedParams = exports.makePaymentTxnWithSuggestedParamsFromObject = exports.makePaymentTxn = exports.makePaymentTxnWithSuggestedParams = void 0;
 
-var txnBuilder = _interopRequireWildcard(require("./transaction"));
+const txnBuilder = __importStar(require("./transaction"));
 
-var _base = require("./types/transactions/base");
+const base_1 = require("./types/transactions/base");
 
-var _transactions = require("./types/transactions");
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const transactions_1 = require("./types/transactions");
 /**
  * makePaymentTxnWithSuggestedParams takes payment arguments and returns a Transaction object
  * @param from - string representation of Algorand address of sender
@@ -16346,6 +16768,8 @@ function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && 
  * genesisID - string specifies genesis ID of network in use
  * @param rekeyTo - rekeyTo address, optional
  */
+
+
 function makePaymentTxnWithSuggestedParams(from, to, amount, closeRemainderTo, note, suggestedParams, rekeyTo) {
   const o = {
     from,
@@ -16354,11 +16778,13 @@ function makePaymentTxnWithSuggestedParams(from, to, amount, closeRemainderTo, n
     closeRemainderTo,
     note,
     suggestedParams,
-    type: _transactions.TransactionType.pay,
+    type: transactions_1.TransactionType.pay,
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
 }
+
+exports.makePaymentTxnWithSuggestedParams = makePaymentTxnWithSuggestedParams;
 /**
  * makePaymentTxn takes payment arguments and returns a Transaction object
  * @param from - string representation of Algorand address of sender
@@ -16376,7 +16802,6 @@ function makePaymentTxnWithSuggestedParams(from, to, amount, closeRemainderTo, n
  * @Deprecated in version 2.0 this will change to use the "WithSuggestedParams" signature.
  */
 
-
 function makePaymentTxn(from, to, fee, amount, closeRemainderTo, firstRound, lastRound, note, genesisHash, genesisID, rekeyTo) {
   const suggestedParams = {
     genesisHash,
@@ -16386,12 +16811,15 @@ function makePaymentTxn(from, to, fee, amount, closeRemainderTo, firstRound, las
     fee
   };
   return makePaymentTxnWithSuggestedParams(from, to, amount, closeRemainderTo, note, suggestedParams, rekeyTo);
-} // helper for above makePaymentTxnWithSuggestedParams, instead accepting an arguments object
+}
 
+exports.makePaymentTxn = makePaymentTxn; // helper for above makePaymentTxnWithSuggestedParams, instead accepting an arguments object
 
 function makePaymentTxnWithSuggestedParamsFromObject(o) {
   return makePaymentTxnWithSuggestedParams(o.from, o.to, o.amount, o.closeRemainderTo, o.note, o.suggestedParams, o.rekeyTo);
 }
+
+exports.makePaymentTxnWithSuggestedParamsFromObject = makePaymentTxnWithSuggestedParamsFromObject;
 
 function makeKeyRegistrationTxnWithSuggestedParams(from, note, voteKey, selectionKey, voteFirst, voteLast, voteKeyDilution, suggestedParams, rekeyTo, nonParticipation = false) {
   const o = {
@@ -16403,12 +16831,14 @@ function makeKeyRegistrationTxnWithSuggestedParams(from, note, voteKey, selectio
     voteLast,
     voteKeyDilution,
     suggestedParams,
-    type: _transactions.TransactionType.keyreg,
+    type: transactions_1.TransactionType.keyreg,
     reKeyTo: rekeyTo,
     nonParticipation
   };
   return new txnBuilder.Transaction(o);
 }
+
+exports.makeKeyRegistrationTxnWithSuggestedParams = makeKeyRegistrationTxnWithSuggestedParams;
 
 function makeKeyRegistrationTxn(from, fee, firstRound, lastRound, note, genesisHash, genesisID, voteKey, selectionKey, voteFirst, voteLast, voteKeyDilution, rekeyTo, nonParticipation = false) {
   const suggestedParams = {
@@ -16421,9 +16851,13 @@ function makeKeyRegistrationTxn(from, fee, firstRound, lastRound, note, genesisH
   return makeKeyRegistrationTxnWithSuggestedParams(from, note, voteKey, selectionKey, voteFirst, voteLast, voteKeyDilution, suggestedParams, rekeyTo, nonParticipation);
 }
 
+exports.makeKeyRegistrationTxn = makeKeyRegistrationTxn;
+
 function makeKeyRegistrationTxnWithSuggestedParamsFromObject(o) {
   return makeKeyRegistrationTxnWithSuggestedParams(o.from, o.note, o.voteKey, o.selectionKey, o.voteFirst, o.voteLast, o.voteKeyDilution, o.suggestedParams, o.rekeyTo, o.nonParticipation);
 }
+
+exports.makeKeyRegistrationTxnWithSuggestedParamsFromObject = makeKeyRegistrationTxnWithSuggestedParamsFromObject;
 /** makeAssetCreateTxnWithSuggestedParams takes asset creation arguments and returns a Transaction object
  * for creating that asset
  *
@@ -16451,7 +16885,6 @@ function makeKeyRegistrationTxnWithSuggestedParamsFromObject(o) {
  * @param rekeyTo - rekeyTo address, optional
  */
 
-
 function makeAssetCreateTxnWithSuggestedParams(from, note, total, decimals, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName, assetURL, assetMetadataHash, suggestedParams, rekeyTo) {
   const o = {
     from,
@@ -16468,11 +16901,13 @@ function makeAssetCreateTxnWithSuggestedParams(from, note, total, decimals, defa
     assetReserve: reserve,
     assetFreeze: freeze,
     assetClawback: clawback,
-    type: _transactions.TransactionType.acfg,
+    type: transactions_1.TransactionType.acfg,
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
 }
+
+exports.makeAssetCreateTxnWithSuggestedParams = makeAssetCreateTxnWithSuggestedParams;
 /** makeAssetCreateTxn takes asset creation arguments and returns a Transaction object
  * for creating that asset
  *
@@ -16499,7 +16934,6 @@ function makeAssetCreateTxnWithSuggestedParams(from, note, total, decimals, defa
  * @Deprecated in version 2.0 this will change to use the "WithSuggestedParams" signature.
  */
 
-
 function makeAssetCreateTxn(from, fee, firstRound, lastRound, note, genesisHash, genesisID, total, decimals, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName, assetURL, assetMetadataHash, rekeyTo) {
   const suggestedParams = {
     genesisHash,
@@ -16509,12 +16943,15 @@ function makeAssetCreateTxn(from, fee, firstRound, lastRound, note, genesisHash,
     fee
   };
   return makeAssetCreateTxnWithSuggestedParams(from, note, total, decimals, defaultFrozen, manager, reserve, freeze, clawback, unitName, assetName, assetURL, assetMetadataHash, suggestedParams, rekeyTo);
-} // helper for above makeAssetCreateTxnWithSuggestedParams, instead accepting an arguments object
+}
 
+exports.makeAssetCreateTxn = makeAssetCreateTxn; // helper for above makeAssetCreateTxnWithSuggestedParams, instead accepting an arguments object
 
 function makeAssetCreateTxnWithSuggestedParamsFromObject(o) {
   return makeAssetCreateTxnWithSuggestedParams(o.from, o.note, o.total, o.decimals, o.defaultFrozen, o.manager, o.reserve, o.freeze, o.clawback, o.unitName, o.assetName, o.assetURL, o.assetMetadataHash, o.suggestedParams, o.rekeyTo);
 }
+
+exports.makeAssetCreateTxnWithSuggestedParamsFromObject = makeAssetCreateTxnWithSuggestedParamsFromObject;
 /** makeAssetConfigTxnWithSuggestedParams can be issued by the asset manager to change the manager, reserve, freeze, or clawback
  * you must respecify existing addresses to keep them the same; leaving a field blank is the same as turning
  * that feature off for this asset
@@ -16538,7 +16975,6 @@ function makeAssetCreateTxnWithSuggestedParamsFromObject(o) {
  * @param rekeyTo - rekeyTo address, optional
  */
 
-
 function makeAssetConfigTxnWithSuggestedParams(from, note, assetIndex, manager, reserve, freeze, clawback, suggestedParams, strictEmptyAddressChecking = true, rekeyTo) {
   if (strictEmptyAddressChecking && (manager === undefined || reserve === undefined || freeze === undefined || clawback === undefined)) {
     throw Error('strict empty address checking was turned on, but at least one empty address was provided');
@@ -16552,12 +16988,14 @@ function makeAssetConfigTxnWithSuggestedParams(from, note, assetIndex, manager, 
     assetReserve: reserve,
     assetFreeze: freeze,
     assetClawback: clawback,
-    type: _transactions.TransactionType.acfg,
+    type: transactions_1.TransactionType.acfg,
     note,
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
 }
+
+exports.makeAssetConfigTxnWithSuggestedParams = makeAssetConfigTxnWithSuggestedParams;
 /** makeAssetConfigTxn can be issued by the asset manager to change the manager, reserve, freeze, or clawback
  * you must respecify existing addresses to keep them the same; leaving a field blank is the same as turning
  * that feature off for this asset
@@ -16580,7 +17018,6 @@ function makeAssetConfigTxnWithSuggestedParams(from, note, assetIndex, manager, 
  * @Deprecated in version 2.0 this will change to use the "WithSuggestedParams" signature.
  */
 
-
 function makeAssetConfigTxn(from, fee, firstRound, lastRound, note, genesisHash, genesisID, assetIndex, manager, reserve, freeze, clawback, strictEmptyAddressChecking = true, rekeyTo) {
   const suggestedParams = {
     genesisHash,
@@ -16590,12 +17027,15 @@ function makeAssetConfigTxn(from, fee, firstRound, lastRound, note, genesisHash,
     fee
   };
   return makeAssetConfigTxnWithSuggestedParams(from, note, assetIndex, manager, reserve, freeze, clawback, suggestedParams, strictEmptyAddressChecking, rekeyTo);
-} // helper for above makeAssetConfigTxnWithSuggestedParams, instead accepting an arguments object
+}
 
+exports.makeAssetConfigTxn = makeAssetConfigTxn; // helper for above makeAssetConfigTxnWithSuggestedParams, instead accepting an arguments object
 
 function makeAssetConfigTxnWithSuggestedParamsFromObject(o) {
   return makeAssetConfigTxnWithSuggestedParams(o.from, o.note, o.assetIndex, o.manager, o.reserve, o.freeze, o.clawback, o.suggestedParams, o.strictEmptyAddressChecking, o.rekeyTo);
 }
+
+exports.makeAssetConfigTxnWithSuggestedParamsFromObject = makeAssetConfigTxnWithSuggestedParamsFromObject;
 /** makeAssetDestroyTxnWithSuggestedParams will allow the asset's manager to remove this asset from the ledger, so long
  * as all outstanding assets are held by the creator.
  *
@@ -16613,18 +17053,19 @@ function makeAssetConfigTxnWithSuggestedParamsFromObject(o) {
  * @param rekeyTo - rekeyTo address, optional
  */
 
-
 function makeAssetDestroyTxnWithSuggestedParams(from, note, assetIndex, suggestedParams, rekeyTo) {
   const o = {
     from,
     suggestedParams,
     assetIndex,
-    type: _transactions.TransactionType.acfg,
+    type: transactions_1.TransactionType.acfg,
     note,
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
 }
+
+exports.makeAssetDestroyTxnWithSuggestedParams = makeAssetDestroyTxnWithSuggestedParams;
 /** makeAssetDestroyTxn will allow the asset's manager to remove this asset from the ledger, so long
  * as all outstanding assets are held by the creator.
  *
@@ -16641,7 +17082,6 @@ function makeAssetDestroyTxnWithSuggestedParams(from, note, assetIndex, suggeste
  * @Deprecated in version 2.0 this will change to use the "WithSuggestedParams" signature.
  */
 
-
 function makeAssetDestroyTxn(from, fee, firstRound, lastRound, note, genesisHash, genesisID, assetIndex, rekeyTo) {
   const suggestedParams = {
     genesisHash,
@@ -16651,12 +17091,15 @@ function makeAssetDestroyTxn(from, fee, firstRound, lastRound, note, genesisHash
     fee
   };
   return makeAssetDestroyTxnWithSuggestedParams(from, note, assetIndex, suggestedParams, rekeyTo);
-} // helper for above makeAssetDestroyTxnWithSuggestedParams, instead accepting an arguments object
+}
 
+exports.makeAssetDestroyTxn = makeAssetDestroyTxn; // helper for above makeAssetDestroyTxnWithSuggestedParams, instead accepting an arguments object
 
 function makeAssetDestroyTxnWithSuggestedParamsFromObject(o) {
   return makeAssetDestroyTxnWithSuggestedParams(o.from, o.note, o.assetIndex, o.suggestedParams, o.rekeyTo);
 }
+
+exports.makeAssetDestroyTxnWithSuggestedParamsFromObject = makeAssetDestroyTxnWithSuggestedParamsFromObject;
 /** makeAssetFreezeTxnWithSuggestedParams will allow the asset's freeze manager to freeze or un-freeze an account,
  * blocking or allowing asset transfers to and from the targeted account.
  *
@@ -16676,11 +17119,10 @@ function makeAssetDestroyTxnWithSuggestedParamsFromObject(o) {
  * @param rekeyTo - rekeyTo address, optional
  */
 
-
 function makeAssetFreezeTxnWithSuggestedParams(from, note, assetIndex, freezeTarget, freezeState, suggestedParams, rekeyTo) {
   const o = {
     from,
-    type: _transactions.TransactionType.afrz,
+    type: transactions_1.TransactionType.afrz,
     freezeAccount: freezeTarget,
     assetIndex,
     freezeState,
@@ -16690,6 +17132,8 @@ function makeAssetFreezeTxnWithSuggestedParams(from, note, assetIndex, freezeTar
   };
   return new txnBuilder.Transaction(o);
 }
+
+exports.makeAssetFreezeTxnWithSuggestedParams = makeAssetFreezeTxnWithSuggestedParams;
 /** makeAssetFreezeTxn will allow the asset's freeze manager to freeze or un-freeze an account,
  * blocking or allowing asset transfers to and from the targeted account.
  *
@@ -16708,7 +17152,6 @@ function makeAssetFreezeTxnWithSuggestedParams(from, note, assetIndex, freezeTar
  * @Deprecated in version 2.0 this will change to use the "WithSuggestedParams" signature.
  */
 
-
 function makeAssetFreezeTxn(from, fee, firstRound, lastRound, note, genesisHash, genesisID, assetIndex, freezeTarget, freezeState, rekeyTo) {
   const suggestedParams = {
     genesisHash,
@@ -16718,12 +17161,15 @@ function makeAssetFreezeTxn(from, fee, firstRound, lastRound, note, genesisHash,
     fee
   };
   return makeAssetFreezeTxnWithSuggestedParams(from, note, assetIndex, freezeTarget, freezeState, suggestedParams, rekeyTo);
-} // helper for above makeAssetFreezeTxnWithSuggestedParams, instead accepting an arguments object
+}
 
+exports.makeAssetFreezeTxn = makeAssetFreezeTxn; // helper for above makeAssetFreezeTxnWithSuggestedParams, instead accepting an arguments object
 
 function makeAssetFreezeTxnWithSuggestedParamsFromObject(o) {
   return makeAssetFreezeTxnWithSuggestedParams(o.from, o.note, o.assetIndex, o.freezeTarget, o.freezeState, o.suggestedParams, o.rekeyTo);
 }
+
+exports.makeAssetFreezeTxnWithSuggestedParamsFromObject = makeAssetFreezeTxnWithSuggestedParamsFromObject;
 /** makeAssetTransferTxnWithSuggestedParams allows for the creation of an asset transfer transaction.
  * Special case: to begin accepting assets, set amount=0 and from=to.
  *
@@ -16749,10 +17195,9 @@ function makeAssetFreezeTxnWithSuggestedParamsFromObject(o) {
  * @param rekeyTo - rekeyTo address, optional
  */
 
-
 function makeAssetTransferTxnWithSuggestedParams(from, to, closeRemainderTo, revocationTarget, amount, note, assetIndex, suggestedParams, rekeyTo) {
   const o = {
-    type: _transactions.TransactionType.axfer,
+    type: transactions_1.TransactionType.axfer,
     from,
     to,
     amount,
@@ -16765,6 +17210,8 @@ function makeAssetTransferTxnWithSuggestedParams(from, to, closeRemainderTo, rev
   };
   return new txnBuilder.Transaction(o);
 }
+
+exports.makeAssetTransferTxnWithSuggestedParams = makeAssetTransferTxnWithSuggestedParams;
 /** makeAssetTransferTxn allows for the creation of an asset transfer transaction.
  * Special case: to begin accepting assets, set amount=0 and from=to.
  *
@@ -16787,7 +17234,6 @@ function makeAssetTransferTxnWithSuggestedParams(from, to, closeRemainderTo, rev
  * @Deprecated in version 2.0 this will change to use the "WithSuggestedParams" signature.
  */
 
-
 function makeAssetTransferTxn(from, to, closeRemainderTo, revocationTarget, fee, amount, firstRound, lastRound, note, genesisHash, genesisID, assetIndex, rekeyTo) {
   const suggestedParams = {
     genesisHash,
@@ -16797,12 +17243,15 @@ function makeAssetTransferTxn(from, to, closeRemainderTo, revocationTarget, fee,
     fee
   };
   return makeAssetTransferTxnWithSuggestedParams(from, to, closeRemainderTo, revocationTarget, amount, note, assetIndex, suggestedParams, rekeyTo);
-} // helper for above makeAssetTransferTxnWithSuggestedParams, instead accepting an arguments object
+}
 
+exports.makeAssetTransferTxn = makeAssetTransferTxn; // helper for above makeAssetTransferTxnWithSuggestedParams, instead accepting an arguments object
 
 function makeAssetTransferTxnWithSuggestedParamsFromObject(o) {
   return makeAssetTransferTxnWithSuggestedParams(o.from, o.to, o.closeRemainderTo, o.revocationTarget, o.amount, o.note, o.assetIndex, o.suggestedParams, o.rekeyTo);
 }
+
+exports.makeAssetTransferTxnWithSuggestedParamsFromObject = makeAssetTransferTxnWithSuggestedParamsFromObject;
 /**
  * Make a transaction that will create an application.
  * @param from - address of sender
@@ -16831,10 +17280,9 @@ function makeAssetTransferTxnWithSuggestedParamsFromObject(o) {
  * @param extraPages - integer extra pages of memory to rent on creation of application
  */
 
-
 function makeApplicationCreateTxn(from, suggestedParams, onComplete, approvalProgram, clearProgram, numLocalInts, numLocalByteSlices, numGlobalInts, numGlobalByteSlices, appArgs, accounts, foreignApps, foreignAssets, note, lease, rekeyTo, extraPages) {
   const o = {
-    type: _transactions.TransactionType.appl,
+    type: transactions_1.TransactionType.appl,
     from,
     suggestedParams,
     appIndex: 0,
@@ -16855,12 +17303,15 @@ function makeApplicationCreateTxn(from, suggestedParams, onComplete, approvalPro
     extraPages
   };
   return new txnBuilder.Transaction(o);
-} // helper for above makeApplicationCreateTxn, instead accepting an arguments object
+}
 
+exports.makeApplicationCreateTxn = makeApplicationCreateTxn; // helper for above makeApplicationCreateTxn, instead accepting an arguments object
 
 function makeApplicationCreateTxnFromObject(o) {
   return makeApplicationCreateTxn(o.from, o.suggestedParams, o.onComplete, o.approvalProgram, o.clearProgram, o.numLocalInts, o.numLocalByteSlices, o.numGlobalInts, o.numGlobalByteSlices, o.appArgs, o.accounts, o.foreignApps, o.foreignAssets, o.note, o.lease, o.rekeyTo, o.extraPages);
 }
+
+exports.makeApplicationCreateTxnFromObject = makeApplicationCreateTxnFromObject;
 /**
  * Make a transaction that changes an application's approval and clear programs
  * @param from - address of sender
@@ -16884,15 +17335,14 @@ function makeApplicationCreateTxnFromObject(o) {
  * @param rekeyTo - String representation of the Algorand address that will be used to authorize all future transactions
  */
 
-
 function makeApplicationUpdateTxn(from, suggestedParams, appIndex, approvalProgram, clearProgram, appArgs, accounts, foreignApps, foreignAssets, note, lease, rekeyTo) {
   const o = {
-    type: _transactions.TransactionType.appl,
+    type: transactions_1.TransactionType.appl,
     from,
     suggestedParams,
     appIndex,
     appApprovalProgram: approvalProgram,
-    appOnComplete: _base.OnApplicationComplete.UpdateApplicationOC,
+    appOnComplete: base_1.OnApplicationComplete.UpdateApplicationOC,
     appClearProgram: clearProgram,
     appArgs,
     appAccounts: accounts,
@@ -16903,12 +17353,15 @@ function makeApplicationUpdateTxn(from, suggestedParams, appIndex, approvalProgr
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
-} // helper for above makeApplicationUpdateTxn, instead accepting an arguments object
+}
 
+exports.makeApplicationUpdateTxn = makeApplicationUpdateTxn; // helper for above makeApplicationUpdateTxn, instead accepting an arguments object
 
 function makeApplicationUpdateTxnFromObject(o) {
   return makeApplicationUpdateTxn(o.from, o.suggestedParams, o.appIndex, o.approvalProgram, o.clearProgram, o.appArgs, o.accounts, o.foreignApps, o.foreignAssets, o.note, o.lease, o.rekeyTo);
 }
+
+exports.makeApplicationUpdateTxnFromObject = makeApplicationUpdateTxnFromObject;
 /**
  * Make a transaction that deletes an application
  * @param from - address of sender
@@ -16930,14 +17383,13 @@ function makeApplicationUpdateTxnFromObject(o) {
  * @param rekeyTo - String representation of the Algorand address that will be used to authorize all future transactions
  */
 
-
 function makeApplicationDeleteTxn(from, suggestedParams, appIndex, appArgs, accounts, foreignApps, foreignAssets, note, lease, rekeyTo) {
   const o = {
-    type: _transactions.TransactionType.appl,
+    type: transactions_1.TransactionType.appl,
     from,
     suggestedParams,
     appIndex,
-    appOnComplete: _base.OnApplicationComplete.DeleteApplicationOC,
+    appOnComplete: base_1.OnApplicationComplete.DeleteApplicationOC,
     appArgs,
     appAccounts: accounts,
     appForeignApps: foreignApps,
@@ -16947,12 +17399,15 @@ function makeApplicationDeleteTxn(from, suggestedParams, appIndex, appArgs, acco
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
-} // helper for above makeApplicationDeleteTxn, instead accepting an arguments object
+}
 
+exports.makeApplicationDeleteTxn = makeApplicationDeleteTxn; // helper for above makeApplicationDeleteTxn, instead accepting an arguments object
 
 function makeApplicationDeleteTxnFromObject(o) {
   return makeApplicationDeleteTxn(o.from, o.suggestedParams, o.appIndex, o.appArgs, o.accounts, o.foreignApps, o.foreignAssets, o.note, o.lease, o.rekeyTo);
 }
+
+exports.makeApplicationDeleteTxnFromObject = makeApplicationDeleteTxnFromObject;
 /**
  * Make a transaction that opts in to use an application
  * @param from - address of sender
@@ -16974,14 +17429,13 @@ function makeApplicationDeleteTxnFromObject(o) {
  * @param rekeyTo - String representation of the Algorand address that will be used to authorize all future transactions
  */
 
-
 function makeApplicationOptInTxn(from, suggestedParams, appIndex, appArgs, accounts, foreignApps, foreignAssets, note, lease, rekeyTo) {
   const o = {
-    type: _transactions.TransactionType.appl,
+    type: transactions_1.TransactionType.appl,
     from,
     suggestedParams,
     appIndex,
-    appOnComplete: _base.OnApplicationComplete.OptInOC,
+    appOnComplete: base_1.OnApplicationComplete.OptInOC,
     appArgs,
     appAccounts: accounts,
     appForeignApps: foreignApps,
@@ -16991,12 +17445,15 @@ function makeApplicationOptInTxn(from, suggestedParams, appIndex, appArgs, accou
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
-} // helper for above makeApplicationOptInTxn, instead accepting an argument object
+}
 
+exports.makeApplicationOptInTxn = makeApplicationOptInTxn; // helper for above makeApplicationOptInTxn, instead accepting an argument object
 
 function makeApplicationOptInTxnFromObject(o) {
   return makeApplicationOptInTxn(o.from, o.suggestedParams, o.appIndex, o.appArgs, o.accounts, o.foreignApps, o.foreignAssets, o.note, o.lease, o.rekeyTo);
 }
+
+exports.makeApplicationOptInTxnFromObject = makeApplicationOptInTxnFromObject;
 /**
  * Make a transaction that closes out a user's state in an application
  * @param from - address of sender
@@ -17018,14 +17475,13 @@ function makeApplicationOptInTxnFromObject(o) {
  * @param rekeyTo - String representation of the Algorand address that will be used to authorize all future transactions
  */
 
-
 function makeApplicationCloseOutTxn(from, suggestedParams, appIndex, appArgs, accounts, foreignApps, foreignAssets, note, lease, rekeyTo) {
   const o = {
-    type: _transactions.TransactionType.appl,
+    type: transactions_1.TransactionType.appl,
     from,
     suggestedParams,
     appIndex,
-    appOnComplete: _base.OnApplicationComplete.CloseOutOC,
+    appOnComplete: base_1.OnApplicationComplete.CloseOutOC,
     appArgs,
     appAccounts: accounts,
     appForeignApps: foreignApps,
@@ -17035,12 +17491,15 @@ function makeApplicationCloseOutTxn(from, suggestedParams, appIndex, appArgs, ac
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
-} // helper for above makeApplicationCloseOutTxn, instead accepting an argument object
+}
 
+exports.makeApplicationCloseOutTxn = makeApplicationCloseOutTxn; // helper for above makeApplicationCloseOutTxn, instead accepting an argument object
 
 function makeApplicationCloseOutTxnFromObject(o) {
   return makeApplicationCloseOutTxn(o.from, o.suggestedParams, o.appIndex, o.appArgs, o.accounts, o.foreignApps, o.foreignAssets, o.note, o.lease, o.rekeyTo);
 }
+
+exports.makeApplicationCloseOutTxnFromObject = makeApplicationCloseOutTxnFromObject;
 /**
  * Make a transaction that clears a user's state in an application
  * @param from - address of sender
@@ -17062,14 +17521,13 @@ function makeApplicationCloseOutTxnFromObject(o) {
  * @param rekeyTo - String representation of the Algorand address that will be used to authorize all future transactions
  */
 
-
 function makeApplicationClearStateTxn(from, suggestedParams, appIndex, appArgs, accounts, foreignApps, foreignAssets, note, lease, rekeyTo) {
   const o = {
-    type: _transactions.TransactionType.appl,
+    type: transactions_1.TransactionType.appl,
     from,
     suggestedParams,
     appIndex,
-    appOnComplete: _base.OnApplicationComplete.ClearStateOC,
+    appOnComplete: base_1.OnApplicationComplete.ClearStateOC,
     appArgs,
     appAccounts: accounts,
     appForeignApps: foreignApps,
@@ -17079,12 +17537,15 @@ function makeApplicationClearStateTxn(from, suggestedParams, appIndex, appArgs, 
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
-} // helper for above makeApplicationClearStateTxn, instead accepting an argument object
+}
 
+exports.makeApplicationClearStateTxn = makeApplicationClearStateTxn; // helper for above makeApplicationClearStateTxn, instead accepting an argument object
 
 function makeApplicationClearStateTxnFromObject(o) {
   return makeApplicationClearStateTxn(o.from, o.suggestedParams, o.appIndex, o.appArgs, o.accounts, o.foreignApps, o.foreignAssets, o.note, o.lease, o.rekeyTo);
 }
+
+exports.makeApplicationClearStateTxnFromObject = makeApplicationClearStateTxnFromObject;
 /**
  * Make a transaction that just calls an application, doing nothing on completion
  * @param from - address of sender
@@ -17106,14 +17567,13 @@ function makeApplicationClearStateTxnFromObject(o) {
  * @param rekeyTo - String representation of the Algorand address that will be used to authorize all future transactions
  */
 
-
 function makeApplicationNoOpTxn(from, suggestedParams, appIndex, appArgs, accounts, foreignApps, foreignAssets, note, lease, rekeyTo) {
   const o = {
-    type: _transactions.TransactionType.appl,
+    type: transactions_1.TransactionType.appl,
     from,
     suggestedParams,
     appIndex,
-    appOnComplete: _base.OnApplicationComplete.NoOpOC,
+    appOnComplete: base_1.OnApplicationComplete.NoOpOC,
     appArgs,
     appAccounts: accounts,
     appForeignApps: foreignApps,
@@ -17123,19 +17583,31 @@ function makeApplicationNoOpTxn(from, suggestedParams, appIndex, appArgs, accoun
     reKeyTo: rekeyTo
   };
   return new txnBuilder.Transaction(o);
-} // helper for above makeApplicationNoOpTxn, instead accepting an argument object
+}
 
+exports.makeApplicationNoOpTxn = makeApplicationNoOpTxn; // helper for above makeApplicationNoOpTxn, instead accepting an argument object
 
 function makeApplicationNoOpTxnFromObject(o) {
   return makeApplicationNoOpTxn(o.from, o.suggestedParams, o.appIndex, o.appArgs, o.accounts, o.foreignApps, o.foreignAssets, o.note, o.lease, o.rekeyTo);
 }
 
+exports.makeApplicationNoOpTxnFromObject = makeApplicationNoOpTxnFromObject;
+
+var base_2 = require("./types/transactions/base");
+
+Object.defineProperty(exports, "OnApplicationComplete", {
+  enumerable: true,
+  get: function () {
+    return base_2.OnApplicationComplete;
+  }
+});
 /**
  * Generic function for creating any application call transaction.
  */
+
 function makeApplicationCallTxnFromObject(options) {
   const o = {
-    type: _transactions.TransactionType.appl,
+    type: transactions_1.TransactionType.appl,
     from: options.from,
     suggestedParams: options.suggestedParams,
     appIndex: options.appIndex,
@@ -17158,38 +17630,63 @@ function makeApplicationCallTxnFromObject(options) {
   return new txnBuilder.Transaction(o);
 }
 
+exports.makeApplicationCallTxnFromObject = makeApplicationCallTxnFromObject;
+
 },{"./transaction":89,"./types/transactions":96,"./types/transactions/base":94}],84:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.NOT_IN_WORDS_LIST_ERROR_MSG = exports.FAIL_TO_DECODE_MNEMONIC_ERROR_MSG = void 0;
-exports.masterDerivationKeyToMnemonic = masterDerivationKeyToMnemonic;
-exports.mnemonicFromSeed = mnemonicFromSeed;
-exports.mnemonicToMasterDerivationKey = mnemonicToMasterDerivationKey;
-exports.mnemonicToSecretKey = mnemonicToSecretKey;
-exports.secretKeyToMnemonic = secretKeyToMnemonic;
-exports.seedFromMnemonic = seedFromMnemonic;
-
-var _english = _interopRequireDefault(require("./wordlists/english"));
-
-var nacl = _interopRequireWildcard(require("../nacl/naclWrappers"));
-
-var address = _interopRequireWildcard(require("../encoding/address"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+exports.masterDerivationKeyToMnemonic = exports.mnemonicToMasterDerivationKey = exports.secretKeyToMnemonic = exports.mnemonicToSecretKey = exports.seedFromMnemonic = exports.mnemonicFromSeed = exports.NOT_IN_WORDS_LIST_ERROR_MSG = exports.FAIL_TO_DECODE_MNEMONIC_ERROR_MSG = void 0;
 /* eslint-disable no-bitwise */
-const FAIL_TO_DECODE_MNEMONIC_ERROR_MSG = 'failed to decode mnemonic';
-exports.FAIL_TO_DECODE_MNEMONIC_ERROR_MSG = FAIL_TO_DECODE_MNEMONIC_ERROR_MSG;
-const NOT_IN_WORDS_LIST_ERROR_MSG = 'the mnemonic contains a word that is not in the wordlist'; // https://stackoverflow.com/a/51452614
 
-exports.NOT_IN_WORDS_LIST_ERROR_MSG = NOT_IN_WORDS_LIST_ERROR_MSG;
+const english_1 = __importDefault(require("./wordlists/english"));
+
+const nacl = __importStar(require("../nacl/naclWrappers"));
+
+const address = __importStar(require("../encoding/address"));
+
+exports.FAIL_TO_DECODE_MNEMONIC_ERROR_MSG = 'failed to decode mnemonic';
+exports.NOT_IN_WORDS_LIST_ERROR_MSG = 'the mnemonic contains a word that is not in the wordlist'; // https://stackoverflow.com/a/51452614
 
 function toUint11Array(buffer8) {
   const buffer11 = [];
@@ -17219,7 +17716,7 @@ function toUint11Array(buffer8) {
 }
 
 function applyWords(nums) {
-  return nums.map(n => _english.default[n]);
+  return nums.map(n => english_1.default[n]);
 }
 
 function computeChecksum(seed) {
@@ -17246,9 +17743,10 @@ function mnemonicFromSeed(seed) {
   const words = applyWords(uint11Array);
   const checksumWord = computeChecksum(seed);
   return `${words.join(' ')} ${checksumWord}`;
-} // from Uint11Array
-// https://stackoverflow.com/a/51452614
+}
 
+exports.mnemonicFromSeed = mnemonicFromSeed; // from Uint11Array
+// https://stackoverflow.com/a/51452614
 
 function toUint8Array(buffer11) {
   const buffer8 = [];
@@ -17290,11 +17788,11 @@ function seedFromMnemonic(mnemonic) {
   const key = words.slice(0, 24); // Check that all words are in list
 
   for (const w of key) {
-    if (_english.default.indexOf(w) === -1) throw new Error(NOT_IN_WORDS_LIST_ERROR_MSG);
+    if (english_1.default.indexOf(w) === -1) throw new Error(exports.NOT_IN_WORDS_LIST_ERROR_MSG);
   }
 
   const checksum = words[words.length - 1];
-  const uint11Array = key.map(word => _english.default.indexOf(word)); // Convert the key to uint8Array
+  const uint11Array = key.map(word => english_1.default.indexOf(word)); // Convert the key to uint8Array
 
   let uint8Array = toUint8Array(uint11Array); // We need to chop the last byte -
   // the short explanation - Since 256 is not divisible by 11, we have an extra 0x0 byte.
@@ -17303,23 +17801,24 @@ function seedFromMnemonic(mnemonic) {
   // While converting back to byte array, our new 264 bits array is divisible by 8 but the last byte is just the padding.
   // check that we have 33 bytes long array as expected
 
-  if (uint8Array.length !== 33) throw new Error(FAIL_TO_DECODE_MNEMONIC_ERROR_MSG); // check that the last byte is actually 0x0
+  if (uint8Array.length !== 33) throw new Error(exports.FAIL_TO_DECODE_MNEMONIC_ERROR_MSG); // check that the last byte is actually 0x0
 
-  if (uint8Array[uint8Array.length - 1] !== 0x0) throw new Error(FAIL_TO_DECODE_MNEMONIC_ERROR_MSG); // chop it !
+  if (uint8Array[uint8Array.length - 1] !== 0x0) throw new Error(exports.FAIL_TO_DECODE_MNEMONIC_ERROR_MSG); // chop it !
 
   uint8Array = uint8Array.slice(0, uint8Array.length - 1); // compute checksum
 
   const cs = computeChecksum(uint8Array); // success!
 
   if (cs === checksum) return uint8Array;
-  throw new Error(FAIL_TO_DECODE_MNEMONIC_ERROR_MSG);
+  throw new Error(exports.FAIL_TO_DECODE_MNEMONIC_ERROR_MSG);
 }
+
+exports.seedFromMnemonic = seedFromMnemonic;
 /**
  * mnemonicToSecretKey takes a mnemonic string and returns the corresponding Algorand address and its secret key.
  * @param mn - 25 words Algorand mnemonic
  * @throws error if fails to decode the mnemonic
  */
-
 
 function mnemonicToSecretKey(mn) {
   const seed = seedFromMnemonic(mn);
@@ -17330,18 +17829,21 @@ function mnemonicToSecretKey(mn) {
     sk: keys.secretKey
   };
 }
+
+exports.mnemonicToSecretKey = mnemonicToSecretKey;
 /**
  * secretKeyToMnemonic takes an Algorand secret key and returns the corresponding mnemonic.
  * @param sk - Algorand secret key
  * @returns Secret key's associated mnemonic
  */
 
-
 function secretKeyToMnemonic(sk) {
   // get the seed from the sk
   const seed = sk.slice(0, nacl.SEED_BTYES_LENGTH);
   return mnemonicFromSeed(seed);
 }
+
+exports.secretKeyToMnemonic = secretKeyToMnemonic;
 /**
  * mnemonicToMasterDerivationKey takes a mnemonic string and returns the corresponding master derivation key.
  * @param mn - 25 words Algorand mnemonic
@@ -17349,77 +17851,95 @@ function secretKeyToMnemonic(sk) {
  * @throws error if fails to decode the mnemonic
  */
 
-
 function mnemonicToMasterDerivationKey(mn) {
   return seedFromMnemonic(mn);
 }
+
+exports.mnemonicToMasterDerivationKey = mnemonicToMasterDerivationKey;
 /**
  * masterDerivationKeyToMnemonic takes a master derivation key and returns the corresponding mnemonic.
  * @param mdk - Uint8Array
  * @returns string mnemonic
  */
 
-
 function masterDerivationKeyToMnemonic(mdk) {
   return mnemonicFromSeed(mdk);
 }
 
-},{"../encoding/address":67,"../nacl/naclWrappers":87,"./wordlists/english":85,"@babel/runtime/helpers/interopRequireDefault":10}],85:[function(require,module,exports){
+exports.masterDerivationKeyToMnemonic = masterDerivationKeyToMnemonic;
+
+},{"../encoding/address":67,"../nacl/naclWrappers":87,"./wordlists/english":85}],85:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
 const english = ['abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse', 'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act', 'action', 'actor', 'actress', 'actual', 'adapt', 'add', 'addict', 'address', 'adjust', 'admit', 'adult', 'advance', 'advice', 'aerobic', 'affair', 'afford', 'afraid', 'again', 'age', 'agent', 'agree', 'ahead', 'aim', 'air', 'airport', 'aisle', 'alarm', 'album', 'alcohol', 'alert', 'alien', 'all', 'alley', 'allow', 'almost', 'alone', 'alpha', 'already', 'also', 'alter', 'always', 'amateur', 'amazing', 'among', 'amount', 'amused', 'analyst', 'anchor', 'ancient', 'anger', 'angle', 'angry', 'animal', 'ankle', 'announce', 'annual', 'another', 'answer', 'antenna', 'antique', 'anxiety', 'any', 'apart', 'apology', 'appear', 'apple', 'approve', 'april', 'arch', 'arctic', 'area', 'arena', 'argue', 'arm', 'armed', 'armor', 'army', 'around', 'arrange', 'arrest', 'arrive', 'arrow', 'art', 'artefact', 'artist', 'artwork', 'ask', 'aspect', 'assault', 'asset', 'assist', 'assume', 'asthma', 'athlete', 'atom', 'attack', 'attend', 'attitude', 'attract', 'auction', 'audit', 'august', 'aunt', 'author', 'auto', 'autumn', 'average', 'avocado', 'avoid', 'awake', 'aware', 'away', 'awesome', 'awful', 'awkward', 'axis', 'baby', 'bachelor', 'bacon', 'badge', 'bag', 'balance', 'balcony', 'ball', 'bamboo', 'banana', 'banner', 'bar', 'barely', 'bargain', 'barrel', 'base', 'basic', 'basket', 'battle', 'beach', 'bean', 'beauty', 'because', 'become', 'beef', 'before', 'begin', 'behave', 'behind', 'believe', 'below', 'belt', 'bench', 'benefit', 'best', 'betray', 'better', 'between', 'beyond', 'bicycle', 'bid', 'bike', 'bind', 'biology', 'bird', 'birth', 'bitter', 'black', 'blade', 'blame', 'blanket', 'blast', 'bleak', 'bless', 'blind', 'blood', 'blossom', 'blouse', 'blue', 'blur', 'blush', 'board', 'boat', 'body', 'boil', 'bomb', 'bone', 'bonus', 'book', 'boost', 'border', 'boring', 'borrow', 'boss', 'bottom', 'bounce', 'box', 'boy', 'bracket', 'brain', 'brand', 'brass', 'brave', 'bread', 'breeze', 'brick', 'bridge', 'brief', 'bright', 'bring', 'brisk', 'broccoli', 'broken', 'bronze', 'broom', 'brother', 'brown', 'brush', 'bubble', 'buddy', 'budget', 'buffalo', 'build', 'bulb', 'bulk', 'bullet', 'bundle', 'bunker', 'burden', 'burger', 'burst', 'bus', 'business', 'busy', 'butter', 'buyer', 'buzz', 'cabbage', 'cabin', 'cable', 'cactus', 'cage', 'cake', 'call', 'calm', 'camera', 'camp', 'can', 'canal', 'cancel', 'candy', 'cannon', 'canoe', 'canvas', 'canyon', 'capable', 'capital', 'captain', 'car', 'carbon', 'card', 'cargo', 'carpet', 'carry', 'cart', 'case', 'cash', 'casino', 'castle', 'casual', 'cat', 'catalog', 'catch', 'category', 'cattle', 'caught', 'cause', 'caution', 'cave', 'ceiling', 'celery', 'cement', 'census', 'century', 'cereal', 'certain', 'chair', 'chalk', 'champion', 'change', 'chaos', 'chapter', 'charge', 'chase', 'chat', 'cheap', 'check', 'cheese', 'chef', 'cherry', 'chest', 'chicken', 'chief', 'child', 'chimney', 'choice', 'choose', 'chronic', 'chuckle', 'chunk', 'churn', 'cigar', 'cinnamon', 'circle', 'citizen', 'city', 'civil', 'claim', 'clap', 'clarify', 'claw', 'clay', 'clean', 'clerk', 'clever', 'click', 'client', 'cliff', 'climb', 'clinic', 'clip', 'clock', 'clog', 'close', 'cloth', 'cloud', 'clown', 'club', 'clump', 'cluster', 'clutch', 'coach', 'coast', 'coconut', 'code', 'coffee', 'coil', 'coin', 'collect', 'color', 'column', 'combine', 'come', 'comfort', 'comic', 'common', 'company', 'concert', 'conduct', 'confirm', 'congress', 'connect', 'consider', 'control', 'convince', 'cook', 'cool', 'copper', 'copy', 'coral', 'core', 'corn', 'correct', 'cost', 'cotton', 'couch', 'country', 'couple', 'course', 'cousin', 'cover', 'coyote', 'crack', 'cradle', 'craft', 'cram', 'crane', 'crash', 'crater', 'crawl', 'crazy', 'cream', 'credit', 'creek', 'crew', 'cricket', 'crime', 'crisp', 'critic', 'crop', 'cross', 'crouch', 'crowd', 'crucial', 'cruel', 'cruise', 'crumble', 'crunch', 'crush', 'cry', 'crystal', 'cube', 'culture', 'cup', 'cupboard', 'curious', 'current', 'curtain', 'curve', 'cushion', 'custom', 'cute', 'cycle', 'dad', 'damage', 'damp', 'dance', 'danger', 'daring', 'dash', 'daughter', 'dawn', 'day', 'deal', 'debate', 'debris', 'decade', 'december', 'decide', 'decline', 'decorate', 'decrease', 'deer', 'defense', 'define', 'defy', 'degree', 'delay', 'deliver', 'demand', 'demise', 'denial', 'dentist', 'deny', 'depart', 'depend', 'deposit', 'depth', 'deputy', 'derive', 'describe', 'desert', 'design', 'desk', 'despair', 'destroy', 'detail', 'detect', 'develop', 'device', 'devote', 'diagram', 'dial', 'diamond', 'diary', 'dice', 'diesel', 'diet', 'differ', 'digital', 'dignity', 'dilemma', 'dinner', 'dinosaur', 'direct', 'dirt', 'disagree', 'discover', 'disease', 'dish', 'dismiss', 'disorder', 'display', 'distance', 'divert', 'divide', 'divorce', 'dizzy', 'doctor', 'document', 'dog', 'doll', 'dolphin', 'domain', 'donate', 'donkey', 'donor', 'door', 'dose', 'double', 'dove', 'draft', 'dragon', 'drama', 'drastic', 'draw', 'dream', 'dress', 'drift', 'drill', 'drink', 'drip', 'drive', 'drop', 'drum', 'dry', 'duck', 'dumb', 'dune', 'during', 'dust', 'dutch', 'duty', 'dwarf', 'dynamic', 'eager', 'eagle', 'early', 'earn', 'earth', 'easily', 'east', 'easy', 'echo', 'ecology', 'economy', 'edge', 'edit', 'educate', 'effort', 'egg', 'eight', 'either', 'elbow', 'elder', 'electric', 'elegant', 'element', 'elephant', 'elevator', 'elite', 'else', 'embark', 'embody', 'embrace', 'emerge', 'emotion', 'employ', 'empower', 'empty', 'enable', 'enact', 'end', 'endless', 'endorse', 'enemy', 'energy', 'enforce', 'engage', 'engine', 'enhance', 'enjoy', 'enlist', 'enough', 'enrich', 'enroll', 'ensure', 'enter', 'entire', 'entry', 'envelope', 'episode', 'equal', 'equip', 'era', 'erase', 'erode', 'erosion', 'error', 'erupt', 'escape', 'essay', 'essence', 'estate', 'eternal', 'ethics', 'evidence', 'evil', 'evoke', 'evolve', 'exact', 'example', 'excess', 'exchange', 'excite', 'exclude', 'excuse', 'execute', 'exercise', 'exhaust', 'exhibit', 'exile', 'exist', 'exit', 'exotic', 'expand', 'expect', 'expire', 'explain', 'expose', 'express', 'extend', 'extra', 'eye', 'eyebrow', 'fabric', 'face', 'faculty', 'fade', 'faint', 'faith', 'fall', 'false', 'fame', 'family', 'famous', 'fan', 'fancy', 'fantasy', 'farm', 'fashion', 'fat', 'fatal', 'father', 'fatigue', 'fault', 'favorite', 'feature', 'february', 'federal', 'fee', 'feed', 'feel', 'female', 'fence', 'festival', 'fetch', 'fever', 'few', 'fiber', 'fiction', 'field', 'figure', 'file', 'film', 'filter', 'final', 'find', 'fine', 'finger', 'finish', 'fire', 'firm', 'first', 'fiscal', 'fish', 'fit', 'fitness', 'fix', 'flag', 'flame', 'flash', 'flat', 'flavor', 'flee', 'flight', 'flip', 'float', 'flock', 'floor', 'flower', 'fluid', 'flush', 'fly', 'foam', 'focus', 'fog', 'foil', 'fold', 'follow', 'food', 'foot', 'force', 'forest', 'forget', 'fork', 'fortune', 'forum', 'forward', 'fossil', 'foster', 'found', 'fox', 'fragile', 'frame', 'frequent', 'fresh', 'friend', 'fringe', 'frog', 'front', 'frost', 'frown', 'frozen', 'fruit', 'fuel', 'fun', 'funny', 'furnace', 'fury', 'future', 'gadget', 'gain', 'galaxy', 'gallery', 'game', 'gap', 'garage', 'garbage', 'garden', 'garlic', 'garment', 'gas', 'gasp', 'gate', 'gather', 'gauge', 'gaze', 'general', 'genius', 'genre', 'gentle', 'genuine', 'gesture', 'ghost', 'giant', 'gift', 'giggle', 'ginger', 'giraffe', 'girl', 'give', 'glad', 'glance', 'glare', 'glass', 'glide', 'glimpse', 'globe', 'gloom', 'glory', 'glove', 'glow', 'glue', 'goat', 'goddess', 'gold', 'good', 'goose', 'gorilla', 'gospel', 'gossip', 'govern', 'gown', 'grab', 'grace', 'grain', 'grant', 'grape', 'grass', 'gravity', 'great', 'green', 'grid', 'grief', 'grit', 'grocery', 'group', 'grow', 'grunt', 'guard', 'guess', 'guide', 'guilt', 'guitar', 'gun', 'gym', 'habit', 'hair', 'half', 'hammer', 'hamster', 'hand', 'happy', 'harbor', 'hard', 'harsh', 'harvest', 'hat', 'have', 'hawk', 'hazard', 'head', 'health', 'heart', 'heavy', 'hedgehog', 'height', 'hello', 'helmet', 'help', 'hen', 'hero', 'hidden', 'high', 'hill', 'hint', 'hip', 'hire', 'history', 'hobby', 'hockey', 'hold', 'hole', 'holiday', 'hollow', 'home', 'honey', 'hood', 'hope', 'horn', 'horror', 'horse', 'hospital', 'host', 'hotel', 'hour', 'hover', 'hub', 'huge', 'human', 'humble', 'humor', 'hundred', 'hungry', 'hunt', 'hurdle', 'hurry', 'hurt', 'husband', 'hybrid', 'ice', 'icon', 'idea', 'identify', 'idle', 'ignore', 'ill', 'illegal', 'illness', 'image', 'imitate', 'immense', 'immune', 'impact', 'impose', 'improve', 'impulse', 'inch', 'include', 'income', 'increase', 'index', 'indicate', 'indoor', 'industry', 'infant', 'inflict', 'inform', 'inhale', 'inherit', 'initial', 'inject', 'injury', 'inmate', 'inner', 'innocent', 'input', 'inquiry', 'insane', 'insect', 'inside', 'inspire', 'install', 'intact', 'interest', 'into', 'invest', 'invite', 'involve', 'iron', 'island', 'isolate', 'issue', 'item', 'ivory', 'jacket', 'jaguar', 'jar', 'jazz', 'jealous', 'jeans', 'jelly', 'jewel', 'job', 'join', 'joke', 'journey', 'joy', 'judge', 'juice', 'jump', 'jungle', 'junior', 'junk', 'just', 'kangaroo', 'keen', 'keep', 'ketchup', 'key', 'kick', 'kid', 'kidney', 'kind', 'kingdom', 'kiss', 'kit', 'kitchen', 'kite', 'kitten', 'kiwi', 'knee', 'knife', 'knock', 'know', 'lab', 'label', 'labor', 'ladder', 'lady', 'lake', 'lamp', 'language', 'laptop', 'large', 'later', 'latin', 'laugh', 'laundry', 'lava', 'law', 'lawn', 'lawsuit', 'layer', 'lazy', 'leader', 'leaf', 'learn', 'leave', 'lecture', 'left', 'leg', 'legal', 'legend', 'leisure', 'lemon', 'lend', 'length', 'lens', 'leopard', 'lesson', 'letter', 'level', 'liar', 'liberty', 'library', 'license', 'life', 'lift', 'light', 'like', 'limb', 'limit', 'link', 'lion', 'liquid', 'list', 'little', 'live', 'lizard', 'load', 'loan', 'lobster', 'local', 'lock', 'logic', 'lonely', 'long', 'loop', 'lottery', 'loud', 'lounge', 'love', 'loyal', 'lucky', 'luggage', 'lumber', 'lunar', 'lunch', 'luxury', 'lyrics', 'machine', 'mad', 'magic', 'magnet', 'maid', 'mail', 'main', 'major', 'make', 'mammal', 'man', 'manage', 'mandate', 'mango', 'mansion', 'manual', 'maple', 'marble', 'march', 'margin', 'marine', 'market', 'marriage', 'mask', 'mass', 'master', 'match', 'material', 'math', 'matrix', 'matter', 'maximum', 'maze', 'meadow', 'mean', 'measure', 'meat', 'mechanic', 'medal', 'media', 'melody', 'melt', 'member', 'memory', 'mention', 'menu', 'mercy', 'merge', 'merit', 'merry', 'mesh', 'message', 'metal', 'method', 'middle', 'midnight', 'milk', 'million', 'mimic', 'mind', 'minimum', 'minor', 'minute', 'miracle', 'mirror', 'misery', 'miss', 'mistake', 'mix', 'mixed', 'mixture', 'mobile', 'model', 'modify', 'mom', 'moment', 'monitor', 'monkey', 'monster', 'month', 'moon', 'moral', 'more', 'morning', 'mosquito', 'mother', 'motion', 'motor', 'mountain', 'mouse', 'move', 'movie', 'much', 'muffin', 'mule', 'multiply', 'muscle', 'museum', 'mushroom', 'music', 'must', 'mutual', 'myself', 'mystery', 'myth', 'naive', 'name', 'napkin', 'narrow', 'nasty', 'nation', 'nature', 'near', 'neck', 'need', 'negative', 'neglect', 'neither', 'nephew', 'nerve', 'nest', 'net', 'network', 'neutral', 'never', 'news', 'next', 'nice', 'night', 'noble', 'noise', 'nominee', 'noodle', 'normal', 'north', 'nose', 'notable', 'note', 'nothing', 'notice', 'novel', 'now', 'nuclear', 'number', 'nurse', 'nut', 'oak', 'obey', 'object', 'oblige', 'obscure', 'observe', 'obtain', 'obvious', 'occur', 'ocean', 'october', 'odor', 'off', 'offer', 'office', 'often', 'oil', 'okay', 'old', 'olive', 'olympic', 'omit', 'once', 'one', 'onion', 'online', 'only', 'open', 'opera', 'opinion', 'oppose', 'option', 'orange', 'orbit', 'orchard', 'order', 'ordinary', 'organ', 'orient', 'original', 'orphan', 'ostrich', 'other', 'outdoor', 'outer', 'output', 'outside', 'oval', 'oven', 'over', 'own', 'owner', 'oxygen', 'oyster', 'ozone', 'pact', 'paddle', 'page', 'pair', 'palace', 'palm', 'panda', 'panel', 'panic', 'panther', 'paper', 'parade', 'parent', 'park', 'parrot', 'party', 'pass', 'patch', 'path', 'patient', 'patrol', 'pattern', 'pause', 'pave', 'payment', 'peace', 'peanut', 'pear', 'peasant', 'pelican', 'pen', 'penalty', 'pencil', 'people', 'pepper', 'perfect', 'permit', 'person', 'pet', 'phone', 'photo', 'phrase', 'physical', 'piano', 'picnic', 'picture', 'piece', 'pig', 'pigeon', 'pill', 'pilot', 'pink', 'pioneer', 'pipe', 'pistol', 'pitch', 'pizza', 'place', 'planet', 'plastic', 'plate', 'play', 'please', 'pledge', 'pluck', 'plug', 'plunge', 'poem', 'poet', 'point', 'polar', 'pole', 'police', 'pond', 'pony', 'pool', 'popular', 'portion', 'position', 'possible', 'post', 'potato', 'pottery', 'poverty', 'powder', 'power', 'practice', 'praise', 'predict', 'prefer', 'prepare', 'present', 'pretty', 'prevent', 'price', 'pride', 'primary', 'print', 'priority', 'prison', 'private', 'prize', 'problem', 'process', 'produce', 'profit', 'program', 'project', 'promote', 'proof', 'property', 'prosper', 'protect', 'proud', 'provide', 'public', 'pudding', 'pull', 'pulp', 'pulse', 'pumpkin', 'punch', 'pupil', 'puppy', 'purchase', 'purity', 'purpose', 'purse', 'push', 'put', 'puzzle', 'pyramid', 'quality', 'quantum', 'quarter', 'question', 'quick', 'quit', 'quiz', 'quote', 'rabbit', 'raccoon', 'race', 'rack', 'radar', 'radio', 'rail', 'rain', 'raise', 'rally', 'ramp', 'ranch', 'random', 'range', 'rapid', 'rare', 'rate', 'rather', 'raven', 'raw', 'razor', 'ready', 'real', 'reason', 'rebel', 'rebuild', 'recall', 'receive', 'recipe', 'record', 'recycle', 'reduce', 'reflect', 'reform', 'refuse', 'region', 'regret', 'regular', 'reject', 'relax', 'release', 'relief', 'rely', 'remain', 'remember', 'remind', 'remove', 'render', 'renew', 'rent', 'reopen', 'repair', 'repeat', 'replace', 'report', 'require', 'rescue', 'resemble', 'resist', 'resource', 'response', 'result', 'retire', 'retreat', 'return', 'reunion', 'reveal', 'review', 'reward', 'rhythm', 'rib', 'ribbon', 'rice', 'rich', 'ride', 'ridge', 'rifle', 'right', 'rigid', 'ring', 'riot', 'ripple', 'risk', 'ritual', 'rival', 'river', 'road', 'roast', 'robot', 'robust', 'rocket', 'romance', 'roof', 'rookie', 'room', 'rose', 'rotate', 'rough', 'round', 'route', 'royal', 'rubber', 'rude', 'rug', 'rule', 'run', 'runway', 'rural', 'sad', 'saddle', 'sadness', 'safe', 'sail', 'salad', 'salmon', 'salon', 'salt', 'salute', 'same', 'sample', 'sand', 'satisfy', 'satoshi', 'sauce', 'sausage', 'save', 'say', 'scale', 'scan', 'scare', 'scatter', 'scene', 'scheme', 'school', 'science', 'scissors', 'scorpion', 'scout', 'scrap', 'screen', 'script', 'scrub', 'sea', 'search', 'season', 'seat', 'second', 'secret', 'section', 'security', 'seed', 'seek', 'segment', 'select', 'sell', 'seminar', 'senior', 'sense', 'sentence', 'series', 'service', 'session', 'settle', 'setup', 'seven', 'shadow', 'shaft', 'shallow', 'share', 'shed', 'shell', 'sheriff', 'shield', 'shift', 'shine', 'ship', 'shiver', 'shock', 'shoe', 'shoot', 'shop', 'short', 'shoulder', 'shove', 'shrimp', 'shrug', 'shuffle', 'shy', 'sibling', 'sick', 'side', 'siege', 'sight', 'sign', 'silent', 'silk', 'silly', 'silver', 'similar', 'simple', 'since', 'sing', 'siren', 'sister', 'situate', 'six', 'size', 'skate', 'sketch', 'ski', 'skill', 'skin', 'skirt', 'skull', 'slab', 'slam', 'sleep', 'slender', 'slice', 'slide', 'slight', 'slim', 'slogan', 'slot', 'slow', 'slush', 'small', 'smart', 'smile', 'smoke', 'smooth', 'snack', 'snake', 'snap', 'sniff', 'snow', 'soap', 'soccer', 'social', 'sock', 'soda', 'soft', 'solar', 'soldier', 'solid', 'solution', 'solve', 'someone', 'song', 'soon', 'sorry', 'sort', 'soul', 'sound', 'soup', 'source', 'south', 'space', 'spare', 'spatial', 'spawn', 'speak', 'special', 'speed', 'spell', 'spend', 'sphere', 'spice', 'spider', 'spike', 'spin', 'spirit', 'split', 'spoil', 'sponsor', 'spoon', 'sport', 'spot', 'spray', 'spread', 'spring', 'spy', 'square', 'squeeze', 'squirrel', 'stable', 'stadium', 'staff', 'stage', 'stairs', 'stamp', 'stand', 'start', 'state', 'stay', 'steak', 'steel', 'stem', 'step', 'stereo', 'stick', 'still', 'sting', 'stock', 'stomach', 'stone', 'stool', 'story', 'stove', 'strategy', 'street', 'strike', 'strong', 'struggle', 'student', 'stuff', 'stumble', 'style', 'subject', 'submit', 'subway', 'success', 'such', 'sudden', 'suffer', 'sugar', 'suggest', 'suit', 'summer', 'sun', 'sunny', 'sunset', 'super', 'supply', 'supreme', 'sure', 'surface', 'surge', 'surprise', 'surround', 'survey', 'suspect', 'sustain', 'swallow', 'swamp', 'swap', 'swarm', 'swear', 'sweet', 'swift', 'swim', 'swing', 'switch', 'sword', 'symbol', 'symptom', 'syrup', 'system', 'table', 'tackle', 'tag', 'tail', 'talent', 'talk', 'tank', 'tape', 'target', 'task', 'taste', 'tattoo', 'taxi', 'teach', 'team', 'tell', 'ten', 'tenant', 'tennis', 'tent', 'term', 'test', 'text', 'thank', 'that', 'theme', 'then', 'theory', 'there', 'they', 'thing', 'this', 'thought', 'three', 'thrive', 'throw', 'thumb', 'thunder', 'ticket', 'tide', 'tiger', 'tilt', 'timber', 'time', 'tiny', 'tip', 'tired', 'tissue', 'title', 'toast', 'tobacco', 'today', 'toddler', 'toe', 'together', 'toilet', 'token', 'tomato', 'tomorrow', 'tone', 'tongue', 'tonight', 'tool', 'tooth', 'top', 'topic', 'topple', 'torch', 'tornado', 'tortoise', 'toss', 'total', 'tourist', 'toward', 'tower', 'town', 'toy', 'track', 'trade', 'traffic', 'tragic', 'train', 'transfer', 'trap', 'trash', 'travel', 'tray', 'treat', 'tree', 'trend', 'trial', 'tribe', 'trick', 'trigger', 'trim', 'trip', 'trophy', 'trouble', 'truck', 'true', 'truly', 'trumpet', 'trust', 'truth', 'try', 'tube', 'tuition', 'tumble', 'tuna', 'tunnel', 'turkey', 'turn', 'turtle', 'twelve', 'twenty', 'twice', 'twin', 'twist', 'two', 'type', 'typical', 'ugly', 'umbrella', 'unable', 'unaware', 'uncle', 'uncover', 'under', 'undo', 'unfair', 'unfold', 'unhappy', 'uniform', 'unique', 'unit', 'universe', 'unknown', 'unlock', 'until', 'unusual', 'unveil', 'update', 'upgrade', 'uphold', 'upon', 'upper', 'upset', 'urban', 'urge', 'usage', 'use', 'used', 'useful', 'useless', 'usual', 'utility', 'vacant', 'vacuum', 'vague', 'valid', 'valley', 'valve', 'van', 'vanish', 'vapor', 'various', 'vast', 'vault', 'vehicle', 'velvet', 'vendor', 'venture', 'venue', 'verb', 'verify', 'version', 'very', 'vessel', 'veteran', 'viable', 'vibrant', 'vicious', 'victory', 'video', 'view', 'village', 'vintage', 'violin', 'virtual', 'virus', 'visa', 'visit', 'visual', 'vital', 'vivid', 'vocal', 'voice', 'void', 'volcano', 'volume', 'vote', 'voyage', 'wage', 'wagon', 'wait', 'walk', 'wall', 'walnut', 'want', 'warfare', 'warm', 'warrior', 'wash', 'wasp', 'waste', 'water', 'wave', 'way', 'wealth', 'weapon', 'wear', 'weasel', 'weather', 'web', 'wedding', 'weekend', 'weird', 'welcome', 'west', 'wet', 'whale', 'what', 'wheat', 'wheel', 'when', 'where', 'whip', 'whisper', 'wide', 'width', 'wife', 'wild', 'will', 'win', 'window', 'wine', 'wing', 'wink', 'winner', 'winter', 'wire', 'wisdom', 'wise', 'wish', 'witness', 'wolf', 'woman', 'wonder', 'wood', 'wool', 'word', 'work', 'world', 'worry', 'worth', 'wrap', 'wreck', 'wrestle', 'wrist', 'write', 'wrong', 'yard', 'year', 'yellow', 'you', 'young', 'youth', 'zebra', 'zero', 'zone', 'zoo'];
-var _default = english;
-exports.default = _default;
+exports.default = english;
 
 },{}],86:[function(require,module,exports){
 (function (Buffer){(function (){
 "use strict";
 
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.MultisigTransaction = exports.MULTISIG_USE_PARTIAL_SIGN_ERROR_MSG = exports.MULTISIG_NO_MUTATE_ERROR_MSG = exports.MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG = exports.MULTISIG_MERGE_SIG_MISMATCH_ERROR_MSG = exports.MULTISIG_MERGE_MISMATCH_ERROR_MSG = exports.MULTISIG_MERGE_MISMATCH_AUTH_ADDR_MSG = exports.MULTISIG_MERGE_LESSTHANTWO_ERROR_MSG = void 0;
-exports.appendSignMultisigTransaction = appendSignMultisigTransaction;
-exports.mergeMultisigTransactions = mergeMultisigTransactions;
-exports.multisigAddress = multisigAddress;
-exports.signMultisigTransaction = signMultisigTransaction;
-exports.verifyMultisig = verifyMultisig;
+exports.multisigAddress = exports.appendSignMultisigTransaction = exports.signMultisigTransaction = exports.verifyMultisig = exports.mergeMultisigTransactions = exports.MultisigTransaction = exports.MULTISIG_USE_PARTIAL_SIGN_ERROR_MSG = exports.MULTISIG_NO_MUTATE_ERROR_MSG = exports.MULTISIG_MERGE_SIG_MISMATCH_ERROR_MSG = exports.MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG = exports.MULTISIG_MERGE_MISMATCH_AUTH_ADDR_MSG = exports.MULTISIG_MERGE_MISMATCH_ERROR_MSG = exports.MULTISIG_MERGE_LESSTHANTWO_ERROR_MSG = void 0;
 
-var nacl = _interopRequireWildcard(require("./nacl/naclWrappers"));
+const nacl = __importStar(require("./nacl/naclWrappers"));
 
-var address = _interopRequireWildcard(require("./encoding/address"));
+const address = __importStar(require("./encoding/address"));
 
-var encoding = _interopRequireWildcard(require("./encoding/encoding"));
+const encoding = __importStar(require("./encoding/encoding"));
 
-var txnBuilder = _interopRequireWildcard(require("./transaction"));
+const txnBuilder = __importStar(require("./transaction"));
 
-var utils = _interopRequireWildcard(require("./utils/utils"));
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
+const utils = __importStar(require("./utils/utils"));
 /**
  Utilities for manipulating multisig transaction blobs.
  */
-const MULTISIG_MERGE_LESSTHANTWO_ERROR_MSG = 'Not enough multisig transactions to merge. Need at least two';
-exports.MULTISIG_MERGE_LESSTHANTWO_ERROR_MSG = MULTISIG_MERGE_LESSTHANTWO_ERROR_MSG;
-const MULTISIG_MERGE_MISMATCH_ERROR_MSG = 'Cannot merge txs. txIDs differ';
-exports.MULTISIG_MERGE_MISMATCH_ERROR_MSG = MULTISIG_MERGE_MISMATCH_ERROR_MSG;
-const MULTISIG_MERGE_MISMATCH_AUTH_ADDR_MSG = 'Cannot merge txs. Auth addrs differ';
-exports.MULTISIG_MERGE_MISMATCH_AUTH_ADDR_MSG = MULTISIG_MERGE_MISMATCH_AUTH_ADDR_MSG;
-const MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG = 'Cannot merge txs. Multisig preimages differ';
-exports.MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG = MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG;
-const MULTISIG_MERGE_SIG_MISMATCH_ERROR_MSG = 'Cannot merge txs. subsigs are mismatched.';
-exports.MULTISIG_MERGE_SIG_MISMATCH_ERROR_MSG = MULTISIG_MERGE_SIG_MISMATCH_ERROR_MSG;
+
+
+exports.MULTISIG_MERGE_LESSTHANTWO_ERROR_MSG = 'Not enough multisig transactions to merge. Need at least two';
+exports.MULTISIG_MERGE_MISMATCH_ERROR_MSG = 'Cannot merge txs. txIDs differ';
+exports.MULTISIG_MERGE_MISMATCH_AUTH_ADDR_MSG = 'Cannot merge txs. Auth addrs differ';
+exports.MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG = 'Cannot merge txs. Multisig preimages differ';
+exports.MULTISIG_MERGE_SIG_MISMATCH_ERROR_MSG = 'Cannot merge txs. subsigs are mismatched.';
 const MULTISIG_KEY_NOT_EXIST_ERROR_MSG = 'Key does not exist';
-const MULTISIG_NO_MUTATE_ERROR_MSG = 'Cannot mutate a multisig field as it would invalidate all existing signatures.';
-exports.MULTISIG_NO_MUTATE_ERROR_MSG = MULTISIG_NO_MUTATE_ERROR_MSG;
-const MULTISIG_USE_PARTIAL_SIGN_ERROR_MSG = 'Cannot sign a multisig transaction using `signTxn`. Use `partialSignTxn` instead.';
+exports.MULTISIG_NO_MUTATE_ERROR_MSG = 'Cannot mutate a multisig field as it would invalidate all existing signatures.';
+exports.MULTISIG_USE_PARTIAL_SIGN_ERROR_MSG = 'Cannot sign a multisig transaction using `signTxn`. Use `partialSignTxn` instead.';
 /**
  * createMultisigTransaction creates a multisig transaction blob.
  * @param txnForEncoding - the actual transaction to sign.
@@ -17430,8 +17950,6 @@ const MULTISIG_USE_PARTIAL_SIGN_ERROR_MSG = 'Cannot sign a multisig transaction 
  * @param pks - ordered list of public keys in this multisig
  * @returns encoded multisig blob
  */
-
-exports.MULTISIG_USE_PARTIAL_SIGN_ERROR_MSG = MULTISIG_USE_PARTIAL_SIGN_ERROR_MSG;
 
 function createMultisigTransaction(txnForEncoding, {
   rawSig,
@@ -17496,7 +18014,7 @@ class MultisigTransaction extends txnBuilder.Transaction {
    * Override inherited method to throw an error, as mutating transactions are prohibited in this context
    */
   addLease() {
-    throw new Error(MULTISIG_NO_MUTATE_ERROR_MSG);
+    throw new Error(exports.MULTISIG_NO_MUTATE_ERROR_MSG);
   }
   /**
    * Override inherited method to throw an error, as mutating transactions are prohibited in this context
@@ -17504,11 +18022,11 @@ class MultisigTransaction extends txnBuilder.Transaction {
 
 
   addRekey() {
-    throw new Error(MULTISIG_NO_MUTATE_ERROR_MSG);
+    throw new Error(exports.MULTISIG_NO_MUTATE_ERROR_MSG);
   }
 
   signTxn(sk) {
-    throw new Error(MULTISIG_USE_PARTIAL_SIGN_ERROR_MSG);
+    throw new Error(exports.MULTISIG_USE_PARTIAL_SIGN_ERROR_MSG);
   }
   /* eslint-enable class-methods-use-this,@typescript-eslint/no-unused-vars,no-dupe-class-members */
 
@@ -17546,18 +18064,17 @@ class MultisigTransaction extends txnBuilder.Transaction {
   }
 
 }
+
+exports.MultisigTransaction = MultisigTransaction;
 /**
  * mergeMultisigTransactions takes a list of multisig transaction blobs, and merges them.
  * @param multisigTxnBlobs - a list of blobs representing encoded multisig txns
  * @returns typed array msg-pack encoded multisig txn
  */
 
-
-exports.MultisigTransaction = MultisigTransaction;
-
 function mergeMultisigTransactions(multisigTxnBlobs) {
   if (multisigTxnBlobs.length < 2) {
-    throw new Error(MULTISIG_MERGE_LESSTHANTWO_ERROR_MSG);
+    throw new Error(exports.MULTISIG_MERGE_LESSTHANTWO_ERROR_MSG);
   }
 
   const refSigTx = encoding.decode(multisigTxnBlobs[0]);
@@ -17576,18 +18093,18 @@ function mergeMultisigTransactions(multisigTxnBlobs) {
     const unisigAlgoTxn = MultisigTransaction.from_obj_for_encoding(unisig.txn);
 
     if (unisigAlgoTxn.txID() !== refTxID) {
-      throw new Error(MULTISIG_MERGE_MISMATCH_ERROR_MSG);
+      throw new Error(exports.MULTISIG_MERGE_MISMATCH_ERROR_MSG);
     }
 
     const authAddr = unisig.sgnr ? address.encodeAddress(unisig.sgnr) : undefined;
 
     if (refAuthAddr !== authAddr) {
-      throw new Error(MULTISIG_MERGE_MISMATCH_AUTH_ADDR_MSG);
+      throw new Error(exports.MULTISIG_MERGE_MISMATCH_AUTH_ADDR_MSG);
     } // check multisig has same preimage as reference
 
 
     if (unisig.msig.subsig.length !== refSigTx.msig.subsig.length) {
-      throw new Error(MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG);
+      throw new Error(exports.MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG);
     }
 
     const preimg = {
@@ -17598,7 +18115,7 @@ function mergeMultisigTransactions(multisigTxnBlobs) {
     const msgigAddr = address.encodeAddress(address.fromMultisigPreImg(preimg));
 
     if (refMsigAddr !== msgigAddr) {
-      throw new Error(MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG);
+      throw new Error(exports.MULTISIG_MERGE_WRONG_PREIMAGE_ERROR_MSG);
     } // now, we can merge
 
 
@@ -17612,7 +18129,7 @@ function mergeMultisigTransactions(multisigTxnBlobs) {
         // info: https://github.com/algorand/js-algorand-sdk/issues/252
         if (uniSubsig.s && Buffer.compare(Buffer.from(uniSubsig.s), Buffer.from(current.s)) !== 0) {
           // mismatch
-          throw new Error(MULTISIG_MERGE_SIG_MISMATCH_ERROR_MSG);
+          throw new Error(exports.MULTISIG_MERGE_SIG_MISMATCH_ERROR_MSG);
         }
 
         return {
@@ -17648,6 +18165,8 @@ function mergeMultisigTransactions(multisigTxnBlobs) {
 
   return new Uint8Array(encoding.encode(signedTxn));
 }
+
+exports.mergeMultisigTransactions = mergeMultisigTransactions;
 
 function verifyMultisig(toBeVerified, msig, publicKey) {
   const version = msig.v;
@@ -17703,6 +18222,8 @@ function verifyMultisig(toBeVerified, msig, publicKey) {
 
   return true;
 }
+
+exports.verifyMultisig = verifyMultisig;
 /**
  * signMultisigTransaction takes a raw transaction (see signTransaction), a multisig preimage, a secret key, and returns
  * a multisig transaction, which is a blob representing a transaction and multisignature account preimage. The returned
@@ -17715,7 +18236,6 @@ function verifyMultisig(toBeVerified, msig, publicKey) {
  * @returns object containing txID, and blob of partially signed multisig transaction (with multisig preimage information)
  * If the final calculated fee is lower than the protocol minimum fee, the fee will be increased to match the minimum.
  */
-
 
 function signMultisigTransaction(txn, {
   version,
@@ -17762,6 +18282,8 @@ function signMultisigTransaction(txn, {
     blob
   };
 }
+
+exports.signMultisigTransaction = signMultisigTransaction;
 /**
  * appendSignMultisigTransaction takes a multisig transaction blob, and appends our signature to it.
  * While we could derive public key preimagery from the partially-signed multisig transaction,
@@ -17773,7 +18295,6 @@ function signMultisigTransaction(txn, {
  * @param sk - Algorand secret key
  * @returns object containing txID, and blob representing encoded multisig txn
  */
-
 
 function appendSignMultisigTransaction(multisigTxnBlob, {
   version,
@@ -17794,13 +18315,14 @@ function appendSignMultisigTransaction(multisigTxnBlob, {
     blob: mergeMultisigTransactions([multisigTxnBlob, partialSignedBlob])
   };
 }
+
+exports.appendSignMultisigTransaction = appendSignMultisigTransaction;
 /**
  * multisigAddress takes multisig metadata (preimage) and returns the corresponding human readable Algorand address.
  * @param version - mutlisig version
  * @param threshold - multisig threshold
  * @param addrs - list of Algorand addresses
  */
-
 
 function multisigAddress({
   version,
@@ -17814,90 +18336,97 @@ function multisigAddress({
   });
 }
 
+exports.multisigAddress = multisigAddress;
+
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"./encoding/address":67,"./encoding/encoding":69,"./nacl/naclWrappers":87,"./transaction":89,"./utils/utils":97,"buffer":3}],87:[function(require,module,exports){
 "use strict";
 
-var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.SEED_BTYES_LENGTH = exports.SECRET_KEY_LENGTH = exports.PUBLIC_KEY_LENGTH = exports.HASH_BYTES_LENGTH = void 0;
-exports.bytesEqual = bytesEqual;
-exports.genericHash = genericHash;
-exports.keyPair = keyPair;
-exports.keyPairFromSecretKey = keyPairFromSecretKey;
-exports.keyPairFromSeed = keyPairFromSeed;
-exports.randomBytes = randomBytes;
-exports.sign = sign;
-exports.verify = verify;
+exports.SEED_BTYES_LENGTH = exports.HASH_BYTES_LENGTH = exports.SECRET_KEY_LENGTH = exports.PUBLIC_KEY_LENGTH = exports.verify = exports.bytesEqual = exports.sign = exports.keyPairFromSecretKey = exports.keyPair = exports.keyPairFromSeed = exports.randomBytes = exports.genericHash = void 0;
 
-var _tweetnacl = _interopRequireDefault(require("tweetnacl"));
+const tweetnacl_1 = __importDefault(require("tweetnacl"));
 
-var _jsSha = _interopRequireDefault(require("js-sha512"));
+const js_sha512_1 = __importDefault(require("js-sha512"));
 
 function genericHash(arr) {
-  return _jsSha.default.sha512_256.array(arr);
+  return js_sha512_1.default.sha512_256.array(arr);
 }
+
+exports.genericHash = genericHash;
 
 function randomBytes(length) {
-  return _tweetnacl.default.randomBytes(length);
+  return tweetnacl_1.default.randomBytes(length);
 }
+
+exports.randomBytes = randomBytes;
 
 function keyPairFromSeed(seed) {
-  return _tweetnacl.default.sign.keyPair.fromSeed(seed);
+  return tweetnacl_1.default.sign.keyPair.fromSeed(seed);
 }
 
+exports.keyPairFromSeed = keyPairFromSeed;
+
 function keyPair() {
-  const seed = randomBytes(_tweetnacl.default.box.secretKeyLength);
+  const seed = randomBytes(tweetnacl_1.default.box.secretKeyLength);
   return keyPairFromSeed(seed);
 }
 
+exports.keyPair = keyPair;
+
 function keyPairFromSecretKey(sk) {
-  return _tweetnacl.default.sign.keyPair.fromSecretKey(sk);
+  return tweetnacl_1.default.sign.keyPair.fromSecretKey(sk);
 }
+
+exports.keyPairFromSecretKey = keyPairFromSecretKey;
 
 function sign(msg, secretKey) {
-  return _tweetnacl.default.sign.detached(msg, secretKey);
+  return tweetnacl_1.default.sign.detached(msg, secretKey);
 }
+
+exports.sign = sign;
 
 function bytesEqual(a, b) {
-  return _tweetnacl.default.verify(a, b);
+  return tweetnacl_1.default.verify(a, b);
 }
 
+exports.bytesEqual = bytesEqual;
+
 function verify(message, signature, verifyKey) {
-  return _tweetnacl.default.sign.detached.verify(message, signature, verifyKey);
-} // constants
+  return tweetnacl_1.default.sign.detached.verify(message, signature, verifyKey);
+}
 
+exports.verify = verify; // constants
 
-const PUBLIC_KEY_LENGTH = _tweetnacl.default.sign.publicKeyLength;
-exports.PUBLIC_KEY_LENGTH = PUBLIC_KEY_LENGTH;
-const SECRET_KEY_LENGTH = _tweetnacl.default.sign.secretKeyLength;
-exports.SECRET_KEY_LENGTH = SECRET_KEY_LENGTH;
-const HASH_BYTES_LENGTH = 32;
-exports.HASH_BYTES_LENGTH = HASH_BYTES_LENGTH;
-const SEED_BTYES_LENGTH = 32;
-exports.SEED_BTYES_LENGTH = SEED_BTYES_LENGTH;
+exports.PUBLIC_KEY_LENGTH = tweetnacl_1.default.sign.publicKeyLength;
+exports.SECRET_KEY_LENGTH = tweetnacl_1.default.sign.secretKeyLength;
+exports.HASH_BYTES_LENGTH = 32;
+exports.SEED_BTYES_LENGTH = 32;
 
-},{"@babel/runtime/helpers/interopRequireDefault":10,"js-sha512":113,"tweetnacl":132}],88:[function(require,module,exports){
+},{"js-sha512":113,"tweetnacl":132}],88:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.isTransactionWithSigner = isTransactionWithSigner;
-exports.makeBasicAccountTransactionSigner = makeBasicAccountTransactionSigner;
-exports.makeLogicSigAccountTransactionSigner = makeLogicSigAccountTransactionSigner;
-exports.makeMultiSigAccountTransactionSigner = makeMultiSigAccountTransactionSigner;
+exports.isTransactionWithSigner = exports.makeMultiSigAccountTransactionSigner = exports.makeLogicSigAccountTransactionSigner = exports.makeBasicAccountTransactionSigner = void 0;
 
-var _logicsig = require("./logicsig");
+const logicsig_1 = require("./logicsig");
 
-var _multisig = require("./multisig");
-
+const multisig_1 = require("./multisig");
 /**
  * Create a TransactionSigner that can sign transactions for the provided basic Account.
  */
+
+
 function makeBasicAccountTransactionSigner(account) {
   return (txnGroup, indexesToSign) => {
     const signed = [];
@@ -17909,10 +18438,11 @@ function makeBasicAccountTransactionSigner(account) {
     return Promise.resolve(signed);
   };
 }
+
+exports.makeBasicAccountTransactionSigner = makeBasicAccountTransactionSigner;
 /**
  * Create a TransactionSigner that can sign transactions for the provided LogicSigAccount.
  */
-
 
 function makeLogicSigAccountTransactionSigner(account) {
   return (txnGroup, indexesToSign) => {
@@ -17921,19 +18451,20 @@ function makeLogicSigAccountTransactionSigner(account) {
     for (const index of indexesToSign) {
       const {
         blob
-      } = (0, _logicsig.signLogicSigTransactionObject)(txnGroup[index], account);
+      } = logicsig_1.signLogicSigTransactionObject(txnGroup[index], account);
       signed.push(blob);
     }
 
     return Promise.resolve(signed);
   };
 }
+
+exports.makeLogicSigAccountTransactionSigner = makeLogicSigAccountTransactionSigner;
 /**
  * Create a TransactionSigner that can sign transactions for the provided Multisig account.
  * @param msig - The Multisig account metadata
  * @param sks - An array of private keys belonging to the msig which should sign the transactions.
  */
-
 
 function makeMultiSigAccountTransactionSigner(msig, sks) {
   return (txnGroup, indexesToSign) => {
@@ -17946,26 +18477,29 @@ function makeMultiSigAccountTransactionSigner(msig, sks) {
       for (const sk of sks) {
         const {
           blob
-        } = (0, _multisig.signMultisigTransaction)(txn, msig, sk);
+        } = multisig_1.signMultisigTransaction(txn, msig, sk);
         partialSigs.push(blob);
       }
 
-      signed.push((0, _multisig.mergeMultisigTransactions)(partialSigs));
+      signed.push(multisig_1.mergeMultisigTransactions(partialSigs));
     }
 
     return Promise.resolve(signed);
   };
 }
+
+exports.makeMultiSigAccountTransactionSigner = makeMultiSigAccountTransactionSigner;
 /**
  * Check if a value conforms to the TransactionWithSigner structure.
  * @param value - The value to check.
  * @returns True if an only if the value has the structure of a TransactionWithSigner.
  */
 
-
 function isTransactionWithSigner(value) {
   return typeof value === 'object' && Object.keys(value).length === 2 && typeof value.txn === 'object' && typeof value.signer === 'function';
 }
+
+exports.isTransactionWithSigner = isTransactionWithSigner;
 
 },{"./logicsig":81,"./multisig":86}],89:[function(require,module,exports){
 (function (Buffer){(function (){
@@ -17973,44 +18507,72 @@ function isTransactionWithSigner(value) {
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Transaction = exports.ALGORAND_MIN_TX_FEE = void 0;
-exports.decodeSignedTransaction = decodeSignedTransaction;
-exports.decodeUnsignedTransaction = decodeUnsignedTransaction;
-exports.default = void 0;
-exports.encodeUnsignedTransaction = encodeUnsignedTransaction;
-exports.instantiateTxnIfNeeded = instantiateTxnIfNeeded;
-
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 
 var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
-
-var _hiBase = _interopRequireDefault(require("hi-base32"));
-
-var address = _interopRequireWildcard(require("./encoding/address"));
-
-var encoding = _interopRequireWildcard(require("./encoding/encoding"));
-
-var nacl = _interopRequireWildcard(require("./nacl/naclWrappers"));
-
-var utils = _interopRequireWildcard(require("./utils/utils"));
-
-var _base = require("./types/transactions/base");
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
-const ALGORAND_TRANSACTION_LENGTH = 52;
-const ALGORAND_MIN_TX_FEE = 1000; // version v5
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
 
-exports.ALGORAND_MIN_TX_FEE = ALGORAND_MIN_TX_FEE;
+var __setModuleDefault = void 0 && (void 0).__setModuleDefault || (Object.create ? function (o, v) {
+  Object.defineProperty(o, "default", {
+    enumerable: true,
+    value: v
+  });
+} : function (o, v) {
+  o["default"] = v;
+});
+
+var __importStar = void 0 && (void 0).__importStar || function (mod) {
+  if (mod && mod.__esModule) return mod;
+  var result = {};
+  if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+
+  __setModuleDefault(result, mod);
+
+  return result;
+};
+
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.instantiateTxnIfNeeded = exports.decodeSignedTransaction = exports.decodeUnsignedTransaction = exports.encodeUnsignedTransaction = exports.Transaction = exports.ALGORAND_MIN_TX_FEE = void 0;
+
+const hi_base32_1 = __importDefault(require("hi-base32"));
+
+const address = __importStar(require("./encoding/address"));
+
+const encoding = __importStar(require("./encoding/encoding"));
+
+const nacl = __importStar(require("./nacl/naclWrappers"));
+
+const utils = __importStar(require("./utils/utils"));
+
+const base_1 = require("./types/transactions/base");
+
+const ALGORAND_TRANSACTION_LENGTH = 52;
+exports.ALGORAND_MIN_TX_FEE = 1000; // version v5
+
 const ALGORAND_TRANSACTION_LEASE_LENGTH = 32;
 const ALGORAND_MAX_ASSET_DECIMALS = 19;
 const NUM_ADDL_BYTES_AFTER_SIGNING = 75; // NUM_ADDL_BYTES_AFTER_SIGNING is the number of bytes added to a txn after signing it
@@ -18032,7 +18594,7 @@ class Transaction {
     /* eslint-disable no-param-reassign */
 
     const defaults = {
-      type: _base.TransactionType.pay,
+      type: base_1.TransactionType.pay,
       flatFee: false,
       nonParticipation: false
     }; // Default type
@@ -18047,7 +18609,7 @@ class Transaction {
     } // Default nonParticipation
 
 
-    if (transaction.type === _base.TransactionType.keyreg && typeof transaction.voteKey !== 'undefined' && typeof transaction.nonParticipation === 'undefined') {
+    if (transaction.type === base_1.TransactionType.keyreg && typeof transaction.voteKey !== 'undefined' && typeof transaction.nonParticipation === 'undefined') {
       transaction.nonParticipation = defaults.nonParticipation;
     }
     /* eslint-enable no-param-reassign */
@@ -18197,8 +18759,8 @@ class Transaction {
     if (!txn.flatFee) {
       this.fee *= this.estimateSize(); // If suggested fee too small and will be rejected, set to min tx fee
 
-      if (this.fee < ALGORAND_MIN_TX_FEE) {
-        this.fee = ALGORAND_MIN_TX_FEE;
+      if (this.fee < exports.ALGORAND_MIN_TX_FEE) {
+        this.fee = exports.ALGORAND_MIN_TX_FEE;
       }
     } // say we are aware of groups
 
@@ -18685,7 +19247,7 @@ class Transaction {
 
   txID() {
     const hash = this.rawTxID();
-    return _hiBase.default.encode(hash).slice(0, ALGORAND_TRANSACTION_LENGTH);
+    return hi_base32_1.default.encode(hash).slice(0, ALGORAND_TRANSACTION_LENGTH);
   } // add a lease to a transaction not yet having
   // supply feePerByte to increment fee accordingly
 
@@ -18754,36 +19316,37 @@ class Transaction {
   }
 
 }
+
+exports.Transaction = Transaction;
 /**
  * encodeUnsignedTransaction takes a completed txnBuilder.Transaction object, such as from the makeFoo
  * family of transactions, and converts it to a Buffer
  * @param transactionObject - the completed Transaction object
  */
 
-
-exports.Transaction = Transaction;
-
 function encodeUnsignedTransaction(transactionObject) {
   const objToEncode = transactionObject.get_obj_for_encoding();
   return encoding.encode(objToEncode);
 }
+
+exports.encodeUnsignedTransaction = encodeUnsignedTransaction;
 /**
  * decodeUnsignedTransaction takes a Buffer (as if from encodeUnsignedTransaction) and converts it to a txnBuilder.Transaction object
  * @param transactionBuffer - the Uint8Array containing a transaction
  */
 
-
 function decodeUnsignedTransaction(transactionBuffer) {
   const partlyDecodedObject = encoding.decode(transactionBuffer);
   return Transaction.from_obj_for_encoding(partlyDecodedObject);
 }
+
+exports.decodeUnsignedTransaction = decodeUnsignedTransaction;
 /**
  * decodeSignedTransaction takes a Buffer (from transaction.signTxn) and converts it to an object
  * containing the Transaction (txn), the signature (sig), and the auth-addr field if applicable (sgnr)
  * @param transactionBuffer - the Uint8Array containing a transaction
  * @returns containing a Transaction, the signature, and possibly an auth-addr field
  */
-
 
 function decodeSignedTransaction(transactionBuffer) {
   const stxnDecoded = encoding.decode(transactionBuffer);
@@ -18795,12 +19358,14 @@ function decodeSignedTransaction(transactionBuffer) {
   return stxn;
 }
 
+exports.decodeSignedTransaction = decodeSignedTransaction;
+
 function instantiateTxnIfNeeded(transactionLike) {
   return transactionLike instanceof Transaction ? transactionLike : new Transaction(transactionLike);
 }
 
-var _default = Transaction;
-exports.default = _default;
+exports.instantiateTxnIfNeeded = instantiateTxnIfNeeded;
+exports.default = Transaction;
 
 }).call(this)}).call(this,require("buffer").Buffer)
 },{"./encoding/address":67,"./encoding/encoding":69,"./nacl/naclWrappers":87,"./types/transactions/base":94,"./utils/utils":97,"@babel/runtime/helpers/defineProperty":8,"@babel/runtime/helpers/extends":9,"@babel/runtime/helpers/interopRequireDefault":10,"buffer":3,"hi-base32":110}],90:[function(require,module,exports){
@@ -18813,48 +19378,32 @@ Object.defineProperty(exports, "__esModule", {
 },{}],91:[function(require,module,exports){
 "use strict";
 
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __exportStar = void 0 && (void 0).__exportStar || function (m, exports) {
+  for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+};
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _transactions = require("./transactions");
+__exportStar(require("./transactions"), exports);
 
-Object.keys(_transactions).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _transactions[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _transactions[key];
-    }
-  });
-});
+__exportStar(require("./multisig"), exports);
 
-var _multisig = require("./multisig");
-
-Object.keys(_multisig).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _multisig[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _multisig[key];
-    }
-  });
-});
-
-var _address = require("./address");
-
-Object.keys(_address).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (key in exports && exports[key] === _address[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _address[key];
-    }
-  });
-});
+__exportStar(require("./address"), exports);
 
 },{"./address":90,"./multisig":93,"./transactions":96}],92:[function(require,module,exports){
 "use strict";
@@ -18862,11 +19411,10 @@ Object.keys(_address).forEach(function (key) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
-
 /**
  * Configure how integers in JSON response will be decoded.
  */
+
 var IntDecoding;
 
 (function (IntDecoding) {
@@ -18894,8 +19442,7 @@ var IntDecoding;
   IntDecoding["BIGINT"] = "bigint";
 })(IntDecoding || (IntDecoding = {}));
 
-var _default = IntDecoding;
-exports.default = _default;
+exports.default = IntDecoding;
 
 },{}],93:[function(require,module,exports){
 arguments[4][90][0].apply(exports,arguments)
@@ -18905,15 +19452,14 @@ arguments[4][90][0].apply(exports,arguments)
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.TransactionType = exports.OnApplicationComplete = void 0;
-
+exports.OnApplicationComplete = exports.TransactionType = void 0;
 /**
  * Enum for application transaction types.
  *
  * The full list is availabe at https://developer.algorand.org/docs/reference/transactions/
  */
+
 var TransactionType;
-exports.TransactionType = TransactionType;
 
 (function (TransactionType) {
   /**
@@ -18945,14 +19491,13 @@ exports.TransactionType = TransactionType;
    */
 
   TransactionType["appl"] = "appl";
-})(TransactionType || (exports.TransactionType = TransactionType = {}));
+})(TransactionType = exports.TransactionType || (exports.TransactionType = {}));
 /**
  * Enums for application transactions on-transaction-complete behavior
  */
 
 
 var OnApplicationComplete;
-exports.OnApplicationComplete = OnApplicationComplete;
 
 (function (OnApplicationComplete) {
   /**
@@ -18992,41 +19537,53 @@ exports.OnApplicationComplete = OnApplicationComplete;
    */
 
   OnApplicationComplete[OnApplicationComplete["DeleteApplicationOC"] = 5] = "DeleteApplicationOC";
-})(OnApplicationComplete || (exports.OnApplicationComplete = OnApplicationComplete = {}));
+})(OnApplicationComplete = exports.OnApplicationComplete || (exports.OnApplicationComplete = {}));
 
 },{}],95:[function(require,module,exports){
-arguments[4][90][0].apply(exports,arguments)
-},{"dup":90}],96:[function(require,module,exports){
 "use strict";
+/**
+ * Interfaces for the encoded transaction object. Every property is labelled with its associated Transaction type property
+ */
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-var _exportNames = {
-  TransactionType: true
+
+},{}],96:[function(require,module,exports){
+"use strict";
+
+var __createBinding = void 0 && (void 0).__createBinding || (Object.create ? function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  Object.defineProperty(o, k2, {
+    enumerable: true,
+    get: function () {
+      return m[k];
+    }
+  });
+} : function (o, m, k, k2) {
+  if (k2 === undefined) k2 = k;
+  o[k2] = m[k];
+});
+
+var __exportStar = void 0 && (void 0).__exportStar || function (m, exports) {
+  for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.TransactionType = void 0; // Utilities
+
+var base_1 = require("./base");
+
 Object.defineProperty(exports, "TransactionType", {
   enumerable: true,
   get: function () {
-    return _base.TransactionType;
+    return base_1.TransactionType;
   }
 });
 
-var _base = require("./base");
-
-var _encoded = require("./encoded");
-
-Object.keys(_encoded).forEach(function (key) {
-  if (key === "default" || key === "__esModule") return;
-  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
-  if (key in exports && exports[key] === _encoded[key]) return;
-  Object.defineProperty(exports, key, {
-    enumerable: true,
-    get: function () {
-      return _encoded[key];
-    }
-  });
-});
+__exportStar(require("./encoded"), exports);
 
 },{"./base":94,"./encoded":95}],97:[function(require,module,exports){
 (function (process){(function (){
@@ -19034,26 +19591,28 @@ Object.keys(_encoded).forEach(function (key) {
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
 
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.arrayEqual = arrayEqual;
-exports.concatArrays = concatArrays;
-exports.isNode = isNode;
-exports.parseJSON = parseJSON;
-exports.removeUndefinedProperties = removeUndefinedProperties;
-
 var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
-
-var _jsonBigint = _interopRequireDefault(require("json-bigint"));
-
-var _intDecoding = _interopRequireDefault(require("../types/intDecoding"));
 
 function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); enumerableOnly && (symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; })), keys.push.apply(keys, symbols); } return keys; }
 
 function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = null != arguments[i] ? arguments[i] : {}; i % 2 ? ownKeys(Object(source), !0).forEach(function (key) { (0, _defineProperty2.default)(target, key, source[key]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } return target; }
 
-const JSONbig = (0, _jsonBigint.default)({
+var __importDefault = void 0 && (void 0).__importDefault || function (mod) {
+  return mod && mod.__esModule ? mod : {
+    "default": mod
+  };
+};
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.isNode = exports.removeUndefinedProperties = exports.concatArrays = exports.arrayEqual = exports.parseJSON = void 0;
+
+const json_bigint_1 = __importDefault(require("json-bigint"));
+
+const intDecoding_1 = __importDefault(require("../types/intDecoding"));
+
+const JSONbig = json_bigint_1.default({
   useNativeBigInt: true,
   strict: true
 });
@@ -19077,7 +19636,7 @@ const JSONbig = (0, _jsonBigint.default)({
  */
 
 function parseJSON(str, options) {
-  const intDecoding = options && options.intDecoding ? options.intDecoding : _intDecoding.default.DEFAULT;
+  const intDecoding = options && options.intDecoding ? options.intDecoding : intDecoding_1.default.DEFAULT;
   const parsed = JSONbig.parse(str, (_, value) => {
     if (value != null && typeof value === 'object' && Object.getPrototypeOf(value) == null) {
       // for some reason the Objects returned by JSONbig.parse have a null prototype, so we
@@ -19109,10 +19668,11 @@ function parseJSON(str, options) {
   });
   return parsed;
 }
+
+exports.parseJSON = parseJSON;
 /**
  * ArrayEqual takes two arrays and return true if equal, false otherwise
  */
-
 
 function arrayEqual(a, b) {
   if (a.length !== b.length) {
@@ -19121,12 +19681,13 @@ function arrayEqual(a, b) {
 
   return Array.from(a).every((val, i) => val === b[i]);
 }
+
+exports.arrayEqual = arrayEqual;
 /**
  * ConcatArrays takes n number arrays and returns a joint Uint8Array
  * @param arrs - An arbitrary number of n array-like number list arguments
  * @returns [a,b]
  */
-
 
 function concatArrays(...arrs) {
   const size = arrs.reduce((sum, arr) => sum + arr.length, 0);
@@ -19140,12 +19701,13 @@ function concatArrays(...arrs) {
 
   return c;
 }
+
+exports.concatArrays = concatArrays;
 /**
  * Remove undefined properties from an object
  * @param obj - An object, preferably one with some undefined properties
  * @returns A copy of the object with undefined properties removed
  */
-
 
 function removeUndefinedProperties(obj) {
   const mutableCopy = _objectSpread({}, obj);
@@ -19155,15 +19717,18 @@ function removeUndefinedProperties(obj) {
   });
   return mutableCopy;
 }
+
+exports.removeUndefinedProperties = removeUndefinedProperties;
 /**
  * Check whether the environment is Node.js (as opposed to the browser)
  * @returns True if Node.js environment, false otherwise
  */
 
-
 function isNode() {
   return typeof process === 'object' && typeof process.versions === 'object' && typeof process.versions.node !== 'undefined';
 }
+
+exports.isNode = isNode;
 
 }).call(this)}).call(this,require('_process'))
 },{"../types/intDecoding":92,"@babel/runtime/helpers/defineProperty":8,"@babel/runtime/helpers/interopRequireDefault":10,"_process":6,"json-bigint":114}],98:[function(require,module,exports){
@@ -19172,8 +19737,7 @@ function isNode() {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.waitForConfirmation = waitForConfirmation;
-
+exports.waitForConfirmation = void 0;
 /**
  * Wait until a transaction has been confirmed or rejected by the network, or
  * until 'waitRounds' number of rounds have passed.
@@ -19183,6 +19747,7 @@ exports.waitForConfirmation = waitForConfirmation;
  * @returns A promise that, upon success, will resolve to the output of the
  *   `pendingTransactionInformation` call for the confirmed transaction.
  */
+
 async function waitForConfirmation(client, txid, waitRounds) {
   // Wait until the transaction is confirmed or rejected, or until 'waitRounds'
   // number of rounds have passed.
@@ -19230,6 +19795,8 @@ async function waitForConfirmation(client, txid, waitRounds) {
 
   throw new Error(`Transaction not confirmed after ${waitRounds} rounds`);
 }
+
+exports.waitForConfirmation = waitForConfirmation;
 
 },{}],99:[function(require,module,exports){
 "use strict";
@@ -21469,7 +22036,7 @@ async function waitForConfirmation(client, txid, waitRounds) {
 
           if (coeffToString(t.c).slice(0, s) === (n = coeffToString(r.c)).slice(0, s)) {
             // The exponent of r may here be one less than the final result exponent,
-            // e.g 0.0009999 (e-4) 0.001 (e-3), so adjust s so the rounding digits
+            // e.g 0.0009999 (e-4)  0.001 (e-3), so adjust s so the rounding digits
             // are indexed correctly.
             if (r.e < e) --s;
             n = n.slice(s - 3, s + 1); // The 4th rounding digit may be in error by -1 so if the 4 rounding digits

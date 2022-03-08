@@ -3,7 +3,7 @@
   "description": "attempt to put algorand on metamask",
   "proposedName": "algorand",
   "source": {
-    "shasum": "mJWHeFQKhXTCvUJBaFr8tYyAzdWfW0Q4YywSTeQMlQw=",
+    "shasum": "o15I+YCROgg7ARddOD4nKJQIpcHQSBvtKjCYwuNvfRM=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
