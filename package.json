@@ -11,7 +11,7 @@
   "license": "MIT",
   "dependencies": {
     "@babel/runtime": "^7.17.2",
-    "algosdk": "^1.13.1"
+    "algosdk": "^1.14.0"
   },
   "devDependencies": {
     "patch-package": "^6.4.7",

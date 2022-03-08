@@ -1,4 +1,4 @@
-const algo =  require('algosdk/dist/cjs');
+const algo =  require('algosdk');
 import nacl from 'tweetnacl';
 
 async function getPrivateKey(){
