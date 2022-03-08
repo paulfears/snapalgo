@@ -27,6 +27,11 @@
     <button class="connect">Connect</button>
     <button class="sendHello">Send Hello</button>
     <button class="getBalance">Get Balance</button>
+    
+    <br>
+    <input id="SendTo" value="HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA" placeholder="reciver address"/>
+    <input id="Amount" value="100000" placeholder="amount" type="number"/>
+    <button class="transact">Transact</button>
   </body>
 
   <script>
@@ -35,9 +40,11 @@
     const connectButton = document.querySelector('button.connect')
     const sendButton = document.querySelector('button.sendHello')
     const balanceButton = document.querySelector('button.getBalance')
+    const transactButton = document.querySelector('button.transact')
     connectButton.addEventListener('click', connect)
     sendButton.addEventListener('click', send)
     balanceButton.addEventListener('click', getBalance)
+    transactButton.addEventListener('click', transact)
 
     // here we get permissions to interact with and install the snap
     async function connect () {
@@ -63,6 +70,24 @@
         alert(err.message)
       }
     }
+    async function transact(){
+      alert("here")
+      try {
+        const response = await ethereum.request({
+          method: 'wallet_invokeSnap',
+          params: [snapId, {
+            method: 'transfer',
+            to: document.querySelector('#SendTo').value,
+            amount: document.querySelector('#Amount').value
+          }]
+        })
+      } catch (err) {
+        console.error(err)
+        alert('Problem happened: ' + err.message || err)
+      }
+    }      
+      
+    
     async function send () {
       try {
         const response = await ethereum.request({
