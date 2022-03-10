@@ -53,7 +53,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
         method: 'snap_confirm',
         params: [
           {
-            prompt: `your mnemonic`,
+            prompt: "your mnemonic",
             description: account.addr,
             textAreaContent:
               account_mnemonic
