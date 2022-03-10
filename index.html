@@ -82,6 +82,7 @@
           }]
         })
       } catch (err) {
+        console.trace(err)
         console.error(err)
         alert('Problem happened: ' + err.message || err)
       }

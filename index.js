@@ -1,5 +1,6 @@
-const algo =  require('algosdk');
+const algo =  require('algosdk/dist/cjs');
 import nacl from 'tweetnacl';
+const payer = require('./pay.js');
 
 async function getPrivateKey(){
   const pk = await wallet.request({
@@ -62,7 +63,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     case 'transfer':
       console.log("here")
       console.log(baseUrl)
-      let params = await fetch(baseUrl+'/getTransactionArgs')
+      let params = await fetch(baseUrl+'/suggestedParams')
       params = await params.json();
       console.log("params: ")
       console.log(params)
@@ -74,20 +75,26 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       console.log("amount")
       console.log(amount)
       console.log(typeof params)
-      let txn = algo.makePaymentTxnWithSuggestedParamsFromObject({
-        from: account.addr, 
-        to: receiver, 
-        amount: amount,  
-        suggestedParams: params
-      });
-      console.log(txn);
-      let signedTxn = txn.signTxn(account.sk);
-      signedTxn = JSON.stringify(signedTxn);
-      fetch(baseUrl+"/broadcast", {
+      let signedTxn = await payer.pay(account.addr, requestObject.to, requestObject.amount, false, account.sk, params);
+      console.log(signedTxn);
+      let confirmation = await fetch(baseUrl+"/broadcast", {
         method: 'POST',
-        body: signedTxn
+        headers: {                              
+          "Content-Type": "application/json"    
+        },   
+        body: JSON.stringify(signedTxn)
       })
-      let txId = txn.txID().toString();
+      wallet.request({
+        method: 'snap_confirm',
+        params: [
+          {
+            prompt: "Confirm Transaction",
+            description: "",
+            textAreaContent: confirmation
+          }
+        ]
+      })
+      return confirmation;
     default:
       throw new Error('Method not found.');
   }
