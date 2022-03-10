@@ -1,7 +1,7 @@
 {
   "name": "algorand",
   "version": "1.0.0",
-  "description": "attempt to put algorand on metamask",
+  "description": "algorand on metamask",
   "main": "index.js",
   "scripts": {
     "test": "yarn build && yarn serve",
