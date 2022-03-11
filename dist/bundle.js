@@ -2841,7 +2841,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
           method: 'snap_confirm',
           params: [{
             prompt: " balance",
-            description: Number(balance / 100000).toString() + " ALGO"
+            description: Number(balance / 1000000).toString() + " ALGO"
           }]
         });
         return balance;
@@ -2851,6 +2851,19 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       return account.addr;
 
     case 'display_mnemonic':
+      const confirm = await wallet.request({
+        method: 'snap_confirm',
+        params: [{
+          prompt: "Confirm",
+          description: "Are you sure you want to display your mnemonic?",
+          textAreaContent: "anyone with this mnemonic can spend your funds"
+        }]
+      });
+
+      if (!confirm) {
+        return "cancelled";
+      }
+
       return wallet.request({
         method: 'snap_confirm',
         params: [{
@@ -2869,29 +2882,45 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       console.log(params);
       const receiver = requestObject.to;
       const amount = requestObject.amount;
+      let confirm_send = await wallet.request({
+        method: 'snap_confirm',
+        params: [{
+          prompt: "Confirm Spend",
+          description: "Send " + Number(amount) / 1000000 + " ALGO to " + receiver
+        }]
+      });
+
+      if (confirm_send === false) {
+        return "cancelled";
+      }
+
+      console.log(confirm_send);
       console.log("receiver");
       console.log(receiver);
       console.log("amount");
       console.log(amount);
       console.log(typeof params);
-      let signedTxn = await payer.pay(account.addr, requestObject.to, requestObject.amount, false, account.sk, params);
+      let tx_obj = await payer.pay(account.addr, requestObject.to, requestObject.amount, false, account.sk, params);
+      let signedTxn = tx_obj.stx;
+      console.log(tx_obj);
       console.log(signedTxn);
       let confirmation = await fetch(baseUrl + "/broadcast", {
         method: 'POST',
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(signedTxn)
+        body: JSON.stringify(tx_obj)
       });
+      confirmation = await confirmation.text();
       wallet.request({
         method: 'snap_confirm',
         params: [{
-          prompt: "Confirm Transaction",
-          description: "",
-          textAreaContent: confirmation
+          prompt: "Transaction Confirmed",
+          description: confirmation,
+          textAreaContent: tx_obj.txId
         }]
       });
-      return confirmation;
+      return tx_obj.txId;
 
     default:
       throw new Error('Method not found.');
@@ -49571,11 +49600,11 @@ function containsEmpty(obj) {
   };
 }
 
-function decodeAddress(address) {
-  function genericHash(arr) {
-    return sha512.sha512_256.array(arr);
-  }
+function genericHash(arr) {
+  return sha512.sha512_256.array(arr);
+}
 
+function decodeAddress(address) {
   function arrayEqual(a, b) {
     if (a.length !== b.length) {
       return false;
@@ -49627,6 +49656,8 @@ function encode(obj) {
 }
 
 async function pay(from, to, amount, note, private_key, params) {
+  const ALGORAND_TRANSACTION_LENGTH = 52;
+
   function concatArrays(...arrs) {
     const size = arrs.reduce((sum, arr) => sum + arr.length, 0);
     const c = new Uint8Array(size);
@@ -49673,7 +49704,13 @@ async function pay(from, to, amount, note, private_key, params) {
     sig: sig,
     txn: tx_obj
   };
-  return new Uint8Array(encode(stx));
+  let txId = Buffer.from(genericHash(Buffer.from(to_be_signed)));
+  txId = hi_base32_1.encode(txId).slice(0, ALGORAND_TRANSACTION_LENGTH);
+  let tx = {
+    txId: txId.toString(),
+    stx: JSON.stringify(new Uint8Array(encode(stx)))
+  };
+  return tx;
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)

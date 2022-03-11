@@ -42,7 +42,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
         params:[
           {
             prompt: " balance",
-            description: Number(balance/100000).toString() + " ALGO",
+            description: Number(balance/1000000).toString() + " ALGO",
             
           }
         ]
@@ -52,6 +52,16 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     case 'getAddress':
       return account.addr;
     case 'display_mnemonic':
+      const confirm = await wallet.request({
+        method: 'snap_confirm',
+        params:[{
+          prompt: "Confirm", 
+          description: "Are you sure you want to display your mnemonic?",
+          textAreaContent: "anyone with this mnemonic can spend your funds"}]
+      })
+      if(!confirm){
+        return "cancelled"
+      }
       return wallet.request({
         method: 'snap_confirm',
         params: [
@@ -73,31 +83,48 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       
       const receiver = requestObject.to;
       const amount = requestObject.amount;
+      let confirm_send = await wallet.request({
+        method: 'snap_confirm',
+        params: [
+          {
+            prompt: "Confirm Spend",
+            description: "Send " + Number(amount)/1000000 + " ALGO to " + receiver,
+          }
+        ]
+      })
+      if(confirm_send === false){
+        return "cancelled";
+      }
+      console.log(confirm_send)
       console.log("receiver")
       console.log(receiver)
       console.log("amount")
       console.log(amount)
       console.log(typeof params)
-      let signedTxn = await payer.pay(account.addr, requestObject.to, requestObject.amount, false, account.sk, params);
+      let tx_obj = await payer.pay(account.addr, requestObject.to, requestObject.amount, false, account.sk, params);
+      let signedTxn = tx_obj.stx;
+      console.log(tx_obj)
       console.log(signedTxn);
       let confirmation = await fetch(baseUrl+"/broadcast", {
         method: 'POST',
         headers: {                              
           "Content-Type": "application/json"    
         },   
-        body: JSON.stringify(signedTxn)
+        body: JSON.stringify(tx_obj)
       })
+      confirmation = await confirmation.text();
+      
       wallet.request({
         method: 'snap_confirm',
         params: [
           {
-            prompt: "Confirm Transaction",
-            description: "",
-            textAreaContent: confirmation
+            prompt: "Transaction Confirmed",
+            description: confirmation,
+            textAreaContent: tx_obj.txId
           }
         ]
       })
-      return confirmation;
+      return tx_obj.txId;
     default:
       throw new Error('Method not found.');
   }

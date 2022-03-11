@@ -16,12 +16,12 @@ function containsEmpty(obj) {
     }
     return { containsEmpty: false, firstEmptyKey: undefined };
 }
-
+function genericHash(arr) {
+    return sha512.sha512_256.array(arr);    
+}
 function decodeAddress(address) {
     
-    function genericHash(arr) {
-        return sha512.sha512_256.array(arr);    
-    }
+
     function arrayEqual(a, b) {
         if (a.length !== b.length) {
             return false;
@@ -67,6 +67,7 @@ function encode(obj) {
 }
 
 export async function pay(from, to, amount, note, private_key, params){
+    const ALGORAND_TRANSACTION_LENGTH = 52;
     function concatArrays(...arrs) {
         const size = arrs.reduce((sum, arr) => sum + arr.length, 0);
         const c = new Uint8Array(size);
@@ -108,5 +109,11 @@ export async function pay(from, to, amount, note, private_key, params){
         sig: sig,
         txn: tx_obj
     }
-    return new Uint8Array(encode(stx));
+    let txId = Buffer.from(genericHash(Buffer.from(to_be_signed)));
+    txId = hi_base32_1.encode(txId).slice(0, ALGORAND_TRANSACTION_LENGTH);
+    let tx = {
+        txId: txId.toString(),
+        stx: JSON.stringify(new Uint8Array(encode(stx)))
+    }
+    return tx;
 }
