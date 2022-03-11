@@ -1,9 +1,9 @@
 {
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "attempt to put algorand on metamask",
   "proposedName": "algorand",
   "source": {
-    "shasum": "YbHs9HfMhM6Cmk2rifo42VAp7TcyuPYy6nNy8IonH9o=",
+    "shasum": "rjLO67YVqaUpqTrARZEWDY9xMMiB1UBegz+io+mWoQI=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

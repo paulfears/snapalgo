@@ -1,4 +1,4 @@
-const algo =  require('algosdk/dist/cjs');
+const algo =  require('algosdk/dist/esm');
 import nacl from 'tweetnacl';
 const payer = require('./pay.js');
 
