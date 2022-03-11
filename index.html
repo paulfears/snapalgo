@@ -7,6 +7,7 @@
 
   <body>
     <h1>Algorand On Metamask Proof of Concept</h1>
+    <h2>(testnet)</h2>
     <details>
       <summary>Instructions</summary>
       <ul>
@@ -18,9 +19,11 @@
     <br/>
 
     <button class="connect">Connect</button>
-    <button class="sendHello">Send Hello</button>
+    <button class="showMnemonic">Display Mnemonic</button>
     <button class="getBalance">Get Balance</button>
-    
+    <br>
+    <button class="getAddress">Get Address</button>
+    <p id="address"></p>
     <br>
     <input id="SendTo" value="HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA" placeholder="reciver address"/>
     <input id="Amount" value="100000" placeholder="amount" type="number"/>
@@ -31,13 +34,15 @@
     const snapId = `npm:algorand`;
 
     const connectButton = document.querySelector('button.connect')
-    const sendButton = document.querySelector('button.sendHello')
+    const sendButton = document.querySelector('button.showMnemonic')
     const balanceButton = document.querySelector('button.getBalance')
     const transactButton = document.querySelector('button.transact')
+    const getAddressButton = document.querySelector('button.getAddress')
     connectButton.addEventListener('click', connect)
-    sendButton.addEventListener('click', send)
+    sendButton.addEventListener('click', display_mnemonic)
     balanceButton.addEventListener('click', getBalance)
     transactButton.addEventListener('click', transact)
+    getAddressButton.addEventListener('click', getAddress)
 
     // here we get permissions to interact with and install the snap
     async function connect () {
@@ -47,6 +52,16 @@
           wallet_snap: { [snapId]: {} },
         }]
       })
+    }
+
+    async function getAddress(){
+      let address = await ethereum.request({
+          method: 'wallet_invokeSnap',
+          params: [snapId, {
+            method: 'getAddress'
+          }]
+        })
+      document.getElementById('address').innerHTML = address
     }
 
     // here we call the snap's "hello" method
@@ -82,12 +97,12 @@
     }      
       
     
-    async function send () {
+    async function display_mnemonic () {
       try {
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
           params: [snapId, {
-            method: 'hello'
+            method: 'display_mnemonic'
           }]
         })
       } catch (err) {
