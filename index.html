@@ -32,7 +32,7 @@
 
   <script>
     const snapId = `npm:algorand`;
-
+    //const snapId = `local:${window.location.href}`;
     const connectButton = document.querySelector('button.connect')
     const sendButton = document.querySelector('button.showMnemonic')
     const balanceButton = document.querySelector('button.getBalance')
@@ -88,6 +88,8 @@
             amount: document.querySelector('#Amount').value
           }]
         })
+        console.log("transaction returned");
+        console.log(response);
       } catch (err) {
         console.trace(err)
         console.error(err)

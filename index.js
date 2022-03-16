@@ -33,6 +33,10 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   let account_mnemonic = algo.secretKeyToMnemonic(account.sk);
   const baseUrl = "https://algorand-api-node.paulfears.repl.co"
   switch (requestObject.method) {
+    case 'returnBalance': {
+      let balance = await fetch(baseUrl+"/balance?address="+account.addr);
+      return balance;
+    }
     case 'getBalance': {
       console.log("here");
       let balance = await fetch(baseUrl+"/balance?address="+account.addr);
@@ -95,36 +99,31 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       if(confirm_send === false){
         return "cancelled";
       }
-      console.log(confirm_send)
-      console.log("receiver")
-      console.log(receiver)
-      console.log("amount")
-      console.log(amount)
-      console.log(typeof params)
       let tx_obj = await payer.pay(account.addr, requestObject.to, requestObject.amount, false, account.sk, params);
-      let signedTxn = tx_obj.stx;
-      console.log(tx_obj)
-      console.log(signedTxn);
-      let confirmation = await fetch(baseUrl+"/broadcast", {
+      fetch(baseUrl+"/broadcast", {
         method: 'POST',
         headers: {                              
           "Content-Type": "application/json"    
         },   
         body: JSON.stringify(tx_obj)
+      }).then(res => {
+        res.text().then((text) => {
+          wallet.request({
+            method: 'snap_confirm',
+            params: [
+              {
+                prompt: "Transaction Confirmed",
+                description: text,
+              }
+            ]
+          })
+        });
+
       })
-      confirmation = await confirmation.text();
       
-      wallet.request({
-        method: 'snap_confirm',
-        params: [
-          {
-            prompt: "Transaction Confirmed",
-            description: confirmation,
-            textAreaContent: tx_obj.txId
-          }
-        ]
-      })
-      return tx_obj.txId;
+      
+      
+      return  tx_obj.txId;
     default:
       throw new Error('Method not found.');
   }
