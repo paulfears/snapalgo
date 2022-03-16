@@ -33,10 +33,11 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   let account_mnemonic = algo.secretKeyToMnemonic(account.sk);
   const baseUrl = "https://algorand-api-node.paulfears.repl.co"
   switch (requestObject.method) {
-    case 'returnBalance': {
+    case 'returnBalance': 
+      console.log("returnBalance");
       let balance = await fetch(baseUrl+"/balance?address="+account.addr);
       return Number(await balance.text());
-    }
+    
     case 'getBalance': {
       console.log("here");
       let balance = await fetch(baseUrl+"/balance?address="+account.addr);
