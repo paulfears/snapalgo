@@ -1,6 +1,6 @@
 {
   "name": "algorand",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "algorand on metamask",
   "main": "index.js",
   "scripts": {
