@@ -1,5 +1,5 @@
 diff --git a/node_modules/bignumber.js/bignumber.js b/node_modules/bignumber.js/bignumber.js
-index 9042a3c..429bd05 100644
+index 9042a3c..7bea7a0 100644
 --- a/node_modules/bignumber.js/bignumber.js
 +++ b/node_modules/bignumber.js/bignumber.js
 @@ -2426,7 +2426,7 @@
@@ -7,20 +7,7 @@ index 9042a3c..429bd05 100644
  
              // The exponent of r may here be one less than the final result exponent,
 -            // e.g 0.0009999 (e-4) --> 0.001 (e-3), so adjust s so the rounding digits
-+           
++            
              // are indexed correctly.
              if (r.e < e) --s;
              n = n.slice(s - 3, s + 1);
-diff --git a/node_modules/bignumber.js/bignumber.mjs b/node_modules/bignumber.js/bignumber.mjs
-index f5f6400..b114ed1 100644
---- a/node_modules/bignumber.js/bignumber.mjs
-+++ b/node_modules/bignumber.js/bignumber.mjs
-@@ -2423,7 +2423,7 @@ function clone(configObject) {
-         if (coeffToString(t.c).slice(0, s) === (n = coeffToString(r.c)).slice(0, s)) {
- 
-           // The exponent of r may here be one less than the final result exponent,
--          // e.g 0.0009999 (e-4) --> 0.001 (e-3), so adjust s so the rounding digits
-+          
-           // are indexed correctly.
-           if (r.e < e) --s;
-           n = n.slice(s - 3, s + 1);

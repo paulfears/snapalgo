@@ -22,6 +22,9 @@
     <button class="showMnemonic">Display Mnemonic</button>
     <button class="getBalance">Get Balance</button>
     <br>
+    <input type="checkbox" id="testnet" checked/>
+    <label for="testnet">Testnet</label>
+    <br>
     <button class="getAddress">Get Address</button>
     <p id="address"></p>
     <br>
@@ -38,6 +41,7 @@
     const balanceButton = document.querySelector('button.getBalance')
     const transactButton = document.querySelector('button.transact')
     const getAddressButton = document.querySelector('button.getAddress')
+    const checkbox = document.getElementById('testnet')
     connectButton.addEventListener('click', connect)
     sendButton.addEventListener('click', display_mnemonic)
     balanceButton.addEventListener('click', getBalance)
@@ -58,7 +62,8 @@
       let address = await ethereum.request({
           method: 'wallet_invokeSnap',
           params: [snapId, {
-            method: 'getAddress'
+            method: 'getAddress',
+            testnet: checkbox.checked
           }]
         })
       document.getElementById('address').innerHTML = address
@@ -70,7 +75,8 @@
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
           params: [snapId, {
-            method: 'getBalance'
+            method: 'getBalance',
+            testnet: checkbox.checked
           }]
         })
       }catch(e){
@@ -84,6 +90,7 @@
           method: 'wallet_invokeSnap',
           params: [snapId, {
             method: 'transfer',
+            testnet: checkbox.checked,
             to: document.querySelector('#SendTo').value,
             amount: document.querySelector('#Amount').value
           }]

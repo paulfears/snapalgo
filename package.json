@@ -1,8 +1,8 @@
 {
   "name": "algorand",
-  "version": "1.0.9",
+  "version": "1.1.1",
   "description": "algorand on metamask",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "yarn build && yarn serve",
     "postinstall": "patch-package"
@@ -15,10 +15,14 @@
   "license": "MIT",
   "dependencies": {
     "@babel/runtime": "^7.17.2",
-    "algosdk": "^1.14.0"
+    
+    "algosdk": "1.14.0",
+    "global": "^4.4.0",
+    "nvm": "^0.0.4"
   },
   "devDependencies": {
     "patch-package": "^6.4.7",
-    "postinstall-postinstall": "^2.1.0"
+    "postinstall-postinstall": "^2.1.0",
+    "@metamask/snaps-cli": "0.9.0"
   }
 }
