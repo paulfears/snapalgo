@@ -53,19 +53,20 @@ const  response = await  window.ethereum.request({
 ```
 ### Available RPC Methods
 
-#### returnBalance
-returns the users current balance
+#### displayBalance
+Displays the users current balance in a metamask flask popup
+
 ```javascript
 await window.ethereum.request({
 	method: 'wallet_invokeSnap',
 	params:['npm:algorand',{
-		method: 'returnBalance',
+		method: 'displayBalance',
 		testnet: false
 	}]
 })
 ```
 #### getBalance
-Displays the users current balance in a metamask flask popup
+returns the users current balance
 ```javascript
 await window.ethereum.request({
 	method:  'wallet_invokeSnap',
@@ -99,13 +100,13 @@ const  response = await  window.ethereum.request({
 	}]
 })
 ```
-#### display_mnemonic
+#### displayMnemonic
 displays the wallets algorand mnemonic in a secure metamask window
 ```javascript
 await window.ethereum.request({
 	method:  'wallet_invokeSnap',
 	params: ['npm:algorand', {
-		method:  'display_mnemonic'
+		method:  'displayMnemonic'
 	}]
 })
 ```

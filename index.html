@@ -34,8 +34,8 @@
   </body>
 
   <script>
-    const snapId = `npm:algorand`;
-    //const snapId = `local:${window.location.href}`;
+    //const snapId = `npm:algorand`;
+    const snapId = `local:${window.location.href}`;
     const connectButton = document.querySelector('button.connect')
     const sendButton = document.querySelector('button.showMnemonic')
     const balanceButton = document.querySelector('button.getBalance')
@@ -75,7 +75,7 @@
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
           params: [snapId, {
-            method: 'getBalance',
+            method: 'displayBalance',
             testnet: checkbox.checked
           }]
         })
@@ -110,7 +110,7 @@
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
           params: [snapId, {
-            method: 'display_mnemonic'
+            method: 'displayMnemonic'
           }]
         })
       } catch (err) {

@@ -29804,14 +29804,12 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   }
 
   switch (requestObject.method) {
-    case 'returnBalance':
-      console.log("returnBalance");
+    case 'getBalance':
       let balance = await fetch(baseUrl + "/balance?address=" + account.addr);
       return Number(await balance.text());
 
-    case 'getBalance':
+    case 'displayBalance':
       {
-        console.log("here");
         let balance = await fetch(baseUrl + "/balance?address=" + account.addr);
         balance = Number(await balance.text());
         wallet.request({
@@ -29827,7 +29825,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     case 'getAddress':
       return account.addr;
 
-    case 'display_mnemonic':
+    case 'displayMnemonic':
       const confirm = await wallet.request({
         method: 'snap_confirm',
         params: [{
