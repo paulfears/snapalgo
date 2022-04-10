@@ -29804,6 +29804,10 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   }
 
   switch (requestObject.method) {
+    case 'getTransactions':
+      let transactions = await fetch(baseUrl + "/transactions?address=" + account.addr);
+      return await transactions.json();
+
     case 'getBalance':
       let balance = await fetch(baseUrl + "/balance?address=" + account.addr);
       return Number(await balance.text());

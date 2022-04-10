@@ -21,6 +21,7 @@
     <button class="connect">Connect</button>
     <button class="showMnemonic">Display Mnemonic</button>
     <button class="getBalance">Get Balance</button>
+    <button id="getTransactionsButton">getTransactions</button>
     <br>
     <input type="checkbox" id="testnet" checked/>
     <label for="testnet">Testnet</label>
@@ -31,6 +32,9 @@
     <input id="SendTo" value="HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA" placeholder="reciver address"/>
     <input id="Amount" value="100000" placeholder="amount" type="number"/>
     <button class="transact">Transact</button>
+    <br>
+    <br>
+    <div id="transactionOutput" style="overflow-y: scroll;"></div>
   </body>
 
   <script>
@@ -42,12 +46,13 @@
     const transactButton = document.querySelector('button.transact')
     const getAddressButton = document.querySelector('button.getAddress')
     const checkbox = document.getElementById('testnet')
+    const transactionButton = document.getElementById('getTransactionsButton')
     connectButton.addEventListener('click', connect)
     sendButton.addEventListener('click', display_mnemonic)
     balanceButton.addEventListener('click', getBalance)
     transactButton.addEventListener('click', transact)
     getAddressButton.addEventListener('click', getAddress)
-
+    transactionButton.addEventListener('click', getTransactions)
     // here we get permissions to interact with and install the snap
     async function connect () {
       await ethereum.request({
@@ -84,6 +89,22 @@
         alert(err.message)
       }
     }
+    async function getTransactions(){
+      try{
+        const response = await ethereum.request({
+          method: 'wallet_invokeSnap',
+          params: [snapId, {
+            method: 'getTransactions',
+            testnet: checkbox.checked
+          }]
+        })
+        document.getElementById('transactionOutput').innerHTML = JSON.stringify(response);
+      }catch(e){
+        console.error(e)
+        alert(err.message)
+      }
+    }
+
     async function transact(){
       try {
         const response = await ethereum.request({

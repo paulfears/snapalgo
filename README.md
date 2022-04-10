@@ -110,4 +110,15 @@ await window.ethereum.request({
 	}]
 })
 ```
+#### getTransactions
+returns a list of javascript objects containing transaction data
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'getTransactions',
+		testnet: false
+	}]
+})
+```
 More RPC methods to come
