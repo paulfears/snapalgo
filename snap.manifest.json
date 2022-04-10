@@ -1,5 +1,5 @@
 {
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "Algorand on Metamask",
   "proposedName": "algorand",
   "repository": {
@@ -11,6 +11,7 @@
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
+        "iconPath": "images/logo.svg",
         "packageName": "algorand",
         "registry": "https://registry.npmjs.org"
       }
