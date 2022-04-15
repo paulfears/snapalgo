@@ -29804,6 +29804,10 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   }
 
   switch (requestObject.method) {
+    case 'isValidAddress':
+      let isValid = algo.isValidAddress(requestObject.address);
+      return isValid;
+
     case 'getTransactions':
       let transactions = await fetch(baseUrl + "/transactions?address=" + account.addr);
       return await transactions.json();

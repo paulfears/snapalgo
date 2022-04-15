@@ -32,6 +32,7 @@
     <input id="SendTo" value="HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA" placeholder="reciver address"/>
     <input id="Amount" value="100000" placeholder="amount" type="number"/>
     <button class="transact">Transact</button>
+    <button class="testAddress">Test Address</button>
     <br>
     <br>
     <div id="transactionOutput" style="overflow-y: scroll;"></div>
@@ -47,6 +48,8 @@
     const getAddressButton = document.querySelector('button.getAddress')
     const checkbox = document.getElementById('testnet')
     const transactionButton = document.getElementById('getTransactionsButton')
+    const testAddressButton = document.querySelector('button.testAddress')
+    testAddressButton.addEventListener('click', isValidAddress)
     connectButton.addEventListener('click', connect)
     sendButton.addEventListener('click', display_mnemonic)
     balanceButton.addEventListener('click', getBalance)
@@ -61,6 +64,18 @@
           wallet_snap: { [snapId]: {} },
         }]
       })
+    }
+
+    async function isValidAddress(){
+      const address = document.getElementById('SendTo').value
+      const isValid = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'isValidAddress',
+          address: document.getElementById('SendTo').value
+        }]
+      })
+      alert("adress is valid : " + isValid)
     }
 
     async function getAddress(){
