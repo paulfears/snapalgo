@@ -3,6 +3,8 @@
   </head>
     <title>Hello, Snaps!</title>
     <link rel="icon" type="image/svg" href="./images/icon.svg"/>
+    <script src="encoding-indexes.js"></script>
+    <script src="encoding.js"></script>
   </head>
 
   <body>
@@ -36,6 +38,10 @@
     <br>
     <br>
     <div id="transactionOutput" style="overflow-y: scroll;"></div>
+    <p>Sign data</p>
+    <input id="data"/>
+    <button id="signButton">sign</button>
+    <div style="width:400px; max-width: 400px; word-break: break-all;" id="signature"></div> 
   </body>
 
   <script>
@@ -49,6 +55,8 @@
     const checkbox = document.getElementById('testnet')
     const transactionButton = document.getElementById('getTransactionsButton')
     const testAddressButton = document.querySelector('button.testAddress')
+    const data = document.getElementById('data')
+    const signButton = document.getElementById('signButton')
     testAddressButton.addEventListener('click', isValidAddress)
     connectButton.addEventListener('click', connect)
     sendButton.addEventListener('click', display_mnemonic)
@@ -56,6 +64,7 @@
     transactButton.addEventListener('click', transact)
     getAddressButton.addEventListener('click', getAddress)
     transactionButton.addEventListener('click', getTransactions)
+    signButton.addEventListener('click', signData)
     // here we get permissions to interact with and install the snap
     async function connect () {
       await ethereum.request({
@@ -65,6 +74,21 @@
         }]
       })
     }
+    
+    async function signData(){
+      console.log("here2")
+      let thing = new Uint8Array(new TextEncoder().encode(document.getElementById('data').value));
+      console.log(thing)
+      let sig = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'signData',
+          data: thing
+        }]        
+      })
+      console.log(sig)
+      document.getElementById('signature').innerHTML = JSON.stringify(sig);
+    } 
 
     async function isValidAddress(){
       const address = document.getElementById('SendTo').value

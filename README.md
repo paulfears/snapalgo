@@ -121,4 +121,17 @@ await window.ethereum.request({
 	}]
 })
 ```
+
+### signData
+takes a Uint8Array and signs it with your privateKey and returs the signature
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'signData'
+		data: new Uint8Array()
+	}]
+})
+```
+
 More RPC methods to come

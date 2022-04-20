@@ -64,6 +64,13 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       })
       return balance
     }
+    case 'signData':
+      let pk = account.sk;
+      console.log("request data");
+      console.log(requestObject.data);
+      let out = nacl.sign(new Uint8Array(requestObject.data), account.sk);
+      return out;
+    
     case 'getAddress':
       return account.addr;
     case 'displayMnemonic':
