@@ -1,5 +1,5 @@
 {
-  "version": "1.1.7",
+  "version": "2.0.0",
   "description": "Algorand on Metamask",
   "proposedName": "algorand",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/paulfears/snapalgo.git"
   },
   "source": {
-    "shasum": "pFofTBEITIBdel+dNuTwg4S4INzlhBQ9Czid1pqycf8=",
+    "shasum": "6ogkZV3iGGPHOv3UbeDqmzwjTzKUTHef2wwar7M+8UY=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -20,7 +20,8 @@
   "initialPermissions": {
     "snap_confirm": {},
     "snap_getBip44Entropy_283": {},
-    "endowment:network-access": {}
+    "endowment:network-access": {},
+    "snap_notify": {}
   },
   "manifestVersion": "0.1"
 }
