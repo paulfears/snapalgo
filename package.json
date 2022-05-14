@@ -17,11 +17,12 @@
     "@babel/runtime": "^7.17.2",
     "@metamask/key-tree": "^3.0.1",
     "algosdk": "1.14.0",
+    "crypto-js": "^4.1.1",
     "global": "^4.4.0",
     "nvm": "^0.0.4"
   },
   "devDependencies": {
-    "@metamask/snaps-cli": "0.10.7",
+    "@metamask/snaps-cli": "^0.12.0",
     "patch-package": "^6.4.7",
     "postinstall-postinstall": "^2.1.0"
   }

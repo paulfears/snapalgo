@@ -1,0 +1,18 @@
+import { BaseKeyring, StoredKeyring } from "@keystonehq/base-eth-keyring";
+import { MetamaskInteractionProvider } from "./MetaMaskInteractionProvider";
+export declare class MetaMaskKeyring extends BaseKeyring {
+    static type: string;
+    static instance: MetaMaskKeyring;
+    constructor(opts?: StoredKeyring);
+    getInteraction: () => MetamaskInteractionProvider;
+    resetStore: () => void;
+    getMemStore: () => import("./MetaMaskInteractionProvider").IMemState;
+    signTransaction(address: string, tx: any): Promise<any>;
+    removeAccount: (address: any) => void;
+    forgetDevice: () => void;
+    submitCryptoHDKey: (cbor: string) => void;
+    submitCryptoAccount: (cbor: string) => void;
+    submitSignature: (requestId: string, cbor: string) => void;
+    cancelSync: () => void;
+    cancelSignRequest: () => void;
+}

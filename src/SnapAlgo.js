@@ -105,6 +105,10 @@ export default class SnapAlgo{
             return sig;
         }
     }
+    async signTxns(txns){
+        
+    }
+
     async sendConfirmation(prompt, description, textAreaContent){
         const confirm = await this.wallet.request({
             method: 'snap_confirm',

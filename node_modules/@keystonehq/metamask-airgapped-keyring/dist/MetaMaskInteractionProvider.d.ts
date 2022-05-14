@@ -1,0 +1,38 @@
+/// <reference types="node" />
+import { InteractionProvider } from "@keystonehq/base-eth-keyring";
+import { EventEmitter } from "events";
+import { ObservableStore } from "@metamask/obs-store";
+import { EthSignRequest, ETHSignature, CryptoHDKey, CryptoAccount } from "@keystonehq/bc-ur-registry-eth";
+export declare type IMemState = ObservableStore<{
+    _version: number;
+    sync: {
+        reading: boolean;
+    };
+    sign: {
+        request?: {
+            requestId: string;
+            payload: {
+                type: string;
+                cbor: string;
+            };
+            title?: string;
+            description?: string;
+        };
+    };
+}>;
+export declare class MetamaskInteractionProvider extends EventEmitter implements InteractionProvider {
+    static instance: MetamaskInteractionProvider;
+    memStore: IMemState;
+    constructor();
+    private cleanSyncListeners;
+    private cleanSignListeners;
+    readCryptoHDKeyOrCryptoAccount: () => Promise<CryptoHDKey | CryptoAccount>;
+    submitCryptoHDKey: (cbor: string) => void;
+    submitCryptoAccount: (cbor: string) => void;
+    cancelSync: () => void;
+    requestSignature: (signRequest: EthSignRequest, requestTitle?: string, requestDescription?: string) => Promise<ETHSignature>;
+    submitSignature: (requestId: string, cbor: string) => void;
+    cancelRequestSignature: () => void;
+    reset: () => void;
+    private resetState;
+}

@@ -1,0 +1,2 @@
+export declare const generateAddressFromXpub: (xpub: string, derivePath: string) => string;
+export declare const findHDPathFromAddress: (address: string, xpub: string, numberLimit: number, rootPath: string) => string | null;

@@ -1,0 +1,25 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RegistryItem = void 0;
+const bc_ur_1 = require("@ngraveio/bc-ur");
+const lib_1 = require("./lib");
+class RegistryItem {
+    constructor() {
+        this.toCBOR = () => {
+            if (this.toDataItem() === undefined) {
+                throw new Error(`#[ur-registry][RegistryItem][fn.toCBOR]: registry ${this.getRegistryType()}'s method toDataItem returns undefined`);
+            }
+            return (0, lib_1.encodeDataItem)(this.toDataItem());
+        };
+        this.toUR = () => {
+            return new bc_ur_1.UR(this.toCBOR(), this.getRegistryType().getType());
+        };
+        this.toUREncoder = (maxFragmentLength, firstSeqNum, minFragmentLength) => {
+            const ur = this.toUR();
+            const urEncoder = new bc_ur_1.UREncoder(ur, maxFragmentLength, firstSeqNum, minFragmentLength);
+            return urEncoder;
+        };
+    }
+}
+exports.RegistryItem = RegistryItem;
+//# sourceMappingURL=RegistryItem.js.map

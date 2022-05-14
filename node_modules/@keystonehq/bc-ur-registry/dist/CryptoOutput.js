@@ -1,0 +1,120 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CryptoOutput = void 0;
+const CryptoECKey_1 = require("./CryptoECKey");
+const CryptoHDKey_1 = require("./CryptoHDKey");
+const lib_1 = require("./lib");
+const MultiKey_1 = require("./MultiKey");
+const RegistryItem_1 = require("./RegistryItem");
+const RegistryType_1 = require("./RegistryType");
+const ScriptExpression_1 = require("./ScriptExpression");
+class CryptoOutput extends RegistryItem_1.RegistryItem {
+    constructor(scriptExpressions, cryptoKey) {
+        super();
+        this.scriptExpressions = scriptExpressions;
+        this.cryptoKey = cryptoKey;
+        this.getRegistryType = () => {
+            return RegistryType_1.RegistryTypes.CRYPTO_OUTPUT;
+        };
+        this.getCryptoKey = () => this.cryptoKey;
+        this.getHDKey = () => {
+            if (this.cryptoKey instanceof CryptoHDKey_1.CryptoHDKey) {
+                return this.cryptoKey;
+            }
+            else {
+                return undefined;
+            }
+        };
+        this.getECKey = () => {
+            if (this.cryptoKey instanceof CryptoECKey_1.CryptoECKey) {
+                return this.cryptoKey;
+            }
+            else {
+                return undefined;
+            }
+        };
+        this.getMultiKey = () => {
+            if (this.cryptoKey instanceof MultiKey_1.MultiKey) {
+                return this.cryptoKey;
+            }
+            else {
+                return undefined;
+            }
+        };
+        this.getScriptExpressions = () => this.scriptExpressions;
+        this._toOutputDescriptor = (seIndex) => {
+            if (seIndex >= this.scriptExpressions.length) {
+                return this.cryptoKey.getOutputDescriptorContent();
+            }
+            else {
+                return `${this.scriptExpressions[seIndex].getExpression()}(${this._toOutputDescriptor(seIndex + 1)})`;
+            }
+        };
+        this.toString = () => {
+            return this._toOutputDescriptor(0);
+        };
+        this.toDataItem = () => {
+            let dataItem = this.cryptoKey.toDataItem();
+            if (this.cryptoKey instanceof CryptoECKey_1.CryptoECKey ||
+                this.cryptoKey instanceof CryptoHDKey_1.CryptoHDKey) {
+                dataItem.setTag(this.cryptoKey.getRegistryType().getTag());
+            }
+            const clonedSe = [...this.scriptExpressions];
+            clonedSe.reverse().forEach((se) => {
+                const tagValue = se.getTag();
+                if (dataItem.getTag() === undefined) {
+                    dataItem.setTag(tagValue);
+                }
+                else {
+                    dataItem = new lib_1.DataItem(dataItem, tagValue);
+                }
+            });
+            return dataItem;
+        };
+    }
+}
+exports.CryptoOutput = CryptoOutput;
+CryptoOutput.fromDataItem = (dataItem) => {
+    const scriptExpressions = [];
+    let _dataItem = dataItem;
+    while (true) {
+        let _tag = _dataItem.getTag();
+        const se = ScriptExpression_1.ScriptExpression.fromTag(_tag);
+        if (se) {
+            scriptExpressions.push(se);
+            if (_dataItem.getData() instanceof lib_1.DataItem) {
+                _dataItem = _dataItem.getData();
+                _tag = _dataItem.getTag();
+            }
+            else {
+                break;
+            }
+        }
+        else {
+            break;
+        }
+    }
+    const seLength = scriptExpressions.length;
+    const isMultiKey = seLength > 0 &&
+        (scriptExpressions[seLength - 1].getExpression() ===
+            ScriptExpression_1.ScriptExpressions.MULTISIG.getExpression() ||
+            scriptExpressions[seLength - 1].getExpression() ===
+                ScriptExpression_1.ScriptExpressions.SORTED_MULTISIG.getExpression());
+    if (isMultiKey) {
+        const multiKey = MultiKey_1.MultiKey.fromDataItem(_dataItem);
+        return new CryptoOutput(scriptExpressions, multiKey);
+    }
+    if (_dataItem.getTag() === RegistryType_1.RegistryTypes.CRYPTO_HDKEY.getTag()) {
+        const cryptoHDKey = CryptoHDKey_1.CryptoHDKey.fromDataItem(_dataItem);
+        return new CryptoOutput(scriptExpressions, cryptoHDKey);
+    }
+    else {
+        const cryptoECKey = CryptoECKey_1.CryptoECKey.fromDataItem(_dataItem);
+        return new CryptoOutput(scriptExpressions, cryptoECKey);
+    }
+};
+CryptoOutput.fromCBOR = (_cborPayload) => {
+    const dataItem = (0, lib_1.decodeToDataItem)(_cborPayload);
+    return CryptoOutput.fromDataItem(dataItem);
+};
+//# sourceMappingURL=CryptoOutput.js.map

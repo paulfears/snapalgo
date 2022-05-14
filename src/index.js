@@ -1,43 +1,29 @@
-const algo =  require('algosdk/dist/cjs');
-import { getBIP44AddressKeyDeriver } from '@metamask/key-tree';
+
 import nacl from 'tweetnacl';
 import SnapAlgo from './SnapAlgo';
+import Accounts from './Accounts';
 
-
-async function getAccount(path){
-  const entropy = await wallet.request({
-    method: 'snap_getBip44Entropy_283',
-  });
-
-  //dirive private key using metamask key tree
-  const algoDiriver = getBIP44AddressKeyDeriver(entropy);
-  
-  //generate an extended private key then grab the first 32 bytes
-  //this coresponds to the private key portion of the extended private key
-  
-  const privateKey = algoDiriver(path).slice(0, 32);
-
-  //algosdk requires keysPairs to be dirived by nacl so we can use the private key as 32 bytes of entropy
-  const keys = nacl.sign.keyPair.fromSeed(privateKey);
-  const Account = {}
-  Account.addr = algo.encodeAddress(keys.publicKey);
-  Account.sk = keys.secretKey;
-  return Account;
-
-}
 
 wallet.registerRpcMessageHandler(async (originString, requestObject) => {
-  let account = await getAccount(2);
-  let snapAlgo = new SnapAlgo(wallet, account);
+  const accountLibary = new Accounts(wallet);
+  console.log("getting Accounts")
+  let accounts = await accountLibary.getAccounts();
+  console.log("accounts got : ")
+  console.log(accounts);
+  let currentAccount = await accountLibary.getCurrentAccount();
+  
+  let snapAlgo = new SnapAlgo(wallet, currentAccount);
   if(requestObject.hasOwnProperty('testnet')){
     snapAlgo.setTestnet(requestObject.testnet);
   }
   switch (requestObject.method) {
     
+    case 'getAccounts':
+      return accountLibary.getAccounts();
     case 'isValidAddress':
       return snapAlgo.isValidAddress(requestObject.address);
     
-      case 'getTransactions':
+    case 'getTransactions':
       return snapAlgo.getTransactions();
     
     case 'getBalance': 

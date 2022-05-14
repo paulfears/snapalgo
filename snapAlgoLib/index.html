@@ -1,0 +1,17 @@
+<html>
+    <head>
+        
+    </head>
+    <body>
+        <button id="enableButton">enable SnapAlgo</button>
+        <script src="dist/index_bundle.js"></script>
+        <script>
+            const snapalgo = new SnapAlgo.Wallet();
+            console.log(window.algorand)
+            document.getElementById('enableButton').addEventListener('click', function() {
+                
+                algorand.enable();
+            });
+        </script>
+    </body>
+</html>
