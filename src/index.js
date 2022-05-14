@@ -28,6 +28,19 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     
     case 'getBalance': 
       return snapAlgo.getBalance();
+
+    case 'clearAccounts':
+      const clearAccountConfirm = await snapAlgo.sendConfirmation(
+        'Clear all accounts?',
+        'imported Accounts will be gone forever',
+      );
+      if(clearAccountConfirm){
+        await accountLibary.clearAccounts();
+        snapAlgo.notify('Accounts cleared');
+        return 'true';
+      }
+      return false;
+      
     
     //display balance in metamask window
     case 'displayBalance': 

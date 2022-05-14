@@ -36,6 +36,7 @@
     <button class="transact">Transact</button>
     <button class="testAddress">Test Address</button>
     <br>
+    <button onClick="clearAccounts()">clear Accounts</button>
     <br>
     <div id="transactionOutput" style="overflow-y: scroll;"></div>
     <p>Sign data</p>
@@ -88,7 +89,16 @@
       })
       console.log(sig)
       document.getElementById('signature').innerHTML = JSON.stringify(sig);
-    } 
+    }
+    
+    async function clearAccounts(){
+      await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'clearAccounts',
+        }]        
+      })
+    }
 
     async function isValidAddress(){
       const address = document.getElementById('SendTo').value

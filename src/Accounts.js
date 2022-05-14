@@ -4,54 +4,55 @@ import { getBIP44AddressKeyDeriver} from '@metamask/key-tree';
 
 export default class Accounts{
     constructor(wallet){
-        console.log("begin Constructing")
+        
         this.wallet = wallet;
         this.accounts = {};
         this.currentAccountId = null;
         this.currentAccount = null;
         this.loaded = false;
-        console.log("end Constructing")
+        
     }
 
     async load(){
         //load acount Data
-        console.log("data is now loading");
+        console.log("load function called")
         const storedAccounts = await this.wallet.request({
             method: 'snap_manageState',
             params: ['get'],
         });
+       
   
-  
-        if(storedAccounts === null){
-            console.log("no stored Accounts");
-            let extendedAccount = {};
+        if(storedAccounts === null || Object.keys(storedAccounts).length === 0){
+            
             const Account = await this.generateAccount(2);
+            let extendedAccount = {};
             extendedAccount.type = 'generated';
             extendedAccount.addr = Account.addr;
-            const address = Account.addr;
             extendedAccount.path = 2;
+            extendedAccount.name = 'Account 1';
+            const address = Account.addr;
             const accounts = {}
             accounts[address] = extendedAccount;
             await this.wallet.request({
               method: 'snap_manageState',
               params: ['update', {"currentAccountId": address, "Accounts": accounts}],
             })
-            this.currentAccountId = addr;
+            this.currentAccountId = address;
             this.accounts = accounts;
             this.loaded = true;
-            console.log("account generated no errors");
+            
             return {"currentAccountId": address, "Accounts": accounts};
           }
           else{
-            console.log("accounts found");
             this.accounts = storedAccounts.Accounts;
             this.currentAccountId = storedAccounts.currentAccountId;
+            this.loaded = true;
             return storedAccounts;
           }
     }
     
     async unlockAccount(addr){
-        console.log("unlocking account");
+        
         if(!this.loaded){
             await this.load();
         }
@@ -59,7 +60,7 @@ export default class Accounts{
             const tempAccount = this.accounts[addr];
             if(tempAccount.type === 'generated'){
                 const Account = await this.generateAccount(tempAccount.path);
-                console.log("account unlocked");
+                
                 return Account;
             }
         }
@@ -97,18 +98,35 @@ export default class Accounts{
     async getAccounts(){
         if(!this.loaded){
             await this.load(); 
-        }    
+        }
+        
         return this.accounts;
     }
-
-    async createNewAccount(){
+    async clearAccounts(){
+        
+        await this.wallet.request({
+            method: 'snap_manageState',
+            params: ['update', {}],
+          });
+        const state = await this.wallet.request({
+            method: 'snap_manageState',
+            params: ['get'],
+        });       
+        
+        return true
+    }
+    async createNewAccount(name){
         if(!this.loaded){
             await this.load();
         }
+        if(!name){
+            name = 'Account ' + (Object.keys(this.accounts).length+1);
+        }
+
         const Account = await this.generateAccount(this.accounts.length + 2);
         const address = Account.addr;
         const path = this.accounts.length+2;
-        this.accounts[address] = {type: 'generated', path: path};
+        this.accounts[address] = {type: 'generated', path: path, name: name};
         await this.wallet.request({
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
@@ -117,7 +135,7 @@ export default class Accounts{
     }
     
     async generateAccount(path){
-        console.log("generating account");
+        
         const entropy = await this.wallet.request({
           method: 'snap_getBip44Entropy_283',
         });
@@ -135,7 +153,7 @@ export default class Accounts{
         const Account = {}
         Account.addr = algo.encodeAddress(keys.publicKey);
         Account.sk = keys.secretKey;
-        console.log("account generated");
+       
         return Account;
       
     }

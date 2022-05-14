@@ -76597,31 +76597,29 @@ const algo = require('algosdk/dist/cjs');
 
 class Accounts {
   constructor(wallet) {
-    console.log("begin Constructing");
     this.wallet = wallet;
     this.accounts = {};
     this.currentAccountId = null;
     this.currentAccount = null;
     this.loaded = false;
-    console.log("end Constructing");
   }
 
   async load() {
     
-    console.log("data is now loading");
+    console.log("load function called");
     const storedAccounts = await this.wallet.request({
       method: 'snap_manageState',
       params: ['get']
     });
 
-    if (storedAccounts === null) {
-      console.log("no stored Accounts");
-      let extendedAccount = {};
+    if (storedAccounts === null || Object.keys(storedAccounts).length === 0) {
       const Account = await this.generateAccount(2);
+      let extendedAccount = {};
       extendedAccount.type = 'generated';
       extendedAccount.addr = Account.addr;
-      const address = Account.addr;
       extendedAccount.path = 2;
+      extendedAccount.name = 'Account 1';
+      const address = Account.addr;
       const accounts = {};
       accounts[address] = extendedAccount;
       await this.wallet.request({
@@ -76631,10 +76629,9 @@ class Accounts {
           "Accounts": accounts
         }]
       });
-      this.currentAccountId = addr;
+      this.currentAccountId = address;
       this.accounts = accounts;
       this.loaded = true;
-      console.log("account generated no errors");
       return {
         "currentAccountId": address,
         "Accounts": accounts
@@ -76642,13 +76639,12 @@ class Accounts {
     } else {
       this.accounts = storedAccounts.Accounts;
       this.currentAccountId = storedAccounts.currentAccountId;
+      this.loaded = true;
       return storedAccounts;
     }
   }
 
   async unlockAccount(addr) {
-    console.log("unlocking account");
-
     if (!this.loaded) {
       await this.load();
     }
@@ -76658,7 +76654,6 @@ class Accounts {
 
       if (tempAccount.type === 'generated') {
         const Account = await this.generateAccount(tempAccount.path);
-        console.log("account unlocked");
         return Account;
       }
     }
@@ -76711,9 +76706,25 @@ class Accounts {
     return this.accounts;
   }
 
-  async createNewAccount() {
+  async clearAccounts() {
+    await this.wallet.request({
+      method: 'snap_manageState',
+      params: ['update', {}]
+    });
+    const state = await this.wallet.request({
+      method: 'snap_manageState',
+      params: ['get']
+    });
+    return true;
+  }
+
+  async createNewAccount(name) {
     if (!this.loaded) {
       await this.load();
+    }
+
+    if (!name) {
+      name = 'Account ' + (Object.keys(this.accounts).length + 1);
     }
 
     const Account = await this.generateAccount(this.accounts.length + 2);
@@ -76721,7 +76732,8 @@ class Accounts {
     const path = this.accounts.length + 2;
     this.accounts[address] = {
       type: 'generated',
-      path: path
+      path: path,
+      name: name
     };
     await this.wallet.request({
       method: 'snap_manageState',
@@ -76737,7 +76749,6 @@ class Accounts {
   }
 
   async generateAccount(path) {
-    console.log("generating account");
     const entropy = await this.wallet.request({
       method: 'snap_getBip44Entropy_283'
     }); 
@@ -76752,7 +76763,6 @@ class Accounts {
     const Account = {};
     Account.addr = algo.encodeAddress(keys.publicKey);
     Account.sk = keys.secretKey;
-    console.log("account generated");
     return Account;
   }
 
@@ -76926,6 +76936,17 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
 
     case 'getBalance':
       return snapAlgo.getBalance();
+
+    case 'clearAccounts':
+      const clearAccountConfirm = await snapAlgo.sendConfirmation('Clear all accounts?', 'imported Accounts will be gone forever');
+
+      if (clearAccountConfirm) {
+        await accountLibary.clearAccounts();
+        snapAlgo.notify('Accounts cleared');
+        return 'true';
+      }
+
+      return false;
     
 
     case 'displayBalance':
