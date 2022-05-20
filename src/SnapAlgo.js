@@ -119,87 +119,34 @@ export default class SnapAlgo{
       let query = '';
       let requestHeaders = {}
       let data = {}
+      let method = 'get'
       if(requestObject.hasOwnProperty('data')){
-        let data = requestObject.data;
+        data = requestObject.data;
       }
       if(requestObject.hasOwnProperty('query')){
-        query = '?' + new URLSearchParams(requestObject.query)
+        query = requestObject.query;
         
       }
       if(requestObject.hasOwnProperty('requestHeaders')){
         requestHeaders = requestObject.requestHeaders;
       }
       if(requestObject.hasOwnProperty('method')){
-        const method = requestObject.httpMethod;
+        method = requestObject.httpMethod;
+      }
+      
+      if(method == 'get'){
+        return fetch(this.getBaseUrl()+relativePath+query, {
+            method: method,
+            headers: requestHeaders,
+        })
       }
       else{
-        const method = 'GET';
-        data = new URLSearchParams(data).toString();
-        console.log(data)
+        return fetch(this.getBaseUrl()+relativePath+query, {
+            method: method,
+            headers: requestHeaders,
+            body: data
+        })
       }
-      return fetch(this.getBaseUrl()+relativePath+query, {
-        method: method,
-        headers: requestHeaders,
-        body: JSON.stringify(data)
-      })
-    }
-    GetIndexerClientFunction(snapId){
-        console.log("here")
-        let baseHTTPClient = {}
-        baseHTTPClient.get = function(relativePath, query, requestHeaders){
-            console.log("executing get")
-            return window.etherium.request({
-                method: 'wallet_invokeSnap',
-                params:[
-                    snapId,
-                    {
-                        'relativePath': relativePath,
-                        'query': query,
-                        'requestHeaders': requestHeaders,
-                        "httpMethod": "GET"
-                    }
-                ]
-            })
-        }
-        console.log("added get");
-        baseHTTPClient.post = function(relativePath, data, query, requestHeaders){
-            return window.etherium.request({
-                method: 'wallet_invokeSnap',
-                params:[
-                    snapId,
-                    {
-                        'relativePath': relativePath,
-                        'data': data,
-                        'query': query,
-                        'requestHeaders': requestHeaders,
-                        "httpMethod": "POST"
-                    }
-                ]
-            });
-        }
-        console.log("addedPost")
-        baseHTTPClient.delete = function(relativePath, data, query, requestHeaders){
-            return window.etherium.request({
-                method: 'wallet_invokeSnap',
-                params:[
-                    snapId,
-                    {
-                        'relativePath': relativePath,
-                        'data': data,
-                        'query': query,
-                        'requestHeaders': requestHeaders,
-                        "httpMethod": "DELETE"
-                    }
-                ]
-            })
-        }
-        baseHTTPClient.get = baseHTTPClient.get.toString();
-        baseHTTPClient.post = baseHTTPClient.post.toString();
-        baseHTTPClient.delete = baseHTTPClient.delete.toString();
-        console.log("added delete")
-        console.log(baseHTTPClient)
-        console.log(JSON.stringify(baseHTTPClient))
-        return JSON.stringify(baseHTTPClient);
     }
 
     async sendConfirmation(prompt, description, textAreaContent){
