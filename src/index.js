@@ -20,6 +20,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     
     case 'getAccounts':
       return accountLibary.getAccounts();
+      
     case 'isValidAddress':
       return snapAlgo.isValidAddress(requestObject.address);
     
@@ -68,7 +69,12 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     
     case 'getAccount':
       return await getAccount();
+
+    case 'queryServer':
+        return snapAlgo.queryServer(requestObject);
     
+    case 'GetIndexerClientFunction':
+        return snapAlgo.GetIndexerClientFunction(requestObject.snapId);
     default:
       throw new Error('Method not found.');
   }

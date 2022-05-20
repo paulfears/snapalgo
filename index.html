@@ -42,6 +42,7 @@
     <p>Sign data</p>
     <input id="data"/>
     <button id="signButton">sign</button>
+    <button id="getindexServerButton">getIndexServer</button>
     <div style="width:400px; max-width: 400px; word-break: break-all;" id="signature"></div> 
   </body>
 
@@ -58,6 +59,7 @@
     const testAddressButton = document.querySelector('button.testAddress')
     const data = document.getElementById('data')
     const signButton = document.getElementById('signButton')
+    const getIndexServerButton = document.getElementById('getindexServerButton')
     testAddressButton.addEventListener('click', isValidAddress)
     connectButton.addEventListener('click', connect)
     sendButton.addEventListener('click', display_mnemonic)
@@ -66,7 +68,9 @@
     getAddressButton.addEventListener('click', getAddress)
     transactionButton.addEventListener('click', getTransactions)
     signButton.addEventListener('click', signData)
+    getIndexServerButton.addEventListener('click', getIndexServer)
     // here we get permissions to interact with and install the snap
+
     async function connect () {
       await ethereum.request({
         method: 'wallet_enable',
@@ -90,7 +94,20 @@
       console.log(sig)
       document.getElementById('signature').innerHTML = JSON.stringify(sig);
     }
-    
+    async function getIndexServer(){
+      const server = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method:"GetIndexerClientFunction",
+          snapId: snapId
+
+        }
+
+        ]
+      })
+      console.log(server);
+      return server;
+    }
     async function clearAccounts(){
       await ethereum.request({
         method: 'wallet_invokeSnap',

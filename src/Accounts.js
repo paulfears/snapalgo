@@ -133,6 +133,7 @@ export default class Accounts{
         })
         return {"currentAccountId": address, "Accounts": this.accounts};
     }
+
     
     async generateAccount(path){
         
