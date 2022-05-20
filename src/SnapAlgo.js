@@ -139,12 +139,24 @@ export default class SnapAlgo{
             method: method,
             headers: requestHeaders,
         })
+        .then((res)=>{
+            return res.text();
+        })
+        .then((json)=>{
+            return JSON.parse(json);
+        })
       }
       else{
         return fetch(this.getBaseUrl()+relativePath+query, {
             method: method,
             headers: requestHeaders,
             body: data
+        })
+        .then((res)=>{
+            return res.text();
+        })
+        .then((json)=>{
+            return JSON.parse(json);
         })
       }
     }
