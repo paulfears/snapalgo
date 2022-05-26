@@ -1,6 +1,6 @@
 {
   "name": "algorand",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "algorand on metamask",
   "main": "src/index.js",
   "scripts": {
@@ -22,7 +22,7 @@
     "nvm": "^0.0.4"
   },
   "devDependencies": {
-    "@metamask/snaps-cli": "^0.12.0",
+    "@metamask/snaps-cli": "^0.15.0",
     "patch-package": "^6.4.7",
     "postinstall-postinstall": "^2.1.0"
   }

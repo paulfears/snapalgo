@@ -5,7 +5,9 @@ const languages = require('./languages');
 
 const constants = {
   ESCAPED_CHAR_REGEX: /^\\./,
-  QUOTED_STRING_REGEX:/^(['"`])((?:|[^\1])+?)(\1)/,
+  QUOTED_STRING_REGEX_1: /^"[^"\\]*(?:\\[\s\S][^"\\]*)*"/,
+  QUOTED_STRING_REGEX_2: /^'[^'\\]*(?:\\[\s\S][^'\\]*)*'/,
+  QUOTED_STRING_REGEX_3: /^`[^`\\]*(?:\\[\s\S][^`\\]*)*`/,
   NEWLINE_REGEX: /^\r*\n/
 };
 
@@ -87,7 +89,15 @@ const parse = (input, options = {}) => {
 
     // quoted strings
     if (block.type !== 'block' && (!prev || !/\w$/.test(prev.value)) && !(tripleQuotes && remaining.startsWith('"""'))) {
-      if ((token = scan(constants.QUOTED_STRING_REGEX, 'text'))) {
+      if ((token = scan(constants.QUOTED_STRING_REGEX_1, 'text'))) {
+        push(new Node(token));
+        continue;
+      }
+      if ((token = scan(constants.QUOTED_STRING_REGEX_2, 'text'))) {
+        push(new Node(token));
+        continue;
+      }
+      if ((token = scan(constants.QUOTED_STRING_REGEX_3, 'text'))) {
         push(new Node(token));
         continue;
       }
@@ -103,7 +113,7 @@ const parse = (input, options = {}) => {
     // This exists to handle the edge case of "/**/" in JavaScript, which is
     // not handled by the regular open / close block comment logic.
     if (BLOCK_EMPTY_REGEX && options.block && !(tripleQuotes && block.type === 'block')) {
-      if ((token = scan(BLOCK_EMPTY_REGEX , 'empty-block'))) {
+      if ((token = scan(BLOCK_EMPTY_REGEX, 'empty-block'))) {
         push(new Node(token));
         continue;
       }
