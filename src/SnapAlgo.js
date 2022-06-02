@@ -1,4 +1,6 @@
-const algo =  require('algosdk/dist/cjs');
+const algosdk =  require('algosdk/dist/cjs');
+
+import HTTPClient from './HTTPClient';
 export default class SnapAlgo{
     constructor(wallet, account){
         this.wallet = wallet;
@@ -12,19 +14,42 @@ export default class SnapAlgo{
         }
         return this.baseUrl;
     }
+    getIndexer(){
+        if(this.testnet){
+            this.network = "testnet";
+        }
+        else{
+            this.network = "mainnet";
+        }
+        let indexerBaseClient = new HTTPClient().get("index", this.network);
+        return new algosdk.Indexer(indexerBaseClient);
+    }
+    getAlgod(){
+        if(this.testnet){
+            this.network = "testnet";
+        }
+        else{
+            this.network = "mainnet";
+        }
+        let algodBaseClient = new HTTPClient().get("algod", this.network);
+        return new algosdk.Algodv2(algodBaseClient)
+    }
     setTestnet(bool){
         this.testnet = bool;
     }
     async getTransactions(){
-        let transactions = await fetch(this.getBaseUrl()+"/transactions?address="+this.account.addr);
-        return await transactions.json();
+        const indexerClient = this.getIndexer();
+        const transactions =  await indexerClient.lookupAccountTransactions(this.account.addr).do();
+        console.log(await transactions)
+        return transactions;
     }
     async getBalance(){
-        let balance = await fetch(this.getBaseUrl()+"/balance?address="+this.account.addr);
-        return Number(await balance.text());
+        const algodClient = this.getAlgod();
+        const output = (await algodClient.accountInformation(this.account.addr).do()).amount;
+        return output;
     }
     isValidAddress(address){
-        return algo.isValidAddress(address);
+        return algosdk.isValidAddress(address);
     }
     async displayMnemonic(){
         const confirm = await this.sendConfirmation(
@@ -36,7 +61,7 @@ export default class SnapAlgo{
             this.sendConfirmation(
                 "mnemonic",
                 this.account.addr,
-                algo.secretKeyToMnemonic(this.account.sk)
+                algosdk.secretKeyToMnemonic(this.account.sk)
             )
             return true;
         }
@@ -44,12 +69,15 @@ export default class SnapAlgo{
             return false;
         }
     }
+
     getAddress(){
         return this.account.addr;
     }
+    
     async getParams(){
-        let request = await fetch(this.getBaseUrl()+"/suggestedParams");
-        return await request.json();
+        const algodClient = this.getAlgod();
+        const suggestedParams = await algodClient.getTransactionParams().do();
+        return suggestedParams;
     }
     async notify(message){
         wallet.request({
@@ -63,102 +91,63 @@ export default class SnapAlgo{
           });
         
     }
-    async broadcastTransaction(txn){
-        //creates a notifican when the transaction is broadcast
-        fetch(this.getBaseUrl()+"/broadcastV2", {
-            method: 'POST',
-            headers: {                              
-              "Content-Type": "application/json"    
-            },   
-            body: JSON.stringify(txn)
-        })
-        .then(res => res.text()
-            .then(
-                (res)=>{
-                    this.notify(res);
-                }
-            
-        ))
-        return txn.txID;
-    }
     async Transfer(receiver, amount){
         let params = await this.getParams();
         amount = BigInt(amount);
         //create a payment transaction
-        let txn = algo.makePaymentTxnWithSuggestedParamsFromObject({
+        let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
             from: this.account.addr, 
             to: receiver, 
             amount: amount, 
             suggestedParams: params
         });
         //user confirmation
-        confirm = await this.sendConfirmation("confirm Spend", "send"+amount+" ALGO to "+receiver+"?");
+        const confirm = await this.sendConfirmation("confirm Spend", "send"+amount+" ALGO to "+receiver+"?");
         if(!confirm){
-            
             return "user rejected Transaction: error 4001";
         }
-        else{
-            //sign the transaction locally
-            let sig = algo.signTransaction(txn, this.account.sk);
-            //send signed transaction over the wire
-            this.broadcastTransaction(sig);
-            return sig;
-        }
+        
+        //sign the transaction locally
+        let sig = txn.signTxn(this.account.sk);
+        //send signed transaction over the wire
+        const algodClient = this.getAlgod();
+        const txId = txn.txID().toString();
+        await algodClient.sendRawTransaction(sig).do();
+        algosdk.waitForConfirmation(algodClient, txId, 4).then((result)=>{
+            console.log(result);
+            this.notify("Transaction Successful", result['confirmed-round']);
+        })
+        return txId;
+        
     }
     async signTxns(txns){
-        
+        console.log(txns);
+        let signedTxns = [];
+        let txnBuffer = Buffer.from(txns, 'base64');
+        let txn = algosdk.decodeUnsignedTransaction(txnBuffer);
+        console.log(txn);
+        return true;
     }
-    async queryServer(requestObject){
-      //requestObject.relativePath
-      //requestObject.requestHeaders
-      //requestObject.query
-      //requestObject.data
-      //requestObject.httpMethod
+    
 
-      const relativePath = requestObject.relativePath;
-      let query = '';
-      let requestHeaders = {}
-      let data = {}
-      let method = 'get'
-      if(requestObject.hasOwnProperty('data')){
-        data = requestObject.data;
-      }
-      if(requestObject.hasOwnProperty('query')){
-        query = requestObject.query;
-        
-      }
-      if(requestObject.hasOwnProperty('requestHeaders')){
-        requestHeaders = requestObject.requestHeaders;
-      }
-      if(requestObject.hasOwnProperty('method')){
-        method = requestObject.httpMethod;
-      }
-      
-      if(method == 'get'){
-        return fetch(this.getBaseUrl()+relativePath+query, {
-            method: method,
-            headers: requestHeaders,
-        })
-        .then((res)=>{
-            return res.text();
-        })
-        .then((json)=>{
-            return JSON.parse(json);
-        })
-      }
-      else{
-        return fetch(this.getBaseUrl()+relativePath+query, {
-            method: method,
-            headers: requestHeaders,
-            body: data
-        })
-        .then((res)=>{
-            return res.text();
-        })
-        .then((json)=>{
-            return JSON.parse(json);
-        })
-      }
+    Uint8ArrayToBase64(uint8ArrayObject){
+        let array = []
+        for(let i =0; i<Object.keys(uint8ArrayObject).length; i++){
+          array.push(uint8ArrayObject[i]);
+        }
+        let output = new Uint8Array(array);
+        output = Buffer.from(output).toString('base64');
+        console.log(output)
+        return output;
+    }
+
+    encodeUnsignedTransaction(unsignedTxn){
+        console.log("encoding transaction");
+        console.log(unsignedTxn);
+
+        let encodedTxn = algosdk.encodeUnsignedTransaction(unsignedTxn);
+        console.log(encodedTxn);
+        return encodedTxn;
     }
 
     async sendConfirmation(prompt, description, textAreaContent){

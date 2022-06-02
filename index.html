@@ -5,6 +5,8 @@
     <link rel="icon" type="image/svg" href="./images/icon.svg"/>
     <script src="encoding-indexes.js"></script>
     <script src="encoding.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/algosdk@1.16.0/dist/browser/algosdk.min.js"></script>
+    
   </head>
 
   <body>
@@ -43,10 +45,14 @@
     <input id="data"/>
     <button id="signButton">sign</button>
     <button id="getindexServerButton">getIndexServer</button>
+    <button id="signTxnsButton">signTxns</button>
+    <button id="toBase64Button">toBase64</button>
     <div style="width:400px; max-width: 400px; word-break: break-all;" id="signature"></div> 
+    <script src="sdk/index_bundle.js"></script>
   </body>
 
   <script>
+    let snapAlgo;
     //const snapId = `npm:algorand`;
     const snapId = `local:${window.location.href}`;
     const connectButton = document.querySelector('button.connect')
@@ -59,7 +65,9 @@
     const testAddressButton = document.querySelector('button.testAddress')
     const data = document.getElementById('data')
     const signButton = document.getElementById('signButton')
+    const toBase64Button = document.getElementById('toBase64Button')
     const getIndexServerButton = document.getElementById('getindexServerButton')
+    const signTxnsButton = document.getElementById('signTxnsButton')
     testAddressButton.addEventListener('click', isValidAddress)
     connectButton.addEventListener('click', connect)
     sendButton.addEventListener('click', display_mnemonic)
@@ -69,14 +77,20 @@
     transactionButton.addEventListener('click', getTransactions)
     signButton.addEventListener('click', signData)
     getIndexServerButton.addEventListener('click', getIndexServer)
+    signTxnsButton.addEventListener('click', signTxns)
+    toBase64Button.addEventListener('click', toBase64)
     // here we get permissions to interact with and install the snap
 
     async function connect () {
-      await ethereum.request({
-        method: 'wallet_enable',
-        params: [{
-          wallet_snap: { [snapId]: {} },
-        }]
+      result = await ethereum.request({
+      method: 'wallet_enable',
+      params: [
+        {
+          wallet_snap: {
+            [snapId]: {}
+          }
+        }
+        ]
       })
     }
     
@@ -94,6 +108,44 @@
       console.log(sig)
       document.getElementById('signature').innerHTML = JSON.stringify(sig);
     }
+    
+    async function toBase64(){
+      let b64 = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'Uint8ArrayToBase64',
+          data: new Uint8Array(new TextEncoder().encode("hello"))
+        }]        
+      })
+      console.log(b64);
+      console.log(b64[0]);
+      console.log(b64[1]);
+    }
+
+    async function signTxns(){
+      console.log("here")
+      let client = await algorand.getAlgorandV2Client();
+      const algodClient = new algosdk.Algodv2(client);
+      let params = await algodClient.getTransactionParams().do();
+      const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
+      const sender = '37G4YMHO2N4MBRUN4NMUIZEOO5A44UMKRF26O3WIN7WRUTDPT6Z2NU46RE';
+      let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        from: sender, 
+        to: receiver, 
+        amount: 10000,  
+        suggestedParams: params
+      });
+      txn = algorand.snapAlgoEncodeTxn(txn)
+      console.log(txn);
+      const out = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'signTxns',
+          txns: txn
+        }]
+      })
+    }
+
     async function getIndexServer(){
       const server = await ethereum.request({
         method: 'wallet_invokeSnap',
@@ -152,7 +204,7 @@
         })
       }catch(e){
         console.error(e)
-        alert(err.message)
+        alert(e.message)
       }
     }
     async function getTransactions(){

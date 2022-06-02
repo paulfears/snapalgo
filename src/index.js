@@ -2,9 +2,11 @@
 import nacl from 'tweetnacl';
 import SnapAlgo from './SnapAlgo';
 import Accounts from './Accounts';
+import { bufferToBase64String } from '@metamask/key-tree/dist/utils';
 
 
 wallet.registerRpcMessageHandler(async (originString, requestObject) => {
+  console.log(originString);
   const accountLibary = new Accounts(wallet);
   console.log("getting Accounts")
   let accounts = await accountLibary.getAccounts();
@@ -69,12 +71,13 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     
     case 'getAccount':
       return await getAccount();
-
-    case 'queryServer':
-        return snapAlgo.queryServer(requestObject);
-    
-    case 'GetIndexerClientFunction':
-        return snapAlgo.GetIndexerClientFunction(requestObject.snapId);
+    case 'encodeTransaction':
+        console.log("encoding transaction");
+        return snapAlgo.encodeUnsignedTransaction(requestObject.txn);
+    case 'Uint8ArrayToBase64':
+        return snapAlgo.Uint8ArrayToBase64(requestObject.data);
+    case 'signTxns':
+      return snapAlgo.signTxns(requestObject.txns);
     default:
       throw new Error('Method not found.');
   }
