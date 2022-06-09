@@ -22,6 +22,9 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     
     case 'getAccounts':
       return accountLibary.getAccounts();
+
+    case 'getAssets':
+      return snapAlgo.getAssets();
       
     case 'isValidAddress':
       return snapAlgo.isValidAddress(requestObject.address);
@@ -74,10 +77,24 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     case 'encodeTransaction':
         console.log("encoding transaction");
         return snapAlgo.encodeUnsignedTransaction(requestObject.txn);
+    case 'encodeTransactions':
+        console.log("encoding transactions");
+        return snapAlgo.encodeUnsignedTransactions(requestObject.txns);
     case 'Uint8ArrayToBase64':
         return snapAlgo.Uint8ArrayToBase64(requestObject.data);
     case 'signTxns':
       return snapAlgo.signTxns(requestObject.txns);
+    case 'AppOptIn':
+      console.log(requestObject);
+      console.log("opting in");
+      console.log("updated");
+      console.log(snapAlgo.optIn);
+      return snapAlgo.AppOptIn(requestObject.appIndex);
+    case 'AssetOptIn':
+      console.log(requestObject);
+      console.log("opting in asset");
+      console.log("updated");
+      return snapAlgo.AssetOptIn(requestObject.assetIndex);
     default:
       throw new Error('Method not found.');
   }

@@ -10,13 +10,6 @@
  */
 
 /*!
- * The buffer module from node.js, for the browser.
- *
- * @author   Feross Aboukhadijeh <https://feross.org>
- * @license  MIT
- */
-
-/*!
  * jQuery JavaScript Library v3.6.0
  * https://jquery.com/
  *
@@ -74,7 +67,3 @@
  * Released under the MIT license.
  * http://jquery.org/license
  */
-
-/*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
-
-/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */

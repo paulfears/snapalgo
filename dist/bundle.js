@@ -74681,14 +74681,11 @@ class SnapAlgo {
     this.account = account;
     this.baseUrl = "https://algorand-api-node.paulfears.repl.co";
     this.testnet = false;
-  }
-
-  getBaseUrl() {
-    if (this.testnet) {
-      return this.baseUrl + "/test";
-    }
-
-    return this.baseUrl;
+    this.IdTable = {
+      "mainnet-v1.0": "wGHE2Pwdvd7S12BL5FaOP20EGYesN73ktiC1qzkkit8=",
+      "testnet-v1.0": "SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=",
+      "betanet-v1.0": "mFgazF+2uRS1tMiL9dsj01hJGySEmPN28B/TjjvpVW0="
+    };
   }
 
   getIndexer() {
@@ -74722,6 +74719,20 @@ class SnapAlgo {
     const transactions = await indexerClient.lookupAccountTransactions(this.account.addr).do();
     console.log(await transactions);
     return transactions;
+  }
+
+  async getAssets() {
+    const indexerClient = this.getIndexer();
+    console.log(Object.getOwnPropertyNames(indexerClient));
+    const accountAssets = await indexerClient.lookupAccountByID(this.account.addr).do();
+    console.log(accountAssets);
+    let assets = accountAssets.account.assets;
+
+    for (let asset of assets) {
+      asset['asset'] = (await indexerClient.searchForAssets().index(asset['asset-id']).do()).assets;
+    }
+
+    return assets;
   }
 
   async getBalance() {
@@ -74791,17 +74802,175 @@ class SnapAlgo {
     algosdk.waitForConfirmation(algodClient, txId, 4).then(result => {
       console.log(result);
       this.notify("Transaction Successful", result['confirmed-round']);
+    }).catch(err => {
+      console.log(err);
+      this.notify("Transaction Failed");
     });
     return txId;
   }
 
-  async signTxns(txns) {
-    console.log(txns);
-    let signedTxns = [];
-    let txnBuffer = Buffer.from(txns, 'base64');
-    let txn = algosdk.decodeUnsignedTransaction(txnBuffer);
+  async optOut(appIndex) {
+    const algod = this.getAlgod();
+    const suggestedParams = await algod.getTransactionParams().do();
+    const txn = algosdk.makeApplicationOptOutTxnFromObject({
+      from: this.account.addr,
+      appIndex: appIndex,
+      suggestedParams: suggestedParams
+    });
+    const confirm = await this.sendConfirmation("confirm OptOut", "opt out of app " + appIndex + "?");
+
+    if (!confirm) {
+      return "user rejected Transaction: error 4001";
+    }
+
+    const sig = txn.signTxn(this.account.sk);
+    const txId = txn.txID().toString();
+    algod.sendRawTransaction(sig).do();
+    algosdk.waitForConfirmation(algod, txId, 4).then(result => {
+      console.log(result);
+      this.notify("opt out Succeeded: ", result['confirmed-round']);
+    }).catch(err => {
+      console.log(err);
+      this.notify("opt out Failed");
+    });
+    return txId;
+  }
+
+  async AssetOptIn(assetIndex) {
+    const algod = this.getAlgod();
+    const suggestedParams = await algod.getTransactionParams().do();
+    console.log("new");
+    const txn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+      from: this.account.addr,
+      assetIndex: assetIndex,
+      to: this.account.addr,
+      amount: 0,
+      suggestedParams: suggestedParams
+    });
+    const confirm = await this.sendConfirmation("confirm OptIn", "opt in to asset " + assetIndex + "?");
+
+    if (!confirm) {
+      return "user rejected Transaction: error 4001";
+    }
+
+    const sig = txn.signTxn(this.account.sk);
+    const txId = txn.txID().toString();
+    algod.sendRawTransaction(sig).do();
+    algosdk.waitForConfirmation(algod, txId, 4).then(result => {
+      console.log(result);
+      this.notify("opt in Succeeded: ", result['confirmed-round']);
+    }).catch(err => {
+      console.log(err);
+      this.notify("opt in Failed");
+    });
+    return txId;
+  }
+
+  async AppOptIn(appIndex) {
+    console.log("here");
+    const algod = this.getAlgod();
+    const suggestedParams = await algod.getTransactionParams().do();
+    console.log("suggestParams");
+    console.log(this.account.addr);
+    const txn = algosdk.makeApplicationOptInTxnFromObject({
+      from: this.account.addr,
+      appIndex: appIndex,
+      suggestedParams: suggestedParams
+    });
     console.log(txn);
-    return true;
+    const confirm = await this.sendConfirmation("confirm OptIn", "opt in to app " + appIndex + "?");
+
+    if (!confirm) {
+      return "user rejected Transaction: error 4001";
+    }
+
+    const sig = txn.signTxn(this.account.sk);
+    const txId = txn.txID().toString();
+    await algod.sendRawTransaction(sig).do();
+    algosdk.waitForConfirmation(algod, txId, 4).then(result => {
+      console.log(err);
+      this.notify("Opt In Successful", result['confirmed-round']);
+    }).catch(err => {
+      console.log(err);
+      this.notify("Opt In Failed");
+    });
+    return "out";
+  }
+
+  async signTxn(TxnObjs, originString) {
+    
+    
+    const verifyer = require("./verifier.js");
+
+    let msg = "Do you want to sign a transaction from " + originString + "?";
+    let index = 0;
+    let signedTxns = [];
+
+    for (txn of TxnObjs) {
+      if (index == 0) {
+        let verifyObj = verifyer.verify(txn, first = true);
+      } else {
+        let verifyObj = verifyer.verify(txn);
+      }
+
+      if (verifyObj.error) {
+        this.notify("Error: " + verifyObj.code);
+        throw verifyObj;
+      }
+
+      if (verifyObj.message) {
+        msg = verifyObj.message;
+      }
+
+      let txnBuffer = Buffer.from(txn, 'base64');
+      let txn = algosdk.decodeUnsignedTransaction(txnBuffer);
+
+      if (!this.isValidAddress(txn.sender)) {
+        this.notify("Error: Invalid Sender Address");
+        return {
+          code: "4001",
+          message: "Invalid Sender Address"
+        };
+      }
+
+      if (txn.fee) {
+        try {
+          if (!Number.isSafeInteger(value) || parseInt(value) < 0) {
+            this.notify("Error: Invalid Fee");
+            return {
+              code: 4300,
+              message: 'Value unable to be cast correctly to a numeric value.'
+            };
+          } else if (parseInt(value) > ELEVATED_FEE_TRESHOLD) {
+            this.sendConfirmation();
+            return new ValidationResponse({
+              status: ValidationStatus.Dangerous,
+              info: 'The associated fee is very high compared to the minimum value.'
+            });
+          } else if (parseInt(value) > HIGH_FEE_TRESHOLD) {
+            return new ValidationResponse({
+              status: ValidationStatus.Warning,
+              info: 'The fee is higher than the minimum value.'
+            });
+          } else {
+            return new ValidationResponse({
+              status: ValidationStatus.Valid
+            });
+          }
+        } catch {
+          
+          return new ValidationResponse({
+            status: ValidationStatus.Invalid,
+            info: 'Value unable to be cast correctly to a numeric value.'
+          });
+        }
+      } else {}
+
+      let signedTxn = txn.signTxn(this.account.sk);
+      signedTxns.push(signedTxn);
+    }
+
+    return signedTxn;
   }
 
   Uint8ArrayToBase64(uint8ArrayObject) {
@@ -74815,14 +74984,6 @@ class SnapAlgo {
     output = Buffer.from(output).toString('base64');
     console.log(output);
     return output;
-  }
-
-  encodeUnsignedTransaction(unsignedTxn) {
-    console.log("encoding transaction");
-    console.log(unsignedTxn);
-    let encodedTxn = algosdk.encodeUnsignedTransaction(unsignedTxn);
-    console.log(encodedTxn);
-    return encodedTxn;
   }
 
   async sendConfirmation(prompt, description, textAreaContent) {
@@ -74842,7 +75003,7 @@ class SnapAlgo {
 exports.default = SnapAlgo;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"./HTTPClient":362,"@babel/runtime/helpers/interopRequireDefault":1,"algosdk/dist/cjs":12,"buffer":176}],364:[function(require,module,exports){
+},{"./HTTPClient":362,"./verifier.js":365,"@babel/runtime/helpers/interopRequireDefault":1,"algosdk/dist/cjs":12,"buffer":176}],364:[function(require,module,exports){
 "use strict";
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -74872,6 +75033,9 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   switch (requestObject.method) {
     case 'getAccounts':
       return accountLibary.getAccounts();
+
+    case 'getAssets':
+      return snapAlgo.getAssets();
 
     case 'isValidAddress':
       return snapAlgo.isValidAddress(requestObject.address);
@@ -74922,15 +75086,117 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       console.log("encoding transaction");
       return snapAlgo.encodeUnsignedTransaction(requestObject.txn);
 
+    case 'encodeTransactions':
+      console.log("encoding transactions");
+      return snapAlgo.encodeUnsignedTransactions(requestObject.txns);
+
     case 'Uint8ArrayToBase64':
       return snapAlgo.Uint8ArrayToBase64(requestObject.data);
 
     case 'signTxns':
       return snapAlgo.signTxns(requestObject.txns);
 
+    case 'AppOptIn':
+      console.log(requestObject);
+      console.log("opting in");
+      console.log("updated");
+      console.log(snapAlgo.optIn);
+      return snapAlgo.AppOptIn(requestObject.appIndex);
+
+    case 'AssetOptIn':
+      console.log(requestObject);
+      console.log("opting in asset");
+      console.log("updated");
+      return snapAlgo.AssetOptIn(requestObject.assetIndex);
+
     default:
       throw new Error('Method not found.');
   }
 });
 
-},{"./Accounts":361,"./SnapAlgo":363,"@babel/runtime/helpers/interopRequireDefault":1,"@metamask/key-tree/dist/utils":10,"tweetnacl":358}]},{},[364]);
+},{"./Accounts":361,"./SnapAlgo":363,"@babel/runtime/helpers/interopRequireDefault":1,"@metamask/key-tree/dist/utils":10,"tweetnacl":358}],365:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = verify;
+
+class SignTxnsError extends Error {
+  constructor(code, data) {
+    const msg = {
+      4001: "User Rejected Request",
+      4100: "The requested operation and/or account has not been authorized by the user.",
+      4200: "The wallet does not support the requested operation.",
+      4201: "to many transactions",
+      4202: "The wallet was not initialized properly beforehand.",
+      4300: "The input provided is invalid."
+    };
+    super(msg[code]);
+    this.code = code;
+
+    if (!data) {
+      this.data = msg[code];
+    } else {
+      this.data = data;
+    }
+
+    this.error = true;
+  }
+
+}
+
+function verify(walletTransaction, first = false) {
+  let error = false;
+  let errorCode = 0;
+  let errorMsd = "";
+  let sign = true;
+  let message = "";
+  let groupMessage = "";
+
+  if (walletTransaction.hasOwnProperty("groupMessage")) {
+    if (first === true) {
+      groupMessage = walletTransaction.groupMessage;
+    } else {
+      return new SignTxnsError(4300, "groupMessage is only allowed to be specified on the first Transaction");
+    }
+  }
+
+  if (walletTransaction.hasOwnProperty("msig")) {
+    return new SignTxnsError(4200);
+  }
+
+  if (walletTransaction.hasOwnProperty("message")) {
+    message = walletTransaction.message;
+  }
+
+  if (walletTransaction.hasOwnProperty("authAddr")) {
+    return new SignTxnsError(4200);
+  }
+
+  if (walletTransaction.hasOwnProperty("addrs")) {
+    return new SignTxnsError(4200);
+  }
+
+  if (walletTransaction.hasOwnProperty("signers")) {
+    if (isArray(walletTransaction.signers)) {
+      if (walletTransaction.signer.length < 1) {
+        sign = false;
+      } else {
+        
+        return new SignTxnsError(4300, "The Wallet does not support non-empty signers array");
+      }
+    } else {
+      return new SignTxnsError(4300, "wallet Signers must be undefined or if the transaction is not to be signed an empty array");
+    }
+  }
+
+  return {
+    sign: sign,
+    error: false,
+    message: message,
+    groupMessage: groupMessage
+  };
+}
+
+},{}]},{},[364]);
