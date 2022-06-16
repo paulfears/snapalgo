@@ -75180,7 +75180,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       console.log(requestObject);
       return snapAlgo.assetOptOut(requestObject.assetIndex);
 
-    case 'TransferAsset':
+    case 'transferAsset':
       return snapAlgo.TransferAsset(requestObject.assetIndex, requestObject.to, requestObject.amount);
 
     case 'getAssetById':
