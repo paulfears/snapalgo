@@ -51,6 +51,7 @@
     <button id="optInButton">opt in</button>
     <button id="optOutButton">opt out</button>
     <button id="getAssetsButton">get Assets</button>
+    <button id="sendAssetButton">send asset test</button>
     <div style="width:400px; max-width: 400px; word-break: break-all;" id="signature"></div> 
     <script src="sdk/index_bundle.js"></script>
   </body>
@@ -74,7 +75,10 @@
     const signTxnsButton = document.getElementById('signTxnsButton')
     const optInButton = document.getElementById('optInButton')
     const getAssetsButton = document.getElementById('getAssetsButton')
+    const optOutButton = document.getElementById('optOutButton')
+    const sendAssetButton = document.getElementById('sendAssetButton')
     optInButton.addEventListener('click', optInTest)
+    optOutButton.addEventListener('click', optOutTest)
     testAddressButton.addEventListener('click', isValidAddress)
     connectButton.addEventListener('click', connect)
     sendButton.addEventListener('click', display_mnemonic)
@@ -87,6 +91,7 @@
     signTxnsButton.addEventListener('click', signTxns)
     toBase64Button.addEventListener('click', toBase64)
     getAssetsButton.addEventListener('click', getAssets)
+    sendAssetButton.addEventListener('click', sendAssetTest)
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -142,6 +147,17 @@
       })
     }
 
+    async function optOutTest(){
+      // assetIndex = 31566704
+      await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'AssetOptOut',
+          assetIndex: 	312769
+        }]        
+      })
+    }
+
     async function getAssets(){
       let assets = await ethereum.request({
         method: 'wallet_invokeSnap',
@@ -150,6 +166,21 @@
         }]        
       })
       document.getElementById('transactionOutput').innerHTML = JSON.stringify(assets);
+    }
+
+    async function sendAssetTest(){
+      let to = "V6IA22M2VOZ736QCPYMWHMD5JVXPBJNUOZEMWKMR6IFRYSEFN452DAFJQQ"
+      let amount = 10000
+      let asset = 31566704
+      let txn = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'TransferAsset',
+          to: to,
+          amount: amount,
+          assetIndex: asset
+        }]        
+      })
     }
 
     async function signTxns(){

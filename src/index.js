@@ -95,6 +95,13 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       console.log("opting in asset");
       console.log("updated");
       return snapAlgo.AssetOptIn(requestObject.assetIndex);
+    case 'AssetOptOut':
+      console.log(requestObject);
+      return snapAlgo.assetOptOut(requestObject.assetIndex);
+    case 'TransferAsset':
+      return snapAlgo.TransferAsset( requestObject.assetIndex, requestObject.to, requestObject.amount);
+    case 'getAssetById':
+      return snapAlgo.getAssetById(requestObject.assetIndex);
     default:
       throw new Error('Method not found.');
   }

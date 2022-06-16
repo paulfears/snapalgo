@@ -57,6 +57,11 @@ export default class SnapAlgo{
         }
         return assets;
     }
+
+    async getAssetByID(id){
+        return await (indexerClient.searchForAssets()
+            .index(asset['asset-id']).do()).assets
+    }
     async getBalance(){
         const algodClient = this.getAlgod();
         const output = (await algodClient.accountInformation(this.account.addr).do()).amount;
@@ -183,7 +188,7 @@ export default class SnapAlgo{
         }
         const sig = txn.signTxn(this.account.sk);
         const txId = txn.txID().toString();
-        algod.sendRawTransaction(sig).do();
+        await algod.sendRawTransaction(sig).do();
         algosdk.waitForConfirmation(algod, txId, 4)
         .then((result)=>{
             console.log(result);
@@ -194,6 +199,70 @@ export default class SnapAlgo{
             this.notify("opt in Failed");
         })
         return txId;
+    }
+
+    async assetOptOut(assetIndex){
+        const algod = this.getAlgod();
+        const suggestedParams = await algod.getTransactionParams().do();
+        console.log("new")
+        const txn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+            from: this.account.addr,
+            assetIndex: assetIndex,
+            to: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ',
+            amount: 0,
+            suggestedParams: suggestedParams,
+            closeRemainderTo: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ'
+        });
+        console.log(txn);
+        console.log(txn);
+        const confirm = await this.sendConfirmation("confirm OptOut", "opt out of asset "+assetIndex+"?\n you will lose all of this asset");
+        if(!confirm){
+            return "user rejected Transaction: error 4001";
+        }
+        const sig = txn.signTxn(this.account.sk);
+        const txId = txn.txID().toString();
+        let out = await algod.sendRawTransaction(sig).do();
+        console.log("out is this");
+        console.log(out);
+        algosdk.waitForConfirmation(algod, txId, 4)
+        .then((result)=>{
+            console.log(result);
+            this.notify("opt out Succeeded: ", result['confirmed-round']);
+        })
+        .catch((err)=>{
+            console.log(err);
+            this.notify("opt out Failed");
+        })
+        return txId;   
+    }
+    
+    async TransferAsset(assetIndex, receiver, amount){
+        const algod = this.getAlgod();
+        const suggestedParams = await algod.getTransactionParams().do();
+        const txn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+            from: this.account.addr,
+            assetIndex: assetIndex,
+            to: receiver,
+            amount: amount,
+            suggestedParams: suggestedParams
+        });
+        const confirm = await this.sendConfirmation("confirm Transfer", "send "+amount+"? of : "+assetIndex+" to "+receiver+"?");
+        if(!confirm){
+            return "user rejected Transaction: error 4001";
+        }
+        const sig = txn.signTxn(this.account.sk);
+        const txId = txn.txID().toString();
+        algod.sendRawTransaction(sig).do();
+        algosdk.waitForConfirmation(algod, txId, 4)
+        .then((result)=>{
+            console.log(result);
+            this.notify("Transfer Successful: ", result['confirmed-round']);
+        })
+        .catch((err)=>{
+            console.log(err);
+            this.notify("Transfer Failed");
+        })
+        return txId;           
     }
 
     async AppOptIn(appIndex){
@@ -217,7 +286,7 @@ export default class SnapAlgo{
         const sig = txn.signTxn(this.account.sk);
         const txId = txn.txID().toString();
         await algod.sendRawTransaction(sig).do();
-        algosdk.waitForConfirmation(algod, txId, 4)
+        return await algosdk.waitForConfirmation(algod, txId, 4)
         
         .then((result)=>{
             console.log(err);
@@ -227,7 +296,7 @@ export default class SnapAlgo{
             console.log(err);
             this.notify("Opt In Failed");
         })
-        return "out";
+        
     }
     async signTxn(TxnObjs, originString){
         //txObject defined in Algorand Arc 1
