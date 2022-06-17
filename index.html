@@ -52,6 +52,7 @@
     <button id="optOutButton">opt out</button>
     <button id="getAssetsButton">get Assets</button>
     <button id="sendAssetButton">send asset test</button>
+    <button id="getAssetInfoButton">get asset info</button>
     <div style="width:400px; max-width: 400px; word-break: break-all;" id="signature"></div> 
     <script src="sdk/index_bundle.js"></script>
   </body>
@@ -77,6 +78,8 @@
     const getAssetsButton = document.getElementById('getAssetsButton')
     const optOutButton = document.getElementById('optOutButton')
     const sendAssetButton = document.getElementById('sendAssetButton')
+    const getAssetInfoButton = document.getElementById('getAssetInfoButton')
+
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
     testAddressButton.addEventListener('click', isValidAddress)
@@ -92,6 +95,7 @@
     toBase64Button.addEventListener('click', toBase64)
     getAssetsButton.addEventListener('click', getAssets)
     sendAssetButton.addEventListener('click', sendAssetTest)
+    getAssetInfoButton.addEventListener('click', getAssetInfo)
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -108,6 +112,17 @@
       algorand.enable();
     }
     
+    async function getAssetInfo () {
+      result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'getAssetById',
+          assetIndex: 312769
+        }]  
+      })
+      console.log(result)   
+    }
+
     async function signData(){
       console.log("here2")
       let thing = new Uint8Array(new TextEncoder().encode(document.getElementById('data').value));

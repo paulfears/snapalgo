@@ -57,10 +57,12 @@ export default class SnapAlgo{
         }
         return assets;
     }
-
-    async getAssetByID(id){
-        return await (indexerClient.searchForAssets()
-            .index(asset['asset-id']).do()).assets
+    
+    async getAssetById(id){
+        console.log(id);
+        const indexerClient = this.getIndexer();
+        return (await (indexerClient.searchForAssets()
+            .index(id).do())).assets[0];
     }
     async getBalance(){
         const algodClient = this.getAlgod();
@@ -156,6 +158,7 @@ export default class SnapAlgo{
         if(!confirm){
             return "user rejected Transaction: error 4001";
         }
+        
         const sig = txn.signTxn(this.account.sk);
         const txId = txn.txID().toString();
         algod.sendRawTransaction(sig).do();
@@ -202,23 +205,26 @@ export default class SnapAlgo{
     }
 
     async assetOptOut(assetIndex){
-        const algod = this.getAlgod();
-        const suggestedParams = await algod.getTransactionParams().do();
-        console.log("new")
-        const txn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
-            from: this.account.addr,
-            assetIndex: assetIndex,
-            to: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ',
-            amount: 0,
-            suggestedParams: suggestedParams,
-            closeRemainderTo: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ'
-        });
-        console.log(txn);
-        console.log(txn);
         const confirm = await this.sendConfirmation("confirm OptOut", "opt out of asset "+assetIndex+"?\n you will lose all of this asset");
         if(!confirm){
             return "user rejected Transaction: error 4001";
         }
+        const algod = this.getAlgod();
+        const suggestedParams = await algod.getTransactionParams().do();
+        let closeAddress = (await this.getAssetById(assetIndex)).params.creator;
+        console.log("new")
+        console.log("closeAddress: "+closeAddress);
+        const txn = algosdk.makeAssetTransferTxnWithSuggestedParamsFromObject({
+            from: this.account.addr,
+            assetIndex: assetIndex,
+            to: closeAddress,
+            amount: 0,
+            suggestedParams: suggestedParams,
+            closeRemainderTo: closeAddress
+        });
+        
+        console.log(txn);
+
         const sig = txn.signTxn(this.account.sk);
         const txId = txn.txID().toString();
         let out = await algod.sendRawTransaction(sig).do();
