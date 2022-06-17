@@ -74862,14 +74862,13 @@ class SnapAlgo {
     const sig = txn.signTxn(this.account.sk);
     const txId = txn.txID().toString();
     await algod.sendRawTransaction(sig).do();
-    algosdk.waitForConfirmation(algod, txId, 4).then(result => {
+    return algosdk.waitForConfirmation(algod, txId, 4).then(result => {
       console.log(result);
       this.notify("opt in Succeeded: ", result['confirmed-round']);
     }).catch(err => {
       console.log(err);
       this.notify("opt in Failed");
     });
-    return txId;
   }
 
   async assetOptOut(assetIndex) {
@@ -74898,14 +74897,13 @@ class SnapAlgo {
     let out = await algod.sendRawTransaction(sig).do();
     console.log("out is this");
     console.log(out);
-    algosdk.waitForConfirmation(algod, txId, 4).then(result => {
+    return algosdk.waitForConfirmation(algod, txId, 4).then(result => {
       console.log(result);
       this.notify("opt out Succeeded: ", result['confirmed-round']);
     }).catch(err => {
       console.log(err);
       this.notify("opt out Failed");
     });
-    return txId;
   }
 
   async TransferAsset(assetIndex, receiver, amount) {
