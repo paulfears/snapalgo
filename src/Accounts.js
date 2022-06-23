@@ -63,6 +63,13 @@ export default class Accounts{
                 
                 return Account;
             }
+            else if(tempAccount.type === 'imported'){
+                const keys = nacl.sign.keyPair.fromSeed(tempAccount.seed);
+                const Account = {}
+                Account.addr = algo.encodeAddress(keys.publicKey);
+                Account.sk = keys.secretKey;
+                return Account
+            }
         }
     }
 
@@ -116,17 +123,39 @@ export default class Accounts{
         return true
     }
     async createNewAccount(name){
+        console.log(name);
+        if(!this.loaded){
+            console.log("loading")
+            await this.load();
+        }
+        if(!name){
+            name = 'Account ' + (Object.keys(this.accounts).length+1);
+        }
+        const path = Object.keys(this.accounts).length+2;
+        const Account = await this.generateAccount(path);
+        console.log(Account)
+        const address = Account.addr;
+        
+        
+        this.accounts[address] = {type: 'generated', path: path, name: name};
+        await this.wallet.request({
+            method: 'snap_manageState',
+            params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
+        })
+        return {"currentAccountId": address, "Accounts": this.accounts};
+    }
+
+    async importAccount(name, mnemonic){
         if(!this.loaded){
             await this.load();
         }
         if(!name){
             name = 'Account ' + (Object.keys(this.accounts).length+1);
         }
-
-        const Account = await this.generateAccount(this.accounts.length + 2);
-        const address = Account.addr;
-        const path = this.accounts.length+2;
-        this.accounts[address] = {type: 'generated', path: path, name: name};
+        const seed = algo.seedFromMnemonic(mnemonic)
+        const keys = nacl.sign.keyPair.fromSeed(privateKey);
+        const address = algo.encodeAddress(keys.publicKey);
+        this.accounts[address] = {type: 'imported', seed:seed, name:name}
         await this.wallet.request({
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
@@ -136,7 +165,8 @@ export default class Accounts{
 
     
     async generateAccount(path){
-        
+        console.log("path is ")
+        console.log(path)
         const entropy = await this.wallet.request({
           method: 'snap_getBip44Entropy_283',
         });

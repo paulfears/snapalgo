@@ -1,6 +1,7 @@
 const algosdk =  require('algosdk/dist/cjs');
 import HTTPClient from './HTTPClient';
-
+import TxnVerifer from "./TxnVerifier";
+import verify from './verifier.js';
 export default class SnapAlgo{
     constructor(wallet, account){
         this.wallet = wallet;
@@ -303,20 +304,28 @@ export default class SnapAlgo{
         })
         
     }
-    async signTxn(TxnObjs, originString){
+    async signTxns(TxnObjs, originString){
         //txObject defined in Algorand Arc 1
         //https://arc.algorand.foundation/ARCs/arc-0001
-        const verifyer = require("./verifier.js");
+        
+        
+        const Txn_Verifer = new TxnVerifer();
         let msg = "Do you want to sign a transaction from "+originString+"?"
         let index = 0;
         let signedTxns = [];
-        for(txn of TxnObjs){
+        console.log("txnObject is")
+        console.log(TxnObjs)
+        for(let txn of TxnObjs){
+            txn = txn.txn
+            let verifyObj = {};
             if(index == 0){
-                let verifyObj = verifyer.verify(txn, first=true);
+                verifyObj = verify(txn, true);
             }
+            
             else{
-                let verifyObj = verifyer.verify(txn);
+                verifyObj = verify(txn);
             }
+            console.log("first check verification complete")
             if(verifyObj.error){
                 this.notify("Error: "+verifyObj.code);
                 throw verifyObj;
@@ -324,52 +333,34 @@ export default class SnapAlgo{
             if(verifyObj.message){
                 msg = verifyObj.message;
             }
+            console.log("here");
             let txnBuffer = Buffer.from(txn, 'base64');
-            let txn = algosdk.decodeUnsignedTransaction(txnBuffer);
-            if(!this.isValidAddress(txn.sender)){
-                this.notify("Error: Invalid Sender Address");
-                return {code:"4001", message:"Invalid Sender Address"};
-            }
-            if(txn.fee){
-                try {
-                    if (!Number.isSafeInteger(value) || parseInt(value) < 0) {
-                        this.notify("Error: Invalid Fee");
-                        return {
-                            code: 4300,
-                            message: 'Value unable to be cast correctly to a numeric value.'
-                        }
-                    
-                    } else if (parseInt(value) > ELEVATED_FEE_TRESHOLD) {
-                      this.sendConfirmation()
-                      return new ValidationResponse({
-                        status: ValidationStatus.Dangerous,
-                        info: 'The associated fee is very high compared to the minimum value.',
-                      });
-                    } else if (parseInt(value) > HIGH_FEE_TRESHOLD) {
-                      
-                      return new ValidationResponse({
-                        status: ValidationStatus.Warning,
-                        info: 'The fee is higher than the minimum value.',
-                      });
-                    } else {
-                      return new ValidationResponse({ status: ValidationStatus.Valid });
+            console.log(txnBuffer)
+            console.log("buffer got")
+            let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
+            console.log("decoded transaction");
+            console.log(decoded_txn);
+            const verifiedObj = Txn_Verifer.verifyTxn(decoded_txn);
+            console.log(verifiedObj);
+            console.log("lets fucking go");
+            if(verifiedObj.valid === true){
+                
+                for(let warning of verifiedObj.warnings){
+                    let confirmWarning = this.sendConfirmation("warning", "", warning);
+                    if(!confirmWarning){
+                        throw {code: 4001, message: "User Rejected Request"}
                     }
-                  } catch {
-                    // For any case where the parse int may fail.
-                    return new ValidationResponse({
-                      status: ValidationStatus.Invalid,
-                      info: 'Value unable to be cast correctly to a numeric value.',
-                    });
-                  }
+                }
+                let signedTxn = decoded_txn.signTxn(this.account.sk)
+                signedTxns.push(signedTxn);
             }
             else{
-                
+                throw verifiedObj.error[0];
             }
             
-            let signedTxn = txn.signTxn(this.account.sk)
-            signedTxns.push(signedTxn);
-
+            index += 1;
         }
+        console.log(done);
         return signedTxn;
     }
     

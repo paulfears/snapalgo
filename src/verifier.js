@@ -23,13 +23,14 @@ class SignTxnsError extends Error {
     }
   }
   
-  export default function verify(walletTransaction, first=false){
+  export default function verify(walletTransaction, first){
     let error = false
     let errorCode = 0
     let errorMsd = ""
     let sign = true
     let message = ""
     let groupMessage = ""
+    
     if(walletTransaction.hasOwnProperty("groupMessage")){
       if(first === true){
         groupMessage = walletTransaction.groupMessage;
@@ -44,9 +45,6 @@ class SignTxnsError extends Error {
     }
     if(walletTransaction.hasOwnProperty("message")){
       message = walletTransaction.message;
-    }
-    if(walletTransaction.hasOwnProperty("authAddr")){
-      return new SignTxnsError(4200)
     }
     if(walletTransaction.hasOwnProperty("addrs")){
       return new SignTxnsError(4200)

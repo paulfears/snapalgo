@@ -1,6 +1,6 @@
 {
   "name": "algorand",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "algorand on metamask",
   "main": "src/index.js",
   "scripts": {
@@ -24,7 +24,7 @@
     "url-search-params-polyfill": "^8.1.1"
   },
   "devDependencies": {
-    "@metamask/snaps-cli": "^0.15.0",
+    "@metamask/snaps-cli": "^0.14.0",
     "patch-package": "^6.4.7",
     "postinstall-postinstall": "^2.1.0"
   }

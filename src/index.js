@@ -21,7 +21,16 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   switch (requestObject.method) {
     
     case 'getAccounts':
-      return accountLibary.getAccounts();
+      return accounts
+
+    case 'createAccount':
+      return await accountLibary.createNewAccount(requestObject.name);
+    
+    case 'importAccount':
+      return await accountLibary.importAccount(requestObject.mnemonic, requestObject.name);
+
+    case 'setAccount':
+      return await accountLibary.setCurrentAccount(requestObject.address);
 
     case 'getAssets':
       return snapAlgo.getAssets();

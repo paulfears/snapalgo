@@ -53,6 +53,12 @@
     <button id="getAssetsButton">get Assets</button>
     <button id="sendAssetButton">send asset test</button>
     <button id="getAssetInfoButton">get asset info</button>
+    <br/>
+    <br/>
+    <p>create new Account</p>
+    <input id="Account_name"/>
+    <button id="createAccountButton">create new Account</button>
+
     <div style="width:400px; max-width: 400px; word-break: break-all;" id="signature"></div> 
     <script src="sdk/index_bundle.js"></script>
   </body>
@@ -79,6 +85,7 @@
     const optOutButton = document.getElementById('optOutButton')
     const sendAssetButton = document.getElementById('sendAssetButton')
     const getAssetInfoButton = document.getElementById('getAssetInfoButton')
+    const createAccountButton = document.getElementById("createAccountButton")
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -96,6 +103,7 @@
     getAssetsButton.addEventListener('click', getAssets)
     sendAssetButton.addEventListener('click', sendAssetTest)
     getAssetInfoButton.addEventListener('click', getAssetInfo)
+    createAccountButton.addEventListener('click', createNewAccount)
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -121,6 +129,18 @@
         }]  
       })
       console.log(result)   
+    }
+
+    async function createNewAccount(){
+      result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [
+          snapId, {
+            method: 'createAccount',
+            name: document.getElementById("Account_name").value
+          }
+        ]
+      })
     }
 
     async function signData(){
@@ -216,11 +236,12 @@
       console.log(encodedTxn);
       
       console.log(txn);
+      let txns = [{txn: encodedTxn}]
       const out = await ethereum.request({
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'signTxns',
-          txns: encodedTxn
+          txns: txns
         }]
       })
       console.log(out);

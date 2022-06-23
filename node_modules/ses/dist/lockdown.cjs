@@ -24,6 +24,7 @@ const universalThis=  globalThis;$h‍_once.universalThis(universalThis);
 const        {
   Array,
   Date,
+  FinalizationRegistry,
   Float32Array,
   JSON,
   Map,
@@ -38,7 +39,7 @@ const        {
   String,
   WeakMap,
   WeakSet}=
-    globalThis;$h‍_once.Array(Array);$h‍_once.Date(Date);$h‍_once.Float32Array(Float32Array);$h‍_once.JSON(JSON);$h‍_once.Map(Map);$h‍_once.Math(Math);$h‍_once.Number(Number);$h‍_once.Object(Object);$h‍_once.Promise(Promise);$h‍_once.Proxy(Proxy);$h‍_once.Reflect(Reflect);$h‍_once.FERAL_REG_EXP(FERAL_REG_EXP);$h‍_once.Set(Set);$h‍_once.String(String);$h‍_once.WeakMap(WeakMap);$h‍_once.WeakSet(WeakSet);
+    globalThis;$h‍_once.Array(Array);$h‍_once.Date(Date);$h‍_once.FinalizationRegistry(FinalizationRegistry);$h‍_once.Float32Array(Float32Array);$h‍_once.JSON(JSON);$h‍_once.Map(Map);$h‍_once.Math(Math);$h‍_once.Number(Number);$h‍_once.Object(Object);$h‍_once.Promise(Promise);$h‍_once.Proxy(Proxy);$h‍_once.Reflect(Reflect);$h‍_once.FERAL_REG_EXP(FERAL_REG_EXP);$h‍_once.Set(Set);$h‍_once.String(String);$h‍_once.WeakMap(WeakMap);$h‍_once.WeakSet(WeakSet);
 
 const        {
   // The feral Error constructor is safe for internal use, but must not be
@@ -161,7 +162,9 @@ const        typedArrayPrototype=  getPrototypeOf(Uint8Array.prototype);
  * which only lives at
  * http://web.archive.org/web/20160805225710/http://wiki.ecmascript.org/doku.php?id=conventions:safe_meta_programming
  *
- * @param {(thisArg: Object, ...args: any[]) => any} fn
+ * @template {Function} F
+ * @param {F} fn
+ * returns {(thisArg: ThisParameterType<F>, ...args: Parameters<F>) => ReturnType<F>}
  */$h‍_once.typedArrayPrototype(typedArrayPrototype);
 const        uncurryThis=  (fn)=>(thisArg, ...args)=>  apply(fn, thisArg, args);$h‍_once.uncurryThis(uncurryThis);
 
@@ -182,6 +185,8 @@ const        iterateArray=  uncurryThis(arrayPrototype[iteratorSymbol]);
 $h‍_once.iterateArray(iterateArray);const mapSet=uncurryThis(mapPrototype.set);$h‍_once.mapSet(mapSet);
 const        mapGet=  uncurryThis(mapPrototype.get);$h‍_once.mapGet(mapGet);
 const        mapHas=  uncurryThis(mapPrototype.has);$h‍_once.mapHas(mapHas);
+const        mapDelete=  uncurryThis(mapPrototype.delete);$h‍_once.mapDelete(mapDelete);
+const        mapEntries=  uncurryThis(mapPrototype.entries);$h‍_once.mapEntries(mapEntries);
 const        iterateMap=  uncurryThis(mapPrototype[iteratorSymbol]);
 //
 $h‍_once.iterateMap(iterateMap);const setAdd=uncurryThis(setPrototype.add);$h‍_once.setAdd(setAdd);
@@ -205,7 +210,8 @@ const        stringSplit=  uncurryThis(stringPrototype.split);$h‍_once.stringS
 const        stringStartsWith=  uncurryThis(stringPrototype.startsWith);$h‍_once.stringStartsWith(stringStartsWith);
 const        iterateString=  uncurryThis(stringPrototype[iteratorSymbol]);
 //
-$h‍_once.iterateString(iterateString);const weakmapDelete=uncurryThis(weakmapPrototype.delete);$h‍_once.weakmapDelete(weakmapDelete);
+$h‍_once.iterateString(iterateString);const weakmapDelete=uncurryThis(weakmapPrototype.delete);
+/** @type {<K, V>(thisArg: WeakMap<K, V>, ...args: Parameters<WeakMap<K,V>['get']>) => ReturnType<WeakMap<K,V>['get']>} */$h‍_once.weakmapDelete(weakmapDelete);
 const        weakmapGet=  uncurryThis(weakmapPrototype.get);$h‍_once.weakmapGet(weakmapGet);
 const        weakmapHas=  uncurryThis(weakmapPrototype.has);$h‍_once.weakmapHas(weakmapHas);
 const        weakmapSet=  uncurryThis(weakmapPrototype.set);
@@ -220,13 +226,19 @@ $h‍_once.functionToString(functionToString);const{all}=Promise;
 const        promiseAll=  (promises)=>apply(all, Promise, [promises]);$h‍_once.promiseAll(promiseAll);
 const        promiseCatch=  uncurryThis(promisePrototype.catch);$h‍_once.promiseCatch(promiseCatch);
 const        promiseThen=  uncurryThis(promisePrototype.then);
+//
+$h‍_once.promiseThen(promiseThen);const finalizationRegistryRegister=
+  FinalizationRegistry&&  uncurryThis(FinalizationRegistry.prototype.register);$h‍_once.finalizationRegistryRegister(finalizationRegistryRegister);
+const        finalizationRegistryUnregister=
+  FinalizationRegistry&&
+  uncurryThis(FinalizationRegistry.prototype.unregister);
 
 /**
  * getConstructorOf()
  * Return the constructor from an instance.
  *
  * @param {Function} fn
- */$h‍_once.promiseThen(promiseThen);
+ */$h‍_once.finalizationRegistryUnregister(finalizationRegistryUnregister);
 const        getConstructorOf=  (fn)=>
   reflectGet(getPrototypeOf(fn), 'constructor');
 
@@ -3017,7 +3029,7 @@ const        whitelist=  {
     // Seen on FF Nightly 88.0a1
     at: false,
     // Seen on FF and XS
-    stack: false,
+    stack: accessor,
     // Superfluously present in some versions of V8.
     // https://github.com/tc39/notes/blob/master/meetings/2021-10/oct-26.md#:~:text=However%2C%20Chrome%2093,and%20node%2016.11.
     cause: false},
@@ -5438,7 +5450,7 @@ const        makeCompartmentConstructor=  (
     assign(globalObject, endowments);
 
     weakmapSet(privateFields, this, {
-      name,
+      name:  `${name}`,
       globalTransforms,
       globalObject,
       knownScopeProxies,
@@ -6351,16 +6363,7 @@ const ErrorInfo=  {
 
 freeze(ErrorInfo);
 
-/**
- * The error annotations are sent to the baseConsole by calling some level
- * method. The 'debug' level seems best, because the Chrome console classifies
- * `debug` as verbose and does not show it by default. But we keep it symbolic
- * so we can change our mind. (On Node, `debug`, `log`, and `info` are aliases
- * for the same function and so will behave the same there.)
- */
-const        BASE_CONSOLE_LEVEL=  'debug';
-
-/** @type {MakeCausalConsole} */$h‍_once.BASE_CONSOLE_LEVEL(BASE_CONSOLE_LEVEL);
+/** @type {MakeCausalConsole} */
 const makeCausalConsole=  (baseConsole, loggedErrorHandler)=>  {
   const {
     getStackString,
@@ -6386,34 +6389,36 @@ const makeCausalConsole=  (baseConsole, loggedErrorHandler)=>  {
    };
 
   /**
+   * @param {LogSeverity} severity
    * @param {Error} error
    * @param {ErrorInfoKind} kind
    * @param {readonly any[]} logArgs
    * @param {Array<Error>} subErrorsSink
    */
-  const logErrorInfo=  (error, kind, logArgs, subErrorsSink)=>  {
+  const logErrorInfo=  (severity, error, kind, logArgs, subErrorsSink)=>  {
     const errorTag=  tagError(error);
     const errorName=
       kind===  ErrorInfo.MESSAGE?   `${errorTag}:`:  `${errorTag} ${kind}`;
     const argTags=  extractErrorArgs(logArgs, subErrorsSink);
     // eslint-disable-next-line @endo/no-polymorphic-call
-    baseConsole[BASE_CONSOLE_LEVEL](errorName, ...argTags);
+    baseConsole[severity](errorName, ...argTags);
    };
 
   /**
    * Logs the `subErrors` within a group name mentioning `optTag`.
    *
+   * @param {LogSeverity} severity
    * @param {Error[]} subErrors
    * @param {string | undefined} optTag
    * @returns {void}
    */
-  const logSubErrors=  (subErrors, optTag=  undefined)=>  {
+  const logSubErrors=  (severity, subErrors, optTag=  undefined)=>  {
     if( subErrors.length===  0) {
       return;
      }
     if( subErrors.length===  1&&  optTag===  undefined) {
       // eslint-disable-next-line no-use-before-define
-      logError(subErrors[0]);
+      logError(severity, subErrors[0]);
       return;
      }
     let label;
@@ -6430,7 +6435,7 @@ const makeCausalConsole=  (baseConsole, loggedErrorHandler)=>  {
     try {
       for( const subError of subErrors) {
         // eslint-disable-next-line no-use-before-define
-        logError(subError);
+        logError(severity, subError);
        }
      }finally {
       // eslint-disable-next-line @endo/no-polymorphic-call
@@ -6440,19 +6445,20 @@ const makeCausalConsole=  (baseConsole, loggedErrorHandler)=>  {
 
   const errorsLogged=  new WeakSet();
 
-  /** @type {NoteCallback} */
-  const noteCallback=  (error, noteLogArgs)=>  {
+  /** @type {(severity: LogSeverity) => NoteCallback} */
+  const makeNoteCallback=  (severity)=>(error, noteLogArgs)=>  {
     const subErrors=  [];
     // Annotation arrived after the error has already been logged,
     // so just log the annotation immediately, rather than remembering it.
-    logErrorInfo(error, ErrorInfo.NOTE, noteLogArgs, subErrors);
-    logSubErrors(subErrors, tagError(error));
+    logErrorInfo(severity, error, ErrorInfo.NOTE, noteLogArgs, subErrors);
+    logSubErrors(severity, subErrors, tagError(error));
    };
 
   /**
+   * @param {LogSeverity} severity
    * @param {Error} error
    */
-  const logError=  (error)=>{
+  const logError=  (severity, error)=>  {
     if( weaksetHas(errorsLogged, error)) {
       return;
      }
@@ -6460,17 +6466,26 @@ const makeCausalConsole=  (baseConsole, loggedErrorHandler)=>  {
     weaksetAdd(errorsLogged, error);
     const subErrors=  [];
     const messageLogArgs=  takeMessageLogArgs(error);
-    const noteLogArgsArray=  takeNoteLogArgsArray(error, noteCallback);
+    const noteLogArgsArray=  takeNoteLogArgsArray(
+      error,
+      makeNoteCallback(severity));
+
     // Show the error's most informative error message
     if( messageLogArgs===  undefined) {
       // If there is no message log args, then just show the message that
       // the error itself carries.
       // eslint-disable-next-line @endo/no-polymorphic-call
-      baseConsole[BASE_CONSOLE_LEVEL]( `${errorTag}:`,error.message);
+      baseConsole[severity]( `${errorTag}:`,error.message);
      }else {
       // If there is one, we take it to be strictly more informative than the
       // message string carried by the error, so show it *instead*.
-      logErrorInfo(error, ErrorInfo.MESSAGE, messageLogArgs, subErrors);
+      logErrorInfo(
+        severity,
+        error,
+        ErrorInfo.MESSAGE,
+        messageLogArgs,
+        subErrors);
+
      }
     // After the message but before any other annotations, show the stack.
     let stackString=  getStackString(error);
@@ -6482,13 +6497,13 @@ const makeCausalConsole=  (baseConsole, loggedErrorHandler)=>  {
       stackString+=  '\n';
      }
     // eslint-disable-next-line @endo/no-polymorphic-call
-    baseConsole[BASE_CONSOLE_LEVEL](stackString);
+    baseConsole[severity](stackString);
     // Show the other annotations on error
     for( const noteLogArgs of noteLogArgsArray) {
-      logErrorInfo(error, ErrorInfo.NOTE, noteLogArgs, subErrors);
+      logErrorInfo(severity, error, ErrorInfo.NOTE, noteLogArgs, subErrors);
      }
     // explain all the errors seen in the messages already emitted.
-    logSubErrors(subErrors, errorTag);
+    logSubErrors(severity, subErrors, errorTag);
    };
 
   const levelMethods=  arrayMap(consoleLevelMethods, ([level, _])=>  {
@@ -6501,7 +6516,7 @@ const makeCausalConsole=  (baseConsole, loggedErrorHandler)=>  {
       // @ts-ignore
       // eslint-disable-next-line @endo/no-polymorphic-call
       baseConsole[level](...argTags);
-      logSubErrors(subErrors);
+      logSubErrors(level, subErrors);
      };
     defineProperty(levelMethod, 'name', { value: level});
     return [level, freeze(levelMethod)];
@@ -6560,7 +6575,133 @@ freeze(filterConsole);
 })
 ,
 // === functors[26] ===
-(({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let TypeError,globalThis,defaultHandler,makeCausalConsole;$h‍_imports([["../commons.js", [["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["globalThis", [$h‍_a => (globalThis = $h‍_a)]]]],["./assert.js", [["loggedErrorHandler", [$h‍_a => (defaultHandler = $h‍_a)]]]],["./console.js", [["makeCausalConsole", [$h‍_a => (makeCausalConsole = $h‍_a)]]]],["./types.js", []],["./internal-types.js", []]]);   
+(({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let FinalizationRegistry,Map,mapGet,mapDelete,WeakMap,mapSet,finalizationRegistryRegister,weakmapSet,weakmapGet,mapEntries,mapHas;$h‍_imports([["../commons.js", [["FinalizationRegistry", [$h‍_a => (FinalizationRegistry = $h‍_a)]],["Map", [$h‍_a => (Map = $h‍_a)]],["mapGet", [$h‍_a => (mapGet = $h‍_a)]],["mapDelete", [$h‍_a => (mapDelete = $h‍_a)]],["WeakMap", [$h‍_a => (WeakMap = $h‍_a)]],["mapSet", [$h‍_a => (mapSet = $h‍_a)]],["finalizationRegistryRegister", [$h‍_a => (finalizationRegistryRegister = $h‍_a)]],["weakmapSet", [$h‍_a => (weakmapSet = $h‍_a)]],["weakmapGet", [$h‍_a => (weakmapGet = $h‍_a)]],["mapEntries", [$h‍_a => (mapEntries = $h‍_a)]],["mapHas", [$h‍_a => (mapHas = $h‍_a)]]]]]);   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Create rejection-tracking machinery compatible with Node.js and browsers.
+ *
+ * Note that modern browsers *prevent* access to the 'unhandledrejection' and
+ * 'rejectionhandled' events needed:
+ * - in cross-origin mode, like when served from file://
+ * - in the browser console (interactively typed-in code)
+ * - in the debugger
+ *
+ * Then, they just look like: `Uncaught (in promise) Error: ...` and don't
+ * implement the machinery.
+ *
+ * The solution is to serve your web page from an http:// or https:// web server
+ * and execute actual code.
+ *
+ * @param {(reason: unknown) => void} reportReason report the reason for an
+ * unhandled rejection.
+ */
+const        makeRejectionHandlers=  (reportReason)=>{
+  if( FinalizationRegistry===  undefined) {
+    return undefined;
+   }
+
+  /** @typedef {number} ReasonId */
+  let lastReasonId=  0;
+
+  /** @type {Map<ReasonId, unknown>} */
+  const idToReason=  new Map();
+
+  /** @type {(() => void) | undefined} */
+  let cancelChecking;
+
+  const removeReasonId=  (reasonId)=>{
+    mapDelete(idToReason, reasonId);
+    if( cancelChecking&&  idToReason.size===  0) {
+      // No more unhandled rejections to check, just cancel the check.
+      cancelChecking();
+      cancelChecking=  undefined;
+     }
+   };
+
+  /** @type {WeakMap<Promise, ReasonId>} */
+  const promiseToReasonId=  new WeakMap();
+
+  /**
+   * Clean up and report the reason for a GCed unhandled rejection.
+   *
+   * @param {ReasonId} heldReasonId
+   */
+  const finalizeDroppedPromise=  (heldReasonId)=>{
+    if( mapHas(idToReason)) {
+      const reason=  mapGet(idToReason, heldReasonId);
+      removeReasonId(heldReasonId);
+      reportReason(reason);
+     }
+   };
+
+  /** @type {FinalizationRegistry<ReasonId>} */
+  const promiseToReason=  new FinalizationRegistry(finalizeDroppedPromise);
+
+  /**
+   * Track a rejected promise and its corresponding reason if there is no
+   * rejection handler synchronously attached.
+   *
+   * @param {unknown} reason
+   * @param {Promise} pr
+   */
+  const unhandledRejectionHandler=  (reason, pr)=>  {
+    lastReasonId+=  1;
+    const reasonId=  lastReasonId;
+
+    // Update bookkeeping.
+    mapSet(idToReason, reasonId, reason);
+    weakmapSet(promiseToReasonId, pr, reasonId);
+    finalizationRegistryRegister(promiseToReason, pr, reasonId, pr);
+   };
+
+  /**
+   * Deal with the addition of a handler to a previously rejected promise.
+   *
+   * Just remove it from our list.  Let the FinalizationRegistry or
+   * processTermination report any GCed unhandled rejected promises.
+   *
+   * @param {Promise} pr
+   */
+  const rejectionHandledHandler=  (pr)=>{
+    const reasonId=  weakmapGet(promiseToReasonId, pr);
+    removeReasonId(reasonId);
+   };
+
+  /**
+   * Report all the unhandled rejections, now that we are abruptly terminating
+   * the agent cluster.
+   */
+  const processTerminationHandler=  ()=>  {
+    for( const [reasonId, reason]of  mapEntries(idToReason)) {
+      removeReasonId(reasonId);
+      reportReason(reason);
+     }
+   };
+
+  return {
+    rejectionHandledHandler,
+    unhandledRejectionHandler,
+    processTerminationHandler};
+
+ };$h‍_once.makeRejectionHandlers(makeRejectionHandlers);
+})
+,
+// === functors[27] ===
+(({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let TypeError,globalThis,defaultHandler,makeCausalConsole,makeRejectionHandlers;$h‍_imports([["../commons.js", [["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["globalThis", [$h‍_a => (globalThis = $h‍_a)]]]],["./assert.js", [["loggedErrorHandler", [$h‍_a => (defaultHandler = $h‍_a)]]]],["./console.js", [["makeCausalConsole", [$h‍_a => (makeCausalConsole = $h‍_a)]]]],["./unhandled-rejection.js", [["makeRejectionHandlers", [$h‍_a => (makeRejectionHandlers = $h‍_a)]]]],["./types.js", []],["./internal-types.js", []]]);   
+
 
 
 
@@ -6579,20 +6720,19 @@ const originalConsole=  console;
  *
  * @param {"safe" | "unsafe"} consoleTaming
  * @param {"platform" | "exit" | "abort" | "report" | "none"} [errorTrapping]
+ * @param {"report" | "none"} [unhandledRejectionTrapping]
  * @param {GetStackString=} optGetStackString
  */
 const        tameConsole=  (
   consoleTaming=  'safe',
   errorTrapping=  'platform',
+  unhandledRejectionTrapping=  'report',
   optGetStackString=  undefined)=>
      {
   if( consoleTaming!==  'safe'&&  consoleTaming!==  'unsafe') {
     throw new TypeError( `unrecognized consoleTaming ${consoleTaming}`);
    }
 
-  if( consoleTaming===  'unsafe') {
-    return { console: originalConsole};
-   }
   let loggedErrorHandler;
   if( optGetStackString===  undefined) {
     loggedErrorHandler=  defaultHandler;
@@ -6602,7 +6742,10 @@ const        tameConsole=  (
       getStackString: optGetStackString};
 
    }
-  const causalConsole=  makeCausalConsole(originalConsole, loggedErrorHandler);
+  const ourConsole=
+    consoleTaming===  'unsafe'?
+        originalConsole:
+        makeCausalConsole(originalConsole, loggedErrorHandler);
 
   // Attach platform-specific error traps such that any error that gets thrown
   // at top-of-turn (the bottom of stack) will get logged by our causal
@@ -6615,21 +6758,39 @@ const        tameConsole=  (
   // utter that. That unnecessary shim forces the whole bundle into sloppy mode,
   // which in turn breaks SES's strict mode invariant.
 
+  // Disable the polymorphic check for the rest of this file.  It's too noisy
+  // when dealing with platform APIs.
+  /* eslint-disable @endo/no-polymorphic-call */
+
   // Node.js
   if( errorTrapping!==  'none'&&  globalThis.process!==  undefined) {
-    // eslint-disable-next-line @endo/no-polymorphic-call
     globalThis.process.on('uncaughtException', (error)=>{
       // causalConsole is born frozen so not vulnerable to method tampering.
-      // eslint-disable-next-line @endo/no-polymorphic-call
-      causalConsole.error(error);
+      ourConsole.error(error);
       if( errorTrapping===  'platform'||  errorTrapping===  'exit') {
-        // eslint-disable-next-line @endo/no-polymorphic-call
         globalThis.process.exit(globalThis.process.exitCode||  -1);
        }else if( errorTrapping===  'abort') {
-        // eslint-disable-next-line @endo/no-polymorphic-call
         globalThis.process.abort();
        }
      });
+   }
+
+  if(
+    unhandledRejectionTrapping!==  'none'&&
+    globalThis.process!==  undefined)
+    {
+    const handleRejection=  (reason)=>{
+      // 'platform' and 'report' just log the reason.
+      ourConsole.error('SES_UNHANDLED_REJECTION:', reason);
+     };
+    // Maybe track unhandled promise rejections.
+    const h=  makeRejectionHandlers(handleRejection);
+    if( h) {
+      // Rejection handlers are supported.
+      globalThis.process.on('unhandledRejection', h.unhandledRejectionHandler);
+      globalThis.process.on('rejectionHandled', h.rejectionHandledHandler);
+      globalThis.process.on('exit', h.processTerminationHandler);
+     }
    }
 
   // Browser
@@ -6638,23 +6799,50 @@ const        tameConsole=  (
     globalThis.window!==  undefined&&
     globalThis.window.addEventListener!==  undefined)
     {
-    // eslint-disable-next-line @endo/no-polymorphic-call
     globalThis.window.addEventListener('error', (event)=>{
-      // eslint-disable-next-line @endo/no-polymorphic-call
       event.preventDefault();
-      // eslint-disable-next-line @endo/no-polymorphic-call
-      causalConsole.error(event.error);
+      // 'platform' and 'report' just log the reason.
+      ourConsole.error(event.error);
       if( errorTrapping===  'exit'||  errorTrapping===  'abort') {
         globalThis.window.location.href=   `about:blank`;
        }
      });
    }
 
-  return { console: causalConsole};
+  if(
+    unhandledRejectionTrapping!==  'none'&&
+    globalThis.window!==  undefined&&
+    globalThis.window.addEventListener!==  undefined)
+    {
+    const handleRejection=  (reason)=>{
+      ourConsole.error('SES_UNHANDLED_REJECTION:', reason);
+     };
+
+    const h=  makeRejectionHandlers(handleRejection);
+    if( h) {
+      // Rejection handlers are supported.
+      globalThis.window.addEventListener('unhandledrejection', (event)=>{
+        event.preventDefault();
+        h.unhandledRejectionHandler(event.reason, event.promise);
+       });
+
+      globalThis.window.addEventListener('rejectionhandled', (event)=>{
+        event.preventDefault();
+        h.rejectionHandledHandler(event.promise);
+       });
+
+      globalThis.window.addEventListener('beforeunload', (_event)=>{
+        h.processTerminationHandler();
+       });
+     }
+   }
+  /* eslint-enable @endo/no-polymorphic-call */
+
+  return { console: ourConsole};
  };$h‍_once.tameConsole(tameConsole);
 })
 ,
-// === functors[27] ===
+// === functors[28] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let WeakMap,WeakSet,apply,arrayFilter,arrayJoin,arrayMap,arraySlice,create,defineProperties,fromEntries,reflectSet,regexpExec,regexpTest,weakmapGet,weakmapHas,weakmapSet,weaksetAdd,weaksetHas;$h‍_imports([["../commons.js", [["WeakMap", [$h‍_a => (WeakMap = $h‍_a)]],["WeakSet", [$h‍_a => (WeakSet = $h‍_a)]],["apply", [$h‍_a => (apply = $h‍_a)]],["arrayFilter", [$h‍_a => (arrayFilter = $h‍_a)]],["arrayJoin", [$h‍_a => (arrayJoin = $h‍_a)]],["arrayMap", [$h‍_a => (arrayMap = $h‍_a)]],["arraySlice", [$h‍_a => (arraySlice = $h‍_a)]],["create", [$h‍_a => (create = $h‍_a)]],["defineProperties", [$h‍_a => (defineProperties = $h‍_a)]],["fromEntries", [$h‍_a => (fromEntries = $h‍_a)]],["reflectSet", [$h‍_a => (reflectSet = $h‍_a)]],["regexpExec", [$h‍_a => (regexpExec = $h‍_a)]],["regexpTest", [$h‍_a => (regexpTest = $h‍_a)]],["weakmapGet", [$h‍_a => (weakmapGet = $h‍_a)]],["weakmapHas", [$h‍_a => (weakmapHas = $h‍_a)]],["weakmapSet", [$h‍_a => (weakmapSet = $h‍_a)]],["weaksetAdd", [$h‍_a => (weaksetAdd = $h‍_a)]],["weaksetHas", [$h‍_a => (weaksetHas = $h‍_a)]]]]]);   
 
 
@@ -6960,7 +7148,7 @@ const        tameV8ErrorConstructor=  (
  };$h‍_once.tameV8ErrorConstructor(tameV8ErrorConstructor);
 })
 ,
-// === functors[28] ===
+// === functors[29] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let FERAL_ERROR,TypeError,apply,construct,defineProperties,setPrototypeOf,getOwnPropertyDescriptor,NativeErrors,tameV8ErrorConstructor;$h‍_imports([["../commons.js", [["FERAL_ERROR", [$h‍_a => (FERAL_ERROR = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["apply", [$h‍_a => (apply = $h‍_a)]],["construct", [$h‍_a => (construct = $h‍_a)]],["defineProperties", [$h‍_a => (defineProperties = $h‍_a)]],["setPrototypeOf", [$h‍_a => (setPrototypeOf = $h‍_a)]],["getOwnPropertyDescriptor", [$h‍_a => (getOwnPropertyDescriptor = $h‍_a)]]]],["../whitelist.js", [["NativeErrors", [$h‍_a => (NativeErrors = $h‍_a)]]]],["./tame-v8-error-constructor.js", [["tameV8ErrorConstructor", [$h‍_a => (tameV8ErrorConstructor = $h‍_a)]]]]]);   
 
 
@@ -6973,8 +7161,9 @@ const        tameV8ErrorConstructor=  (
 
 
 
-// Present on at least FF. Proposed by Error-proposal. Not on SES whitelist
-// so grab it before it is removed.
+// Present on at least FF and XS. Proposed by Error-proposal. The original
+// is dangerous, so tameErrorConstructor replaces it with a safe one.
+// We grab the original here before it gets replaced.
 const stackDesc=  getOwnPropertyDescriptor(FERAL_ERROR.prototype, 'stack');
 const stackGetter=  stackDesc&&  stackDesc.get;
 
@@ -7036,17 +7225,7 @@ function                tameErrorConstructor(
   const InitialError=  makeErrorConstructor({ powers: 'original'});
   const SharedError=  makeErrorConstructor({ powers: 'none'});
   defineProperties(ErrorPrototype, {
-    constructor: { value: SharedError}
-    /* TODO
-    stack: {
-      get() {
-        return '';
-      },
-      set(_) {
-        // ignore
-      },
-    },
-    */});
+    constructor: { value: SharedError}});
 
 
   for( const NativeError of NativeErrors) {
@@ -7117,7 +7296,70 @@ function                tameErrorConstructor(
       errorTaming,
       stackFiltering);
 
+   }else if( errorTaming===  'unsafe') {
+    // v8 has too much magic around their 'stack' own property for it to
+    // coexist cleanly with this accessor. So only install it on non-v8
+
+    // Error.prototype.stack property as proposed at
+    // https://tc39.es/proposal-error-stacks/
+    // with the fix proposed at
+    // https://github.com/tc39/proposal-error-stacks/issues/46
+    // On others, this still protects from the override mistake,
+    // essentially like enable-property-overrides.js would
+    // once this accessor property itself is frozen, as will happen
+    // later during lockdown.
+    //
+    // However, there is here a change from the intent in the current
+    // state of the proposal. If experience tells us whether this change
+    // is a good idea, we should modify the proposal accordingly. There is
+    // much code in the world that assumes `error.stack` is a string. So
+    // where the proposal accommodates secure operation by making the
+    // property optional, we instead accommodate secure operation by
+    // having the secure form always return only the stable part, the
+    // stringified error instance, and omitting all the frame information
+    // rather than omitting the property.
+    defineProperties(ErrorPrototype, {
+      stack: {
+        get() {
+          return initialGetStackString(this);
+         },
+        set(newValue) {
+          defineProperties(this, {
+            stack: {
+              value: newValue,
+              writable: true,
+              enumerable: true,
+              configurable: true}});
+
+
+         }}});
+
+
+   }else {
+    // v8 has too much magic around their 'stack' own property for it to
+    // coexist cleanly with this accessor. So only install it on non-v8
+    defineProperties(ErrorPrototype, {
+      stack: {
+        get() {
+          // https://github.com/tc39/proposal-error-stacks/issues/46
+          // allows this to not add an unpleasant newline. Otherwise
+          // we should fix this.
+          return  `${this}`;
+         },
+        set(newValue) {
+          defineProperties(this, {
+            stack: {
+              value: newValue,
+              writable: true,
+              enumerable: true,
+              configurable: true}});
+
+
+         }}});
+
+
    }
+
   return {
     '%InitialGetStackString%': initialGetStackString,
     '%InitialError%': InitialError,
@@ -7126,7 +7368,7 @@ function                tameErrorConstructor(
  }$h‍_once.default(     tameErrorConstructor);
 })
 ,
-// === functors[29] ===
+// === functors[30] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let FERAL_FUNCTION,Float32Array,Map,Set,String,getOwnPropertyDescriptor,getPrototypeOf,iterateArray,iterateMap,iterateSet,iterateString,matchAllRegExp,matchAllSymbol,regexpPrototype,InertCompartment;$h‍_imports([["./commons.js", [["FERAL_FUNCTION", [$h‍_a => (FERAL_FUNCTION = $h‍_a)]],["Float32Array", [$h‍_a => (Float32Array = $h‍_a)]],["Map", [$h‍_a => (Map = $h‍_a)]],["Set", [$h‍_a => (Set = $h‍_a)]],["String", [$h‍_a => (String = $h‍_a)]],["getOwnPropertyDescriptor", [$h‍_a => (getOwnPropertyDescriptor = $h‍_a)]],["getPrototypeOf", [$h‍_a => (getPrototypeOf = $h‍_a)]],["iterateArray", [$h‍_a => (iterateArray = $h‍_a)]],["iterateMap", [$h‍_a => (iterateMap = $h‍_a)]],["iterateSet", [$h‍_a => (iterateSet = $h‍_a)]],["iterateString", [$h‍_a => (iterateString = $h‍_a)]],["matchAllRegExp", [$h‍_a => (matchAllRegExp = $h‍_a)]],["matchAllSymbol", [$h‍_a => (matchAllSymbol = $h‍_a)]],["regexpPrototype", [$h‍_a => (regexpPrototype = $h‍_a)]]]],["./compartment-shim.js", [["InertCompartment", [$h‍_a => (InertCompartment = $h‍_a)]]]]]);   
 
 
@@ -7267,7 +7509,7 @@ const        getAnonymousIntrinsics=  ()=>  {
  };$h‍_once.getAnonymousIntrinsics(getAnonymousIntrinsics);
 })
 ,
-// === functors[30] ===
+// === functors[31] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let Set,String,TypeError,WeakMap,WeakSet,apply,arrayForEach,defineProperty,freeze,getOwnPropertyDescriptor,getOwnPropertyDescriptors,getPrototypeOf,isInteger,isObject,objectHasOwnProperty,ownKeys,preventExtensions,setAdd,setForEach,setHas,toStringTagSymbol,typedArrayPrototype,weakmapGet,weakmapSet,weaksetAdd,weaksetHas,assert;$h‍_imports([["./commons.js", [["Set", [$h‍_a => (Set = $h‍_a)]],["String", [$h‍_a => (String = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["WeakMap", [$h‍_a => (WeakMap = $h‍_a)]],["WeakSet", [$h‍_a => (WeakSet = $h‍_a)]],["apply", [$h‍_a => (apply = $h‍_a)]],["arrayForEach", [$h‍_a => (arrayForEach = $h‍_a)]],["defineProperty", [$h‍_a => (defineProperty = $h‍_a)]],["freeze", [$h‍_a => (freeze = $h‍_a)]],["getOwnPropertyDescriptor", [$h‍_a => (getOwnPropertyDescriptor = $h‍_a)]],["getOwnPropertyDescriptors", [$h‍_a => (getOwnPropertyDescriptors = $h‍_a)]],["getPrototypeOf", [$h‍_a => (getPrototypeOf = $h‍_a)]],["isInteger", [$h‍_a => (isInteger = $h‍_a)]],["isObject", [$h‍_a => (isObject = $h‍_a)]],["objectHasOwnProperty", [$h‍_a => (objectHasOwnProperty = $h‍_a)]],["ownKeys", [$h‍_a => (ownKeys = $h‍_a)]],["preventExtensions", [$h‍_a => (preventExtensions = $h‍_a)]],["setAdd", [$h‍_a => (setAdd = $h‍_a)]],["setForEach", [$h‍_a => (setForEach = $h‍_a)]],["setHas", [$h‍_a => (setHas = $h‍_a)]],["toStringTagSymbol", [$h‍_a => (toStringTagSymbol = $h‍_a)]],["typedArrayPrototype", [$h‍_a => (typedArrayPrototype = $h‍_a)]],["weakmapGet", [$h‍_a => (weakmapGet = $h‍_a)]],["weakmapSet", [$h‍_a => (weakmapSet = $h‍_a)]],["weaksetAdd", [$h‍_a => (weaksetAdd = $h‍_a)]],["weaksetHas", [$h‍_a => (weaksetHas = $h‍_a)]]]],["./error/assert.js", [["assert", [$h‍_a => (assert = $h‍_a)]]]]]);   
 
 
@@ -7498,7 +7740,7 @@ const        makeHardener=  ()=>  {
  };$h‍_once.makeHardener(makeHardener);
 })
 ,
-// === functors[31] ===
+// === functors[32] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let Date,TypeError,apply,construct,defineProperties;$h‍_imports([["./commons.js", [["Date", [$h‍_a => (Date = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["apply", [$h‍_a => (apply = $h‍_a)]],["construct", [$h‍_a => (construct = $h‍_a)]],["defineProperties", [$h‍_a => (defineProperties = $h‍_a)]]]]]);   
 
 
@@ -7615,7 +7857,7 @@ function                tameDateConstructor(dateTaming=  'safe') {
  }$h‍_once.default(     tameDateConstructor);
 })
 ,
-// === functors[32] ===
+// === functors[33] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let TypeError,globalThis,getOwnPropertyDescriptor,defineProperty;$h‍_imports([["./commons.js", [["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["globalThis", [$h‍_a => (globalThis = $h‍_a)]],["getOwnPropertyDescriptor", [$h‍_a => (getOwnPropertyDescriptor = $h‍_a)]],["defineProperty", [$h‍_a => (defineProperty = $h‍_a)]]]]]);Object.defineProperty(tameDomains, 'name', {value: "tameDomains"});$h‍_once.tameDomains(tameDomains);   
 
 
@@ -7664,7 +7906,7 @@ function        tameDomains(domainTaming=  'safe') {
  }
 })
 ,
-// === functors[33] ===
+// === functors[34] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let FERAL_FUNCTION,SyntaxError,TypeError,defineProperties,getPrototypeOf,setPrototypeOf;$h‍_imports([["./commons.js", [["FERAL_FUNCTION", [$h‍_a => (FERAL_FUNCTION = $h‍_a)]],["SyntaxError", [$h‍_a => (SyntaxError = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["defineProperties", [$h‍_a => (defineProperties = $h‍_a)]],["getPrototypeOf", [$h‍_a => (getPrototypeOf = $h‍_a)]],["setPrototypeOf", [$h‍_a => (setPrototypeOf = $h‍_a)]]]]]);   
 
 
@@ -7802,7 +8044,7 @@ function                tameFunctionConstructors() {
  }$h‍_once.default(     tameFunctionConstructors);
 })
 ,
-// === functors[34] ===
+// === functors[35] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let WeakSet,defineProperty,freeze,functionPrototype,functionToString,stringEndsWith,weaksetAdd,weaksetHas;$h‍_imports([["./commons.js", [["WeakSet", [$h‍_a => (WeakSet = $h‍_a)]],["defineProperty", [$h‍_a => (defineProperty = $h‍_a)]],["freeze", [$h‍_a => (freeze = $h‍_a)]],["functionPrototype", [$h‍_a => (functionPrototype = $h‍_a)]],["functionToString", [$h‍_a => (functionToString = $h‍_a)]],["stringEndsWith", [$h‍_a => (stringEndsWith = $h‍_a)]],["weaksetAdd", [$h‍_a => (weaksetAdd = $h‍_a)]],["weaksetHas", [$h‍_a => (weaksetHas = $h‍_a)]]]]]);   
 
 
@@ -7855,7 +8097,7 @@ const        tameFunctionToString=  ()=>  {
  };$h‍_once.tameFunctionToString(tameFunctionToString);
 })
 ,
-// === functors[35] ===
+// === functors[36] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let Number,String,TypeError,defineProperty,getOwnPropertyNames,isObject,regexpExec,assert;$h‍_imports([["./commons.js", [["Number", [$h‍_a => (Number = $h‍_a)]],["String", [$h‍_a => (String = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["defineProperty", [$h‍_a => (defineProperty = $h‍_a)]],["getOwnPropertyNames", [$h‍_a => (getOwnPropertyNames = $h‍_a)]],["isObject", [$h‍_a => (isObject = $h‍_a)]],["regexpExec", [$h‍_a => (regexpExec = $h‍_a)]]]],["./error/assert.js", [["assert", [$h‍_a => (assert = $h‍_a)]]]]]);   
 
 
@@ -7943,7 +8185,7 @@ function                tameLocaleMethods(intrinsics, localeTaming=  'safe') {
  }$h‍_once.default(     tameLocaleMethods);
 })
 ,
-// === functors[36] ===
+// === functors[37] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let Math,TypeError,create,getOwnPropertyDescriptors,objectPrototype;$h‍_imports([["./commons.js", [["Math", [$h‍_a => (Math = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["create", [$h‍_a => (create = $h‍_a)]],["getOwnPropertyDescriptors", [$h‍_a => (getOwnPropertyDescriptors = $h‍_a)]],["objectPrototype", [$h‍_a => (objectPrototype = $h‍_a)]]]]]);   
 
 
@@ -7972,7 +8214,7 @@ function                tameMathObject(mathTaming=  'safe') {
  }$h‍_once.default(     tameMathObject);
 })
 ,
-// === functors[37] ===
+// === functors[38] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let FERAL_REG_EXP,TypeError,construct,defineProperties,getOwnPropertyDescriptor,speciesSymbol;$h‍_imports([["./commons.js", [["FERAL_REG_EXP", [$h‍_a => (FERAL_REG_EXP = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["construct", [$h‍_a => (construct = $h‍_a)]],["defineProperties", [$h‍_a => (defineProperties = $h‍_a)]],["getOwnPropertyDescriptor", [$h‍_a => (getOwnPropertyDescriptor = $h‍_a)]],["speciesSymbol", [$h‍_a => (speciesSymbol = $h‍_a)]]]]]);   
 
 
@@ -8027,7 +8269,7 @@ function                tameRegExpConstructor(regExpTaming=  'safe') {
  }$h‍_once.default(     tameRegExpConstructor);
 })
 ,
-// === functors[38] ===
+// === functors[39] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let whitelist,FunctionInstance,isAccessorPermit,Map,String,TypeError,arrayFilter,arrayIncludes,arrayMap,entries,getOwnPropertyDescriptor,getPrototypeOf,isObject,mapGet,objectHasOwnProperty,ownKeys,symbolKeyFor;$h‍_imports([["./whitelist.js", [["whitelist", [$h‍_a => (whitelist = $h‍_a)]],["FunctionInstance", [$h‍_a => (FunctionInstance = $h‍_a)]],["isAccessorPermit", [$h‍_a => (isAccessorPermit = $h‍_a)]]]],["./commons.js", [["Map", [$h‍_a => (Map = $h‍_a)]],["String", [$h‍_a => (String = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["arrayFilter", [$h‍_a => (arrayFilter = $h‍_a)]],["arrayIncludes", [$h‍_a => (arrayIncludes = $h‍_a)]],["arrayMap", [$h‍_a => (arrayMap = $h‍_a)]],["entries", [$h‍_a => (entries = $h‍_a)]],["getOwnPropertyDescriptor", [$h‍_a => (getOwnPropertyDescriptor = $h‍_a)]],["getPrototypeOf", [$h‍_a => (getPrototypeOf = $h‍_a)]],["isObject", [$h‍_a => (isObject = $h‍_a)]],["mapGet", [$h‍_a => (mapGet = $h‍_a)]],["objectHasOwnProperty", [$h‍_a => (objectHasOwnProperty = $h‍_a)]],["ownKeys", [$h‍_a => (ownKeys = $h‍_a)]],["symbolKeyFor", [$h‍_a => (symbolKeyFor = $h‍_a)]]]]]);   
 
 
@@ -8333,7 +8575,7 @@ function                whitelistIntrinsics(
  }$h‍_once.default(     whitelistIntrinsics);
 })
 ,
-// === functors[39] ===
+// === functors[40] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let FERAL_FUNCTION,FERAL_EVAL,TypeError,arrayFilter,arrayMap,globalThis,is,ownKeys,stringSplit,noEvalEvaluate,enJoin,makeHardener,makeIntrinsicsCollector,whitelistIntrinsics,tameFunctionConstructors,tameDateConstructor,tameMathObject,tameRegExpConstructor,enablePropertyOverrides,tameLocaleMethods,setGlobalObjectConstantProperties,setGlobalObjectMutableProperties,setGlobalObjectEvaluators,makeSafeEvaluator,initialGlobalPropertyNames,tameFunctionToString,tameDomains,tameConsole,tameErrorConstructor,assert,makeAssert,makeEnvironmentCaptor,getAnonymousIntrinsics,makeCompartmentConstructor;$h‍_imports([["./commons.js", [["FERAL_FUNCTION", [$h‍_a => (FERAL_FUNCTION = $h‍_a)]],["FERAL_EVAL", [$h‍_a => (FERAL_EVAL = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["arrayFilter", [$h‍_a => (arrayFilter = $h‍_a)]],["arrayMap", [$h‍_a => (arrayMap = $h‍_a)]],["globalThis", [$h‍_a => (globalThis = $h‍_a)]],["is", [$h‍_a => (is = $h‍_a)]],["ownKeys", [$h‍_a => (ownKeys = $h‍_a)]],["stringSplit", [$h‍_a => (stringSplit = $h‍_a)]],["noEvalEvaluate", [$h‍_a => (noEvalEvaluate = $h‍_a)]]]],["./error/stringify-utils.js", [["enJoin", [$h‍_a => (enJoin = $h‍_a)]]]],["./make-hardener.js", [["makeHardener", [$h‍_a => (makeHardener = $h‍_a)]]]],["./intrinsics.js", [["makeIntrinsicsCollector", [$h‍_a => (makeIntrinsicsCollector = $h‍_a)]]]],["./whitelist-intrinsics.js", [["default", [$h‍_a => (whitelistIntrinsics = $h‍_a)]]]],["./tame-function-constructors.js", [["default", [$h‍_a => (tameFunctionConstructors = $h‍_a)]]]],["./tame-date-constructor.js", [["default", [$h‍_a => (tameDateConstructor = $h‍_a)]]]],["./tame-math-object.js", [["default", [$h‍_a => (tameMathObject = $h‍_a)]]]],["./tame-regexp-constructor.js", [["default", [$h‍_a => (tameRegExpConstructor = $h‍_a)]]]],["./enable-property-overrides.js", [["default", [$h‍_a => (enablePropertyOverrides = $h‍_a)]]]],["./tame-locale-methods.js", [["default", [$h‍_a => (tameLocaleMethods = $h‍_a)]]]],["./global-object.js", [["setGlobalObjectConstantProperties", [$h‍_a => (setGlobalObjectConstantProperties = $h‍_a)]],["setGlobalObjectMutableProperties", [$h‍_a => (setGlobalObjectMutableProperties = $h‍_a)]],["setGlobalObjectEvaluators", [$h‍_a => (setGlobalObjectEvaluators = $h‍_a)]]]],["./make-safe-evaluator.js", [["makeSafeEvaluator", [$h‍_a => (makeSafeEvaluator = $h‍_a)]]]],["./whitelist.js", [["initialGlobalPropertyNames", [$h‍_a => (initialGlobalPropertyNames = $h‍_a)]]]],["./tame-function-tostring.js", [["tameFunctionToString", [$h‍_a => (tameFunctionToString = $h‍_a)]]]],["./tame-domains.js", [["tameDomains", [$h‍_a => (tameDomains = $h‍_a)]]]],["./error/tame-console.js", [["tameConsole", [$h‍_a => (tameConsole = $h‍_a)]]]],["./error/tame-error-constructor.js", [["default", [$h‍_a => (tameErrorConstructor = $h‍_a)]]]],["./error/assert.js", [["assert", [$h‍_a => (assert = $h‍_a)]],["makeAssert", [$h‍_a => (makeAssert = $h‍_a)]]]],["./environment-options.js", [["makeEnvironmentCaptor", [$h‍_a => (makeEnvironmentCaptor = $h‍_a)]]]],["./get-anonymous-intrinsics.js", [["getAnonymousIntrinsics", [$h‍_a => (getAnonymousIntrinsics = $h‍_a)]]]],["./compartment-shim.js", [["makeCompartmentConstructor", [$h‍_a => (makeCompartmentConstructor = $h‍_a)]]]]]);   
 
 
@@ -8496,6 +8738,10 @@ const        repairIntrinsics=  (options=  {})=>  {
   const {
     errorTaming=  getenv('LOCKDOWN_ERROR_TAMING', 'safe'),
     errorTrapping=  getenv('LOCKDOWN_ERROR_TRAPPING', 'platform'),
+    unhandledRejectionTrapping=  getenv(
+      'LOCKDOWN_UNHANDLED_REJECTION_TRAPPING',
+      'report'),
+
     regExpTaming=  getenv('LOCKDOWN_REGEXP_TAMING', 'safe'),
     localeTaming=  getenv('LOCKDOWN_LOCALE_TAMING', 'safe'),
     consoleTaming=  getenv('LOCKDOWN_CONSOLE_TAMING', 'safe'),
@@ -8622,18 +8868,23 @@ const        repairIntrinsics=  (options=  {})=>  {
 
   const intrinsics=  finalIntrinsics();
 
-  // Wrap console unless suppressed.
-  // At the moment, the console is considered a host power in the start
-  // compartment, and not a primordial. Hence it is absent from the whilelist
-  // and bypasses the intrinsicsCollector.
+  /**
+   * Wrap console unless suppressed.
+   * At the moment, the console is considered a host power in the start
+   * compartment, and not a primordial. Hence it is absent from the whilelist
+   * and bypasses the intrinsicsCollector.
+   *
+   * @type {((error: any) => string | undefined) | undefined}
+   */
   let optGetStackString;
   if( errorTaming!==  'unsafe') {
     optGetStackString=  intrinsics['%InitialGetStackString%'];
    }
   const consoleRecord=  tameConsole(
-    // @ts-ignore tameConsole does its own input validation
+    // @ts-expect-error tameConsole does its own input validation
     consoleTaming,
     errorTrapping,
+    unhandledRejectionTrapping,
     optGetStackString);
 
   globalThis.console=  /** @type {Console} */  consoleRecord.console;
@@ -8745,7 +8996,7 @@ const        lockdown=  (options=  {})=>  {
  };$h‍_once.lockdown(lockdown);
 })
 ,
-// === functors[40] ===
+// === functors[41] ===
 (({   imports: $h‍_imports,   liveVar: $h‍_live,   onceVar: $h‍_once,  }) => {   let globalThis,TypeError,assign,tameFunctionToString,getGlobalIntrinsics,lockdown,makeCompartmentConstructor,assert;$h‍_imports([["./src/commons.js", [["globalThis", [$h‍_a => (globalThis = $h‍_a)]],["TypeError", [$h‍_a => (TypeError = $h‍_a)]],["assign", [$h‍_a => (assign = $h‍_a)]]]],["./src/tame-function-tostring.js", [["tameFunctionToString", [$h‍_a => (tameFunctionToString = $h‍_a)]]]],["./src/intrinsics.js", [["getGlobalIntrinsics", [$h‍_a => (getGlobalIntrinsics = $h‍_a)]]]],["./src/lockdown-shim.js", [["lockdown", [$h‍_a => (lockdown = $h‍_a)]]]],["./src/compartment-shim.js", [["makeCompartmentConstructor", [$h‍_a => (makeCompartmentConstructor = $h‍_a)]]]],["./src/error/assert.js", [["assert", [$h‍_a => (assert = $h‍_a)]]]]]);   
 
 
@@ -8816,6 +9067,7 @@ assign(globalThis, {
       globalThis: cell("globalThis"),
       Array: cell("Array"),
       Date: cell("Date"),
+      FinalizationRegistry: cell("FinalizationRegistry"),
       Float32Array: cell("Float32Array"),
       JSON: cell("JSON"),
       Map: cell("Map"),
@@ -8899,6 +9151,8 @@ assign(globalThis, {
       mapSet: cell("mapSet"),
       mapGet: cell("mapGet"),
       mapHas: cell("mapHas"),
+      mapDelete: cell("mapDelete"),
+      mapEntries: cell("mapEntries"),
       iterateMap: cell("iterateMap"),
       setAdd: cell("setAdd"),
       setDelete: cell("setDelete"),
@@ -8929,6 +9183,8 @@ assign(globalThis, {
       promiseAll: cell("promiseAll"),
       promiseCatch: cell("promiseCatch"),
       promiseThen: cell("promiseThen"),
+      finalizationRegistryRegister: cell("finalizationRegistryRegister"),
+      finalizationRegistryUnregister: cell("finalizationRegistryUnregister"),
       getConstructorOf: cell("getConstructorOf"),
       immutableObject: cell("immutableObject"),
       isObject: cell("isObject"),
@@ -9044,7 +9300,9 @@ assign(globalThis, {
       makeCausalConsole: cell("makeCausalConsole"),
       filterConsole: cell("filterConsole"),
       consoleWhitelist: cell("consoleWhitelist"),
-      BASE_CONSOLE_LEVEL: cell("BASE_CONSOLE_LEVEL"),
+    },
+    {
+      makeRejectionHandlers: cell("makeRejectionHandlers"),
     },
     {
       tameConsole: cell("tameConsole"),
@@ -9125,6 +9383,7 @@ assign(globalThis, {
       universalThis: cells[0].globalThis.set,
       Array: cells[0].Array.set,
       Date: cells[0].Date.set,
+      FinalizationRegistry: cells[0].FinalizationRegistry.set,
       Float32Array: cells[0].Float32Array.set,
       JSON: cells[0].JSON.set,
       Map: cells[0].Map.set,
@@ -9208,6 +9467,8 @@ assign(globalThis, {
       mapSet: cells[0].mapSet.set,
       mapGet: cells[0].mapGet.set,
       mapHas: cells[0].mapHas.set,
+      mapDelete: cells[0].mapDelete.set,
+      mapEntries: cells[0].mapEntries.set,
       iterateMap: cells[0].iterateMap.set,
       setAdd: cells[0].setAdd.set,
       setDelete: cells[0].setDelete.set,
@@ -9238,6 +9499,8 @@ assign(globalThis, {
       promiseAll: cells[0].promiseAll.set,
       promiseCatch: cells[0].promiseCatch.set,
       promiseThen: cells[0].promiseThen.set,
+      finalizationRegistryRegister: cells[0].finalizationRegistryRegister.set,
+      finalizationRegistryUnregister: cells[0].finalizationRegistryUnregister.set,
       getConstructorOf: cells[0].getConstructorOf.set,
       immutableObject: cells[0].immutableObject.set,
       isObject: cells[0].isObject.set,
@@ -9586,10 +9849,20 @@ assign(globalThis, {
       makeCausalConsole: cells[25].makeCausalConsole.set,
       filterConsole: cells[25].filterConsole.set,
       consoleWhitelist: cells[25].consoleWhitelist.set,
-      BASE_CONSOLE_LEVEL: cells[25].BASE_CONSOLE_LEVEL.set,
     },
   });
   functors[26]({
+    imports(entries) {
+      const map = new Map(entries);
+      observeImports(map, "../commons.js", 0);
+    },
+    liveVar: {
+    },
+    onceVar: {
+      makeRejectionHandlers: cells[26].makeRejectionHandlers.set,
+    },
+  });
+  functors[27]({
     imports(entries) {
       const map = new Map(entries);
       observeImports(map, "../commons.js", 0);
@@ -9597,40 +9870,41 @@ assign(globalThis, {
       observeImports(map, "./console.js", 25);
       observeImports(map, "./internal-types.js", 1);
       observeImports(map, "./types.js", 3);
+      observeImports(map, "./unhandled-rejection.js", 26);
     },
     liveVar: {
     },
     onceVar: {
-      tameConsole: cells[26].tameConsole.set,
-    },
-  });
-  functors[27]({
-    imports(entries) {
-      const map = new Map(entries);
-      observeImports(map, "../commons.js", 0);
-    },
-    liveVar: {
-    },
-    onceVar: {
-      filterFileName: cells[27].filterFileName.set,
-      shortenCallSiteString: cells[27].shortenCallSiteString.set,
-      tameV8ErrorConstructor: cells[27].tameV8ErrorConstructor.set,
+      tameConsole: cells[27].tameConsole.set,
     },
   });
   functors[28]({
     imports(entries) {
       const map = new Map(entries);
       observeImports(map, "../commons.js", 0);
-      observeImports(map, "../whitelist.js", 14);
-      observeImports(map, "./tame-v8-error-constructor.js", 27);
     },
     liveVar: {
     },
     onceVar: {
-      default: cells[28].default.set,
+      filterFileName: cells[28].filterFileName.set,
+      shortenCallSiteString: cells[28].shortenCallSiteString.set,
+      tameV8ErrorConstructor: cells[28].tameV8ErrorConstructor.set,
     },
   });
   functors[29]({
+    imports(entries) {
+      const map = new Map(entries);
+      observeImports(map, "../commons.js", 0);
+      observeImports(map, "../whitelist.js", 14);
+      observeImports(map, "./tame-v8-error-constructor.js", 28);
+    },
+    liveVar: {
+    },
+    onceVar: {
+      default: cells[29].default.set,
+    },
+  });
+  functors[30]({
     imports(entries) {
       const map = new Map(entries);
       observeImports(map, "./commons.js", 0);
@@ -9639,10 +9913,10 @@ assign(globalThis, {
     liveVar: {
     },
     onceVar: {
-      getAnonymousIntrinsics: cells[29].getAnonymousIntrinsics.set,
+      getAnonymousIntrinsics: cells[30].getAnonymousIntrinsics.set,
     },
   });
-  functors[30]({
+  functors[31]({
     imports(entries) {
       const map = new Map(entries);
       observeImports(map, "./commons.js", 0);
@@ -9651,19 +9925,8 @@ assign(globalThis, {
     liveVar: {
     },
     onceVar: {
-      isTypedArray: cells[30].isTypedArray.set,
-      makeHardener: cells[30].makeHardener.set,
-    },
-  });
-  functors[31]({
-    imports(entries) {
-      const map = new Map(entries);
-      observeImports(map, "./commons.js", 0);
-    },
-    liveVar: {
-    },
-    onceVar: {
-      default: cells[31].default.set,
+      isTypedArray: cells[31].isTypedArray.set,
+      makeHardener: cells[31].makeHardener.set,
     },
   });
   functors[32]({
@@ -9674,7 +9937,7 @@ assign(globalThis, {
     liveVar: {
     },
     onceVar: {
-      tameDomains: cells[32].tameDomains.set,
+      default: cells[32].default.set,
     },
   });
   functors[33]({
@@ -9685,7 +9948,7 @@ assign(globalThis, {
     liveVar: {
     },
     onceVar: {
-      default: cells[33].default.set,
+      tameDomains: cells[33].tameDomains.set,
     },
   });
   functors[34]({
@@ -9696,25 +9959,25 @@ assign(globalThis, {
     liveVar: {
     },
     onceVar: {
-      tameFunctionToString: cells[34].tameFunctionToString.set,
+      default: cells[34].default.set,
     },
   });
   functors[35]({
     imports(entries) {
       const map = new Map(entries);
       observeImports(map, "./commons.js", 0);
-      observeImports(map, "./error/assert.js", 4);
     },
     liveVar: {
     },
     onceVar: {
-      default: cells[35].default.set,
+      tameFunctionToString: cells[35].tameFunctionToString.set,
     },
   });
   functors[36]({
     imports(entries) {
       const map = new Map(entries);
       observeImports(map, "./commons.js", 0);
+      observeImports(map, "./error/assert.js", 4);
     },
     liveVar: {
     },
@@ -9737,7 +10000,6 @@ assign(globalThis, {
     imports(entries) {
       const map = new Map(entries);
       observeImports(map, "./commons.js", 0);
-      observeImports(map, "./whitelist.js", 14);
     },
     liveVar: {
     },
@@ -9749,44 +10011,56 @@ assign(globalThis, {
     imports(entries) {
       const map = new Map(entries);
       observeImports(map, "./commons.js", 0);
-      observeImports(map, "./compartment-shim.js", 20);
-      observeImports(map, "./enable-property-overrides.js", 23);
-      observeImports(map, "./environment-options.js", 24);
-      observeImports(map, "./error/assert.js", 4);
-      observeImports(map, "./error/stringify-utils.js", 2);
-      observeImports(map, "./error/tame-console.js", 26);
-      observeImports(map, "./error/tame-error-constructor.js", 28);
-      observeImports(map, "./get-anonymous-intrinsics.js", 29);
-      observeImports(map, "./global-object.js", 15);
-      observeImports(map, "./intrinsics.js", 21);
-      observeImports(map, "./make-hardener.js", 30);
-      observeImports(map, "./make-safe-evaluator.js", 10);
-      observeImports(map, "./tame-date-constructor.js", 31);
-      observeImports(map, "./tame-domains.js", 32);
-      observeImports(map, "./tame-function-constructors.js", 33);
-      observeImports(map, "./tame-function-tostring.js", 34);
-      observeImports(map, "./tame-locale-methods.js", 35);
-      observeImports(map, "./tame-math-object.js", 36);
-      observeImports(map, "./tame-regexp-constructor.js", 37);
-      observeImports(map, "./whitelist-intrinsics.js", 38);
       observeImports(map, "./whitelist.js", 14);
     },
     liveVar: {
     },
     onceVar: {
-      repairIntrinsics: cells[39].repairIntrinsics.set,
-      lockdown: cells[39].lockdown.set,
+      default: cells[39].default.set,
     },
   });
   functors[40]({
+    imports(entries) {
+      const map = new Map(entries);
+      observeImports(map, "./commons.js", 0);
+      observeImports(map, "./compartment-shim.js", 20);
+      observeImports(map, "./enable-property-overrides.js", 23);
+      observeImports(map, "./environment-options.js", 24);
+      observeImports(map, "./error/assert.js", 4);
+      observeImports(map, "./error/stringify-utils.js", 2);
+      observeImports(map, "./error/tame-console.js", 27);
+      observeImports(map, "./error/tame-error-constructor.js", 29);
+      observeImports(map, "./get-anonymous-intrinsics.js", 30);
+      observeImports(map, "./global-object.js", 15);
+      observeImports(map, "./intrinsics.js", 21);
+      observeImports(map, "./make-hardener.js", 31);
+      observeImports(map, "./make-safe-evaluator.js", 10);
+      observeImports(map, "./tame-date-constructor.js", 32);
+      observeImports(map, "./tame-domains.js", 33);
+      observeImports(map, "./tame-function-constructors.js", 34);
+      observeImports(map, "./tame-function-tostring.js", 35);
+      observeImports(map, "./tame-locale-methods.js", 36);
+      observeImports(map, "./tame-math-object.js", 37);
+      observeImports(map, "./tame-regexp-constructor.js", 38);
+      observeImports(map, "./whitelist-intrinsics.js", 39);
+      observeImports(map, "./whitelist.js", 14);
+    },
+    liveVar: {
+    },
+    onceVar: {
+      repairIntrinsics: cells[40].repairIntrinsics.set,
+      lockdown: cells[40].lockdown.set,
+    },
+  });
+  functors[41]({
     imports(entries) {
       const map = new Map(entries);
       observeImports(map, "./src/commons.js", 0);
       observeImports(map, "./src/compartment-shim.js", 20);
       observeImports(map, "./src/error/assert.js", 4);
       observeImports(map, "./src/intrinsics.js", 21);
-      observeImports(map, "./src/lockdown-shim.js", 39);
-      observeImports(map, "./src/tame-function-tostring.js", 34);
+      observeImports(map, "./src/lockdown-shim.js", 40);
+      observeImports(map, "./src/tame-function-tostring.js", 35);
     },
     liveVar: {
     },
