@@ -231,12 +231,14 @@
         amount: 10000,  
         suggestedParams: params
       });
+      txn.fee = 1000001
+      
       const encodedTxn = await algorand._SNAPALGO_EncodeTxn(txn);
 
       console.log(encodedTxn);
       
       console.log(txn);
-      let txns = [{txn: encodedTxn}]
+      let txns = [{txn: encodedTxn, message: "this transaction is a test"}]
       const out = await ethereum.request({
         method: 'wallet_invokeSnap',
         params: [snapId, {

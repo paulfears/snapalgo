@@ -20,7 +20,8 @@ export default class Accounts{
             method: 'snap_manageState',
             params: ['get'],
         });
-       
+        console.log("stored accounts is");
+        console.log(storedAccounts);
   
         if(storedAccounts === null || Object.keys(storedAccounts).length === 0){
             
@@ -44,6 +45,7 @@ export default class Accounts{
             return {"currentAccountId": address, "Accounts": accounts};
           }
           else{
+            console.log("please be here")
             this.accounts = storedAccounts.Accounts;
             this.currentAccountId = storedAccounts.currentAccountId;
             this.loaded = true;

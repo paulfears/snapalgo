@@ -310,12 +310,28 @@ export default class SnapAlgo{
         
         
         const Txn_Verifer = new TxnVerifer();
-        let msg = "Do you want to sign a transaction from "+originString+"?"
+        let msg = "Do you want to sign transactions from "+originString+"?"
+        const confirm = await this.sendConfirmation("sign TXNS?", "This can result in spending of funds", msg);
+        if(!confirm){
+            throw {code: 4001, message: "User Rejected Request"}
+        }
         let index = 0;
         let signedTxns = [];
         console.log("txnObject is")
         console.log(TxnObjs)
         for(let txn of TxnObjs){
+
+            if(txn.message){
+                const msgConfirmation = await this.sendConfirmation("Untrusted Message", originString+" says:", txn.message)
+                if(!msgConfirmation){
+                    throw {code: 4001, message: "User Rejected Request"}
+                }
+            }
+            if(txn.signers){
+                if(Array.isArray(txn.signers) && txn.signers.length === 0){
+                    signedTxns.push(null);
+                }
+            }
             txn = txn.txn
             let verifyObj = {};
             if(index == 0){
@@ -346,13 +362,15 @@ export default class SnapAlgo{
             if(verifiedObj.valid === true){
                 
                 for(let warning of verifiedObj.warnings){
-                    let confirmWarning = this.sendConfirmation("warning", "", warning);
+                    let confirmWarning = await this.sendConfirmation("warning", "txn Warning", warning);
                     if(!confirmWarning){
                         throw {code: 4001, message: "User Rejected Request"}
                     }
                 }
                 let signedTxn = decoded_txn.signTxn(this.account.sk)
-                signedTxns.push(signedTxn);
+                
+                const b64signedTxn = Buffer.from(signedTxn).toString('base64');
+                signedTxns.push(b64signedTxn);
             }
             else{
                 throw verifiedObj.error[0];
@@ -360,8 +378,8 @@ export default class SnapAlgo{
             
             index += 1;
         }
-        console.log(done);
-        return signedTxn;
+        console.log("done");
+        return signedTxns;
     }
     
 
@@ -381,9 +399,9 @@ export default class SnapAlgo{
             method: 'snap_confirm',
             params:[
                 {
-                    prompt: prompt,
-                    description: description,
-                    textAreaContent: textAreaContent
+                    prompt: prompt.substr(0,40),
+                    description: description.substr(0,140),
+                    textAreaContent: textAreaContent.substr(0,1800)
                 }
             ]
         });

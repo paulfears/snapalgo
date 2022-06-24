@@ -92,7 +92,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     case 'Uint8ArrayToBase64':
         return snapAlgo.Uint8ArrayToBase64(requestObject.data);
     case 'signTxns':
-      return snapAlgo.signTxns(requestObject.txns);
+      return snapAlgo.signTxns(requestObject.txns, originString);
     case 'AppOptIn':
       console.log(requestObject);
       console.log("opting in");
