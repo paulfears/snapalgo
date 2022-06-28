@@ -93,24 +93,20 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
         return snapAlgo.Uint8ArrayToBase64(requestObject.data);
     case 'signTxns':
       return snapAlgo.signTxns(requestObject.txns, originString);
+    case 'postTxns':
+      return snapAlgo.postTxns(requestObject.stxns);
     case 'AppOptIn':
-      console.log(requestObject);
-      console.log("opting in");
-      console.log("updated");
-      console.log(snapAlgo.optIn);
       return snapAlgo.AppOptIn(requestObject.appIndex);
     case 'AssetOptIn':
-      console.log(requestObject);
-      console.log("opting in asset");
-      console.log("updated");
       return snapAlgo.AssetOptIn(requestObject.assetIndex);
     case 'AssetOptOut':
-      console.log(requestObject);
       return snapAlgo.assetOptOut(requestObject.assetIndex);
     case 'transferAsset':
       return snapAlgo.TransferAsset( requestObject.assetIndex, requestObject.to, requestObject.amount);
     case 'getAssetById':
       return snapAlgo.getAssetById(requestObject.assetIndex);
+    case 'signAndPostTxns':
+      return snapAlgo.signAndPostTxns(requestObject.txns);
     default:
       throw new Error('Method not found.');
   }

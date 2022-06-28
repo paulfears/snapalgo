@@ -53,6 +53,8 @@
     <button id="getAssetsButton">get Assets</button>
     <button id="sendAssetButton">send asset test</button>
     <button id="getAssetInfoButton">get asset info</button>
+    <button id="signTransaction">sign Transaction</button>
+    <button id="signAndPostTransactionButton">Sign and Post Transaction Test</button>
     <br/>
     <br/>
     <p>create new Account</p>
@@ -86,6 +88,9 @@
     const sendAssetButton = document.getElementById('sendAssetButton')
     const getAssetInfoButton = document.getElementById('getAssetInfoButton')
     const createAccountButton = document.getElementById("createAccountButton")
+    const signTransactionButton = document.getElementById("signTransaction")
+    const signAndPostTransactionButton = document.getElementById("signAndPostTransactionButton")
+    
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -104,6 +109,7 @@
     sendAssetButton.addEventListener('click', sendAssetTest)
     getAssetInfoButton.addEventListener('click', getAssetInfo)
     createAccountButton.addEventListener('click', createNewAccount)
+    signAndPostTransactionButton.addEventListener('click', signAndPostTransaction)
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -218,6 +224,32 @@
       })
     }
 
+    async function signAndPostTransaction(){
+      let client = await algorand.getAlgorandV2Client();
+      const algodClient = new algosdk.Algodv2(client);
+      let params = await algodClient.getTransactionParams().do();
+      const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
+      const sender = '37G4YMHO2N4MBRUN4NMUIZEOO5A44UMKRF26O3WIN7WRUTDPT6Z2NU46RE';
+      let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        from: sender, 
+        to: receiver, 
+        amount: 10000,  
+        suggestedParams: params
+      });
+      
+      const encodedTxn = await algorand._SNAPALGO_EncodeTxn(txn);
+      let txns = [{txn: encodedTxn, message: "this transaction is a test of sign and post transaction"}]
+      const out = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'signAndPostTxns',
+          txns: txns
+        }]
+      })
+      console.log(out);
+
+    }
+
     async function signTxns(){
       console.log("here")
       let client = await algorand.getAlgorandV2Client();
@@ -231,13 +263,13 @@
         amount: 10000,  
         suggestedParams: params
       });
-      txn.fee = 1000001
       
       const encodedTxn = await algorand._SNAPALGO_EncodeTxn(txn);
 
       console.log(encodedTxn);
       
       console.log(txn);
+      console.log("yo yo yo")
       let txns = [{txn: encodedTxn, message: "this transaction is a test"}]
       const out = await ethereum.request({
         method: 'wallet_invokeSnap',
@@ -246,8 +278,17 @@
           txns: txns
         }]
       })
+      await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'postTxns',
+          stxns: out
+        }]
+      })
       console.log(out);
     }
+
+
 
     async function getIndexServer(){
       const server = await ethereum.request({

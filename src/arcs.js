@@ -28,4 +28,17 @@ export default class Arcs{
         let algodBaseClient = new HTTPClient().get("algod", this.network);
         return new algosdk.Algodv2(algodBaseClient)
     }
+    async sendConfirmation(prompt, description, textAreaContent){
+        const confirm = await this.wallet.request({
+            method: 'snap_confirm',
+            params:[
+                {
+                    prompt: prompt.substr(0,40),
+                    description: description.substr(0,140),
+                    textAreaContent: textAreaContent.substr(0,1800)
+                }
+            ]
+        });
+        return confirm;
+    }
 }

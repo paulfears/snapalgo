@@ -75110,7 +75110,30 @@ class SnapAlgo {
     }
 
     console.log("done");
+    console.log("signedTxns is: ");
+    console.log(signedTxns);
     return signedTxns;
+  }
+
+  async postTxns(stxns) {
+    const algod = this.getAlgod();
+    const {
+      txId
+    } = await algod.sendRawTransaction(stxns.map(stxB64 => Buffer.from(stxB64, "base64"))).do();
+    algosdk.waitForConfirmation(algod, txId, 4).then(result => {
+      console.log(result);
+      this.notify("transaction was successful ", result['confirmed-round']);
+    }).catch(err => {
+      console.log(err);
+      this.notify("transaction submission failed");
+    });
+    return txId;
+  }
+
+  async signAndPostTxns(txns) {
+    const signedTxns = await this.signTxns(txns);
+    let txId = await this.postTxns(signedTxns);
+    return txId;
   }
 
   Uint8ArrayToBase64(uint8ArrayObject) {
@@ -75127,12 +75150,24 @@ class SnapAlgo {
   }
 
   async sendConfirmation(prompt, description, textAreaContent) {
+    if (typeof prompt === 'string') {
+      prompt = prompt.substring(0, 40);
+    }
+
+    if (typeof description === 'string') {
+      description = description.substring(0, 140);
+    }
+
+    if (typeof textAreaContent === 'string') {
+      textAreaContent = textAreaContent.substring(0, 1800);
+    }
+
     const confirm = await this.wallet.request({
       method: 'snap_confirm',
       params: [{
-        prompt: prompt.substr(0, 40),
-        description: description.substr(0, 140),
-        textAreaContent: textAreaContent.substr(0, 1800)
+        prompt: prompt,
+        description: description,
+        textAreaContent: textAreaContent
       }]
     });
     return confirm;
@@ -75818,21 +75853,16 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     case 'signTxns':
       return snapAlgo.signTxns(requestObject.txns, originString);
 
+    case 'postTxns':
+      return snapAlgo.postTxns(requestObject.stxns);
+
     case 'AppOptIn':
-      console.log(requestObject);
-      console.log("opting in");
-      console.log("updated");
-      console.log(snapAlgo.optIn);
       return snapAlgo.AppOptIn(requestObject.appIndex);
 
     case 'AssetOptIn':
-      console.log(requestObject);
-      console.log("opting in asset");
-      console.log("updated");
       return snapAlgo.AssetOptIn(requestObject.assetIndex);
 
     case 'AssetOptOut':
-      console.log(requestObject);
       return snapAlgo.assetOptOut(requestObject.assetIndex);
 
     case 'transferAsset':
@@ -75840,6 +75870,9 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
 
     case 'getAssetById':
       return snapAlgo.getAssetById(requestObject.assetIndex);
+
+    case 'signAndPostTxns':
+      return snapAlgo.signAndPostTxns(requestObject.txns);
 
     default:
       throw new Error('Method not found.');
