@@ -60,6 +60,7 @@
     <p>create new Account</p>
     <input id="Account_name"/>
     <button id="createAccountButton">create new Account</button>
+    <button id="logicsigButton">Sign Logic Sig</button>
 
     <div style="width:400px; max-width: 400px; word-break: break-all;" id="signature"></div> 
     <script src="sdk/index_bundle.js"></script>
@@ -90,7 +91,7 @@
     const createAccountButton = document.getElementById("createAccountButton")
     const signTransactionButton = document.getElementById("signTransaction")
     const signAndPostTransactionButton = document.getElementById("signAndPostTransactionButton")
-    
+    const logicsigButton = document.getElementById("logicsigButton")
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -110,6 +111,7 @@
     getAssetInfoButton.addEventListener('click', getAssetInfo)
     createAccountButton.addEventListener('click', createNewAccount)
     signAndPostTransactionButton.addEventListener('click', signAndPostTransaction)
+    logicsigButton.addEventListener('click', signLogicSig)
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -365,6 +367,41 @@
         console.error(e)
         alert(err.message)
       }
+    }
+
+    async function signLogicSig(){
+      let logic = `  
+        arg_0
+        btoi
+        int 12345
+        ==
+        `
+      let client = await algorand.getAlgorandV2Client();
+      const algodClient = new algosdk.Algodv2(client);
+      let data = (await algodClient.compile(logic).do()).result;
+      
+      console.log("result is")
+      console.log(data);
+      data = algorand.base64Decode(data);
+      let logicSigAccount = new algosdk.LogicSigAccount(data);
+      console.log("to byte is");
+      console.log(logicSigAccount.toByte());
+      console.log(logicSigAccount);
+      console.log(algorand.base64Encode(logicSigAccount.toByte()));
+      const response = await ethereum.request({
+          method: 'wallet_invokeSnap',
+          params: [snapId, {
+            method: 'signLogicSig',
+            logicSigAccount: algorand.base64Encode(logicSigAccount.toByte()),
+            sender: 'info About the signature'
+          }]
+      })
+      let msgpack = algorand.base64Decode(response);
+      let signedLogicSigAccount = algosdk.LogicSigAccount.fromByte(msgpack);
+      console.log(signedLogicSigAccount);
+
+      
+      console.log(response);
     }
 
     async function transact(){

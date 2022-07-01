@@ -107,6 +107,8 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       return snapAlgo.getAssetById(requestObject.assetIndex);
     case 'signAndPostTxns':
       return snapAlgo.signAndPostTxns(requestObject.txns);
+    case 'signLogicSig':
+      return snapAlgo.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
     default:
       throw new Error('Method not found.');
   }

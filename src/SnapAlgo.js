@@ -408,6 +408,18 @@ export default class SnapAlgo{
         return txId;
     }
 
+    async signLogicSig(logicSigAccount){
+        let confirm = await this.sendConfirmation("sign logic sig?", "Are you sure", "Signing a logic signature gives a smart contract the ability to sign transactions on your behalf. This can result in the loss of funds");
+        if(!confirm){
+            throw {code: 4001, message: "User Rejected Request"}
+        }
+        const logicBytes = new Uint8Array(Buffer.from(logicSigAccount, 'base64'));
+        logicSigAccount = algosdk.LogicSigAccount.fromByte(logicBytes)
+        logicSigAccount.sign(this.account.sk);
+        const signedAccount = Buffer.from(logicSigAccount.toByte()).toString('base64')
+        return signedAccount;
+    }
+
     Uint8ArrayToBase64(uint8ArrayObject){
         let array = []
         for(let i =0; i<Object.keys(uint8ArrayObject).length; i++){
