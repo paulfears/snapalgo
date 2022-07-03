@@ -74543,7 +74543,8 @@ class Accounts {
     this.accounts[address] = {
       type: 'generated',
       path: path,
-      name: name
+      name: name,
+      addr: address
     };
     await this.wallet.request({
       method: 'snap_manageState',

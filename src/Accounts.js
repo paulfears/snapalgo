@@ -139,7 +139,7 @@ export default class Accounts{
         const address = Account.addr;
         
         
-        this.accounts[address] = {type: 'generated', path: path, name: name};
+        this.accounts[address] = {type: 'generated', path: path, name: name, addr: address};
         await this.wallet.request({
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
