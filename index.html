@@ -376,6 +376,7 @@
         int 12345
         ==
         `
+      console.log(logic);
       let client = await algorand.getAlgorandV2Client();
       const algodClient = new algosdk.Algodv2(client);
       let data = (await algodClient.compile(logic).do()).result;

@@ -74780,6 +74780,12 @@ class SnapAlgo {
     console.log(Object.getOwnPropertyNames(indexerClient));
     const accountAssets = await indexerClient.lookupAccountByID(this.account.addr).do();
     console.log(accountAssets);
+
+    if (accountAssets.account === undefined) {
+      
+      return [];
+    }
+
     let assets = accountAssets.account.assets;
 
     for (let asset of assets) {
@@ -75798,6 +75804,9 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
   switch (requestObject.method) {
     case 'getAccounts':
       return accounts;
+
+    case 'getCurrentAccount':
+      return currentAccount;
 
     case 'createAccount':
       return await accountLibary.createNewAccount(requestObject.name);
