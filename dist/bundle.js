@@ -75818,14 +75818,14 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     case 'createAccount':
       const result = await accountLibary.createNewAccount(requestObject.name);
       const newAccount = result.Account;
-      snapAlgo.notify("account created");
       const mnemonic = accountLibary.getMnemonic(newAccount);
       const mnemonicConfirmation = await snapAlgo.sendConfirmation("Display Mnemonic", "Do you want to display Your mnemonic");
 
       if (mnemonicConfirmation) {
-        await snapAlgo.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
+        snapAlgo.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
       }
 
+      snapAlgo.notify("account created");
       return true;
 
     case 'importAccount':
