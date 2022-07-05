@@ -74834,6 +74834,7 @@ class SnapAlgo {
   }
 
   async notify(message) {
+    console.log("notify called");
     wallet.request({
       method: 'snap_notify',
       params: [{
@@ -75810,7 +75811,9 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       return currentAccount;
 
     case 'createAccount':
-      return await accountLibary.createNewAccount(requestObject.name);
+      const output = await accountLibary.createNewAccount(requestObject.name);
+      snapAlgo.notify("account created");
+      return output;
 
     case 'importAccount':
       return await accountLibary.importAccount(requestObject.mnemonic, requestObject.name);

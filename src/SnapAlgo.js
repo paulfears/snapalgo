@@ -106,6 +106,7 @@ export default class SnapAlgo{
         return suggestedParams;
     }
     async notify(message){
+        console.log("notify called");
         wallet.request({
             method: 'snap_notify',
             params: [
