@@ -144,7 +144,7 @@ export default class Accounts{
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
         })
-        return {"currentAccountId": address, "Accounts": this.accounts};
+        return {"currentAccountId": address, "Accounts": this.accounts, "Account": Account};
     }
 
     async importAccount(name, mnemonic){
@@ -191,6 +191,8 @@ export default class Accounts{
       
     }
     
-
+    async getMnemonic(account){
+        return algo.secretKeyToMnemonic(account.sk)
+    }
 
 }

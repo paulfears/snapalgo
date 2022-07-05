@@ -74555,7 +74555,8 @@ class Accounts {
     });
     return {
       "currentAccountId": address,
-      "Accounts": this.accounts
+      "Accounts": this.accounts,
+      "Account": Account
     };
   }
 
@@ -74609,6 +74610,10 @@ class Accounts {
     Account.addr = algo.encodeAddress(keys.publicKey);
     Account.sk = keys.secretKey;
     return Account;
+  }
+
+  async getMnemonic(account) {
+    return algo.secretKeyToMnemonic(account.sk);
   }
 
 }
@@ -75811,9 +75816,17 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       return currentAccount;
 
     case 'createAccount':
-      const output = await accountLibary.createNewAccount(requestObject.name);
+      const result = await accountLibary.createNewAccount(requestObject.name);
+      const newAccount = result.Account;
       snapAlgo.notify("account created");
-      return output;
+      const mnemonic = accountLibary.getMnemonic(newAccount);
+      const mnemonicConfirmation = await snapAlgo.sendConfirmation("Display Mnemonic", "Do you want to display Your mnemonic");
+
+      if (mnemonicConfirmation) {
+        await snapAlgo.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
+      }
+
+      return true;
 
     case 'importAccount':
       return await accountLibary.importAccount(requestObject.mnemonic, requestObject.name);
