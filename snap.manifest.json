@@ -1,5 +1,5 @@
 {
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "Algorand on Metamask",
   "proposedName": "algorand",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/paulfears/snapalgo.git"
   },
   "source": {
-    "shasum": "HTtFRdQ2TvT2X12bLKo0UbGZD2wnbDnWyfecFH73Li4=",
+    "shasum": "D6skgD4pnDzviifrpL/FNvEaPZMoTc5UltxgJ5oeYCE=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",

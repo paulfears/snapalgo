@@ -1,6 +1,6 @@
 import nacl from 'tweetnacl';
 const algo =  require('algosdk/dist/cjs');
-import { getBIP44AddressKeyDeriver} from '@metamask/key-tree';
+import { getBIP44AddressKeyDeriver, JsonBIP44CoinTypeNode} from '@metamask/key-tree';
 
 export default class Accounts{
     constructor(wallet){
@@ -175,17 +175,27 @@ export default class Accounts{
         const entropy = await this.wallet.request({
           method: 'snap_getBip44Entropy_283',
         });
+        console.log("entropy is");
+        console.log(entropy);
       
         //dirive private key using metamask key tree
-        const algoDiriver = getBIP44AddressKeyDeriver(entropy);
+        const coinTypeNode = entropy;
+        console.log(coinTypeNode);
+        // Get an address key deriver for the coin_type node.
+        // In this case, its path will be: m / 44' / 60' / 0' / 0 / address_index
+        // Alternatively you can use an extended key (`xprv`) as well.
+        const addressKeyDeriver = await getBIP44AddressKeyDeriver(coinTypeNode);
+
         
         //generate an extended private key then grab the first 32 bytes
         //this coresponds to the private key portion of the extended private key
         
-        const privateKey = algoDiriver(path).slice(0, 32);
+        const privateKey = (await addressKeyDeriver(path)).privateKeyBuffer;
+
       
         //algosdk requires keysPairs to be dirived by nacl so we can use the private key as 32 bytes of entropy
         const keys = nacl.sign.keyPair.fromSeed(privateKey);
+
         const Account = {}
         Account.addr = algo.encodeAddress(keys.publicKey);
         Account.sk = keys.secretKey;
