@@ -74794,7 +74794,7 @@ class SnapAlgo {
     const accountAssets = await indexerClient.lookupAccountByID(this.account.addr).do();
     console.log(accountAssets);
 
-    if (accountAssets.account === undefined) {
+    if (accountAssets.account.assets === undefined) {
       
       return [];
     }
