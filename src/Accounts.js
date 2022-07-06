@@ -67,7 +67,7 @@ export default class Accounts{
             }
             else if(tempAccount.type === 'imported'){
                 let b64Seed = tempAccount.seed;
-                const seed = Buffer.from(b64Seed, 'base64');
+                const seed = new Uint8Array(Buffer.from(b64Seed, 'base64'));
                 const keys = nacl.sign.keyPair.fromSeed(seed);
                 const Account = {}
                 Account.addr = algo.encodeAddress(keys.publicKey);
