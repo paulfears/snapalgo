@@ -265,14 +265,26 @@
         amount: 10000,  
         suggestedParams: params
       });
-      
-      const encodedTxn = await algorand._SNAPALGO_EncodeTxn(txn);
 
+
+      
+      
+
+      let txn2 = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        from: sender, 
+        to: receiver, 
+        amount: 250,  
+        suggestedParams: params
+      });
+      const txs = [txn, txn2];
+      //algosdk.assignGroupID(txs);
+      const encodedTxn = await window.algorand.encodeTxn(txn);
+      const encodedTxn2 = await window.algorand.encodeTxn(txn2);
       console.log(encodedTxn);
       
       console.log(txn);
       console.log("yo yo yo")
-      let txns = [{txn: encodedTxn, message: "this transaction is a test"}]
+      let txns = [{txn: encodedTxn, message: "this transaction is a test"}, {txn:encodedTxn2, message: "this transaction is a test2"}]
       const out = await ethereum.request({
         method: 'wallet_invokeSnap',
         params: [snapId, {
@@ -280,6 +292,7 @@
           txns: txns
         }]
       })
+      /*
       await ethereum.request({
         method: 'wallet_invokeSnap',
         params: [snapId, {
@@ -287,6 +300,7 @@
           stxns: out
         }]
       })
+      */
       console.log(out);
     }
 

@@ -74571,7 +74571,7 @@ class Accounts {
 
     const seed = algo.seedFromMnemonic(mnemonic);
 
-    const keys = _tweetnacl.default.sign.keyPair.fromSeed(privateKey);
+    const keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);
 
     const address = algo.encodeAddress(keys.publicKey);
     this.accounts[address] = {
@@ -75070,6 +75070,7 @@ class SnapAlgo {
       }
 
       txn = txn.txn;
+      console.log(txn);
       let verifyObj = {};
 
       if (index == 0) {
@@ -75830,7 +75831,8 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       return true;
 
     case 'importAccount':
-      return await accountLibary.importAccount(requestObject.mnemonic, requestObject.name);
+      console.log("originString : " + originString);
+      return await accountLibary.importAccount(requestObject.name, requestObject.mnemonic);
 
     case 'setAccount':
       return await accountLibary.setCurrentAccount(requestObject.address);

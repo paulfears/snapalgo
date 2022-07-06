@@ -338,6 +338,7 @@ export default class SnapAlgo{
                 }
             }
             txn = txn.txn
+            console.log(txn);
             let verifyObj = {};
             if(index == 0){
                 verifyObj = verify(txn, true);

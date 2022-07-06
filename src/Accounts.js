@@ -155,7 +155,7 @@ export default class Accounts{
             name = 'Account ' + (Object.keys(this.accounts).length+1);
         }
         const seed = algo.seedFromMnemonic(mnemonic)
-        const keys = nacl.sign.keyPair.fromSeed(privateKey);
+        const keys = nacl.sign.keyPair.fromSeed(seed);
         const address = algo.encodeAddress(keys.publicKey);
         this.accounts[address] = {type: 'imported', seed:seed, name:name}
         await this.wallet.request({

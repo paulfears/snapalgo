@@ -40,7 +40,9 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       
     
     case 'importAccount':
-      return await accountLibary.importAccount(requestObject.mnemonic, requestObject.name);
+      console.log("originString : " + originString);
+      
+      return await accountLibary.importAccount( requestObject.name, requestObject.mnemonic);
 
     case 'setAccount':
       return await accountLibary.setCurrentAccount(requestObject.address);
