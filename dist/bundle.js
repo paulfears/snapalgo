@@ -74376,6 +74376,7 @@ function config (name) {
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],362:[function(require,module,exports){
+(function (Buffer){(function (){
 "use strict";
 
 var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -74455,7 +74456,10 @@ class Accounts {
         const Account = await this.generateAccount(tempAccount.path);
         return Account;
       } else if (tempAccount.type === 'imported') {
-        const keys = _tweetnacl.default.sign.keyPair.fromSeed(tempAccount.seed);
+        let b64Seed = tempAccount.seed;
+        const seed = Buffer.from(b64Seed, 'base64');
+
+        const keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);
 
         const Account = {};
         Account.addr = algo.encodeAddress(keys.publicKey);
@@ -74574,9 +74578,10 @@ class Accounts {
     const keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);
 
     const address = algo.encodeAddress(keys.publicKey);
+    let b64Seed = buffer.from(seed).toString('base64');
     this.accounts[address] = {
       type: 'imported',
-      seed: seed,
+      seed: b64Seed,
       name: name
     };
     await this.wallet.request({
@@ -74620,7 +74625,8 @@ class Accounts {
 
 exports.default = Accounts;
 
-},{"@babel/runtime/helpers/interopRequireDefault":1,"@metamask/key-tree":9,"algosdk/dist/cjs":12,"tweetnacl":359}],363:[function(require,module,exports){
+}).call(this)}).call(this,require("buffer").Buffer)
+},{"@babel/runtime/helpers/interopRequireDefault":1,"@metamask/key-tree":9,"algosdk/dist/cjs":12,"buffer":176,"tweetnacl":359}],363:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {

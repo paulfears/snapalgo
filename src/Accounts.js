@@ -66,7 +66,9 @@ export default class Accounts{
                 return Account;
             }
             else if(tempAccount.type === 'imported'){
-                const keys = nacl.sign.keyPair.fromSeed(tempAccount.seed);
+                let b64Seed = tempAccount.seed;
+                const seed = Buffer.from(b64Seed, 'base64');
+                const keys = nacl.sign.keyPair.fromSeed(seed);
                 const Account = {}
                 Account.addr = algo.encodeAddress(keys.publicKey);
                 Account.sk = keys.secretKey;
@@ -157,7 +159,8 @@ export default class Accounts{
         const seed = algo.seedFromMnemonic(mnemonic)
         const keys = nacl.sign.keyPair.fromSeed(seed);
         const address = algo.encodeAddress(keys.publicKey);
-        this.accounts[address] = {type: 'imported', seed:seed, name:name}
+        let b64Seed = buffer.from(seed).toString('base64');
+        this.accounts[address] = {type: 'imported', seed:b64Seed, name:name}
         await this.wallet.request({
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
