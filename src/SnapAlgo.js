@@ -51,7 +51,7 @@ export default class SnapAlgo{
         console.log(Object.getOwnPropertyNames(indexerClient))
         const accountAssets = await indexerClient.lookupAccountByID(this.account.addr).do();
         console.log(accountAssets);
-        if(accountAssets.account === undefined){
+        if(accountAssets.account.assets === undefined){
             //no assets
             return [];
         }
