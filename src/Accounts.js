@@ -160,7 +160,7 @@ export default class Accounts{
         const keys = nacl.sign.keyPair.fromSeed(seed);
         const address = algo.encodeAddress(keys.publicKey);
         let b64Seed = Buffer.from(seed).toString('base64');
-        this.accounts[address] = {type: 'imported', seed:b64Seed, name:name}
+        this.accounts[address] = {type: 'imported', seed:b64Seed, name:name, addr: address};
         await this.wallet.request({
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
