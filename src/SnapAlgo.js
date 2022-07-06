@@ -134,7 +134,7 @@ export default class SnapAlgo{
             suggestedParams: params
         });
         //user confirmation
-        const confirm = await this.sendConfirmation("confirm Spend", "send"+amount+" ALGO to "+receiver+"?");
+        const confirm = await this.sendConfirmation("confirm Spend", `send ${Number(amount)/1000000} ALGO to ${receiver}?`);
         if(!confirm){
             return "user rejected Transaction: error 4001";
         }
