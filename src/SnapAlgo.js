@@ -56,6 +56,8 @@ export default class SnapAlgo{
             return [];
         }
         let assets = accountAssets.account.assets;
+        console.log(assets)
+        console.log("dogs")
         for(let asset of assets){
             asset['asset'] = (await indexerClient.searchForAssets()
             .index(asset['asset-id']).do()).assets;

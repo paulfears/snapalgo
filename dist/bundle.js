@@ -74457,7 +74457,7 @@ class Accounts {
         return Account;
       } else if (tempAccount.type === 'imported') {
         let b64Seed = tempAccount.seed;
-        const seed = Buffer.from(b64Seed, 'base64');
+        const seed = new Uint8Array(Buffer.from(b64Seed, 'base64'));
 
         const keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);
 
@@ -74582,7 +74582,8 @@ class Accounts {
     this.accounts[address] = {
       type: 'imported',
       seed: b64Seed,
-      name: name
+      name: name,
+      addr: address
     };
     await this.wallet.request({
       method: 'snap_manageState',
@@ -74799,6 +74800,8 @@ class SnapAlgo {
     }
 
     let assets = accountAssets.account.assets;
+    console.log(assets);
+    console.log("dogs");
 
     for (let asset of assets) {
       asset['asset'] = (await indexerClient.searchForAssets().index(asset['asset-id']).do()).assets;
