@@ -74578,7 +74578,7 @@ class Accounts {
     const keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);
 
     const address = algo.encodeAddress(keys.publicKey);
-    let b64Seed = buffer.from(seed).toString('base64');
+    let b64Seed = Buffer.from(seed).toString('base64');
     this.accounts[address] = {
       type: 'imported',
       seed: b64Seed,
