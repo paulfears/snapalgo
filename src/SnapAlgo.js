@@ -178,7 +178,7 @@ export default class SnapAlgo{
         algosdk.waitForConfirmation(algod, txId, 4)
         .then((result)=>{
             console.log(result);
-            this.notify("opt out Succeeded: ", result['confirmed-round']);
+            this.notify("opt out Succeeded: ", appIndex);
         })
         .catch((err)=>{
             console.log(err);
@@ -208,7 +208,7 @@ export default class SnapAlgo{
         return algosdk.waitForConfirmation(algod, txId, 4)
         .then((result)=>{
             console.log(result);
-            this.notify("opt in Succeeded: ", result['confirmed-round']);
+            this.notify("opt in Succeeded: ", assetIndex);
         })
         .catch((err)=>{
             console.log(err);

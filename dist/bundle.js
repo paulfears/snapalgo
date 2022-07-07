@@ -33013,7 +33013,7 @@ class SnapAlgo {
     algod.sendRawTransaction(sig).do();
     algosdk.waitForConfirmation(algod, txId, 4).then(result => {
       console.log(result);
-      this.notify("opt out Succeeded: ", result['confirmed-round']);
+      this.notify("opt out Succeeded: ", appIndex);
     }).catch(err => {
       console.log(err);
       this.notify("opt out Failed");
@@ -33043,7 +33043,7 @@ class SnapAlgo {
     await algod.sendRawTransaction(sig).do();
     return algosdk.waitForConfirmation(algod, txId, 4).then(result => {
       console.log(result);
-      this.notify("opt in Succeeded: ", result['confirmed-round']);
+      this.notify("opt in Succeeded: ", assetIndex);
     }).catch(err => {
       console.log(err);
       this.notify("opt in Failed");
