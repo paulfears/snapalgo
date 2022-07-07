@@ -145,16 +145,18 @@ export default class SnapAlgo{
         const algodClient = this.getAlgod();
         const txId = txn.txID().toString();
         await algodClient.sendRawTransaction(sig).do();
-        algosdk.waitForConfirmation(algodClient, txId, 4)
+        return await algosdk.waitForConfirmation(algodClient, txId, 4)
         .then((result)=>{
             console.log(result);
             this.notify("Transaction Successful", result['confirmed-round']);
+            return result;
         })
         .catch((err)=>{
             console.log(err);
             this.notify("Transaction Failed");
+            return err;
         })
-        return txId;
+        
         
     }
     async optOut(appIndex){
