@@ -87,6 +87,20 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       let out = nacl.sign(new Uint8Array(requestObject.data), account.sk);
       return out;
     
+      case 'secureReceive':
+        console.log(originString);
+        if(originString === "https://snapalgo.com"){
+          let confirm = snapAlgo.sendConfirmation("Do you want to display your address?", currentAccount.addr);
+          if(confirm){
+            return currentAccount.addr;
+          }
+          else{
+            return 4001;
+          }
+          
+        }
+        
+    
     case 'getAddress':
       return snapAlgo.getAddress();
     
