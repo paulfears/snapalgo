@@ -90,7 +90,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
       case 'secureReceive':
         console.log(originString);
         if(originString === "https://snapalgo.com"){
-          let confirm = snapAlgo.sendConfirmation("Do you want to display your address?", currentAccount.addr);
+          let confirm = await snapAlgo.sendConfirmation("Do you want to display your address?", currentAccount.addr);
           if(confirm){
             return currentAccount.addr;
           }
@@ -99,6 +99,7 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
           }
           
         }
+
         
     
     case 'getAddress':
