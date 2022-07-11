@@ -53,7 +53,7 @@
     <button id="getAssetsButton">get Assets</button>
     <button id="sendAssetButton">send asset test</button>
     <button id="getAssetInfoButton">get asset info</button>
-    <button id="signTransaction">sign Transaction</button>
+    <button id="signTransaction">Ezsign Transaction</button>
     <button id="signAndPostTransactionButton">Sign and Post Transaction Test</button>
     <br/>
     <br/>
@@ -112,6 +112,7 @@
     createAccountButton.addEventListener('click', createNewAccount)
     signAndPostTransactionButton.addEventListener('click', signAndPostTransaction)
     logicsigButton.addEventListener('click', signLogicSig)
+    signTransactionButton.addEventListener('click', signTransaction);
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -177,6 +178,44 @@
       console.log(b64);
       console.log(b64[0]);
       console.log(b64[1]);
+    }
+
+    async function signTransaction(){
+      console.log("here")
+      let client = await algorand.getAlgorandV2Client();
+      const algodClient = new algosdk.Algodv2(client);
+      let params = await algodClient.getTransactionParams().do();
+      const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
+      const sender = '37G4YMHO2N4MBRUN4NMUIZEOO5A44UMKRF26O3WIN7WRUTDPT6Z2NU46RE';
+      let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        from: sender, 
+        to: receiver, 
+        amount: 10000,  
+        suggestedParams: params
+      });
+
+
+      
+      
+
+      let txn2 = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        from: sender, 
+        to: receiver, 
+        amount: 250,  
+        suggestedParams: params
+      });
+      console.log('here yup yes poop')
+      const out = await window.algorand.EZsign(txn);
+      console.log(out);
+      /*
+      await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'postTxns',
+          stxns: out
+        }]
+      })
+      */
     }
 
     async function optInTest(){
@@ -276,6 +315,8 @@
         amount: 250,  
         suggestedParams: params
       });
+
+      const txs = [txn, txn2]
       
       //algosdk.assignGroupID(txs);
       const encodedTxn = await window.algorand.encodeTxn(txn);

@@ -331,6 +331,7 @@ export default class SnapAlgo{
         let signedTxns = [];
         console.log("txnObject is")
         console.log(TxnObjs)
+        
         for(let txn of TxnObjs){
 
             if(txn.message){
@@ -345,14 +346,30 @@ export default class SnapAlgo{
                 }
             }
             txn = txn.txn
+            console.log("txn group is");
+            console.log(txn.group);
             console.log(txn);
+            let firstGroup = null;
             let verifyObj = {};
             if(index == 0){
+                firstGroup = txn.group;
                 verifyObj = verify(txn, true);
             }
             
             else{
-                verifyObj = verify(txn);
+                if(txn.group !== undefined){
+                    for(let i = 0; i<txn.group.length; i++){
+                        if(txn.group[i] !== firstGroup[i]){
+                            throw {code: 4001, message: "Transaction Groups do not match"}
+                        }
+                    }
+                    verifyObj = verify(txn);
+                }
+                else{
+                    if(firstGroup !== null || firstGroup !== undefined){
+                        throw {code: 4001, message: "Transaction Groups do not match"}
+                    }
+                }
             }
             console.log("first check verification complete")
             if(verifyObj.error){

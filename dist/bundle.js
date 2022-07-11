@@ -33182,13 +33182,35 @@ class SnapAlgo {
       }
 
       txn = txn.txn;
+      console.log("txn group is");
+      console.log(txn.group);
       console.log(txn);
+      let firstGroup = null;
       let verifyObj = {};
 
       if (index == 0) {
+        firstGroup = txn.group;
         verifyObj = (0, _verifier.default)(txn, true);
       } else {
-        verifyObj = (0, _verifier.default)(txn);
+        if (txn.group !== undefined) {
+          for (let i = 0; i < txn.group.length; i++) {
+            if (txn.group[i] !== firstGroup[i]) {
+              throw {
+                code: 4001,
+                message: "Transaction Groups do not match"
+              };
+            }
+          }
+
+          verifyObj = (0, _verifier.default)(txn);
+        } else {
+          if (firstGroup !== null || firstGroup !== undefined) {
+            throw {
+              code: 4001,
+              message: "Transaction Groups do not match"
+            };
+          }
+        }
       }
 
       console.log("first check verification complete");
@@ -33604,6 +33626,8 @@ class TxnVerifer {
         }
       } else if (txn.type === "appl") {
         
+        console.log("appl create");
+
         if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('onComplete')) {
           if (!this.checkInt({
             value: txn.appIndex
