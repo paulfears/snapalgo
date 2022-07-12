@@ -33252,9 +33252,8 @@ class SnapAlgo {
     stxns = stxns.map(stxB64 => Buffer.from(stxB64, "base64"));
     console.log(stxns);
     const algod = this.getAlgod();
-    const {
-      txId
-    } = await algod.sendRawTransaction(stxns).do();
+    const txId = await algod.sendRawTransaction(stxns).do();
+    console.log(txId);
     console.log("txId is: ");
     console.log(txId);
     algosdk.waitForConfirmation(algod, txId, 4).then(result => {
