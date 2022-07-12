@@ -33808,6 +33808,8 @@ class TxnVerifer {
   }
 
   checkInt(intObj) {
+    console.log("in checkInt");
+
     if (!intObj.hasOwnProperty('min')) {
       intObj.min = 0;
     }

@@ -312,6 +312,7 @@ export default class TxnVerifer{
     return btoa(binstr);
   }
   checkInt(intObj){
+    console.log("in checkInt");
     if(!intObj.hasOwnProperty('min')){
       intObj.min = 0;
     }
@@ -320,7 +321,8 @@ export default class TxnVerifer{
     }
     if(Number.isInteger(intObj.value) && intObj.value>=intObj.min && intObj.value<=intObj.max){
       return true;
-    } return false;
+    } 
+    return false;
   }
   checkBoolean(value){
     if(typeof value === 'boolean'){
