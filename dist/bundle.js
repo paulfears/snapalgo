@@ -33627,6 +33627,8 @@ class TxnVerifer {
       } else if (txn.type === "appl") {
         console.log("in appl"); 
 
+        console.log(txn);
+
         if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('onComplete')) {
           console.log("appl create");
 
