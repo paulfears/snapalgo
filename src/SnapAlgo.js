@@ -411,9 +411,10 @@ export default class SnapAlgo{
         console.log(stxns);
         stxns = stxns.map(stxB64 => Buffer.from(stxB64, "base64"))
         console.log(stxns);
-        const ogTxn = algosdk.decodeSignedTransaction(stxns[0]);
-        console.log(ogTxn);
-        console.log(ogTxn.txn);
+        const ogTxn = algosdk.decodeSignedTransaction(stxns[0]).txn;
+        if(ogTxn.genesisID === "testnet-v1.0"){
+            this.setTestnet(true);
+        }
         const algod = this.getAlgod()
         const txId = await algod.sendRawTransaction(stxns).do()
         console.log(txId);
