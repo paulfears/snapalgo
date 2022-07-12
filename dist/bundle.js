@@ -33618,6 +33618,11 @@ class TxnVerifer {
         console.log(txn.appApprovalProgram);
         console.log("can check property");
 
+        for (let key in txn) {
+          console.log(key);
+          console.log(txn[key]);
+        }
+
         if (txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('appOnComplete')) {
           console.log("appl create");
 

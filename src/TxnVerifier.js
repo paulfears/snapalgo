@@ -210,6 +210,10 @@ export default class TxnVerifer{
         console.log(txn.hasOwnProperty('appApprovalProgram'));
         console.log(txn.appApprovalProgram);
         console.log("can check property");
+        for(let key in txn){
+          console.log(key)
+          console.log(txn[key])
+        }
         if(txn.hasOwnProperty('appApprovalProgram') 
         && txn.hasOwnProperty('appClearProgram') 
         && txn.hasOwnProperty('appGlobalByteSlices') 
