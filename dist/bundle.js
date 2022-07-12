@@ -33251,6 +33251,9 @@ class SnapAlgo {
     console.log(stxns);
     stxns = stxns.map(stxB64 => Buffer.from(stxB64, "base64"));
     console.log(stxns);
+    const ogTxn = algosdk.decodeSignedTransaction(stxns[0]);
+    console.log(ogTxn);
+    console.log(ogTxn.txn);
     const algod = this.getAlgod();
     const txId = await algod.sendRawTransaction(stxns).do();
     console.log(txId);
