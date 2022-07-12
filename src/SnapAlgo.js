@@ -416,8 +416,7 @@ export default class SnapAlgo{
             this.setTestnet(true);
         }
         const algod = this.getAlgod()
-        const txId = await algod.sendRawTransaction(stxns).do()
-        console.log(txId);
+        const txId = (await algod.sendRawTransaction(stxns).do()).txId;
         console.log("txId is: ");
         console.log(txId);
         algosdk.waitForConfirmation(algod, txId, 4)
