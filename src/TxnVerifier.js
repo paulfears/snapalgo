@@ -209,10 +209,10 @@ export default class TxnVerifer{
             this.throw(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
           }
           if(!this.checkUint8({value:txn.appApprovalProgram,max:2048})){
-            throw(4300,'appApprovalProgram must be a Uint8Array that is less than 2048 bytes');
+            this.throw(4300,'appApprovalProgram must be a Uint8Array that is less than 2048 bytes');
           }
           if(!this.checkUint8({value:txn.appClearProgram,max:2048})){
-            throw(4300,'appClearProgram must be a Uint8Array that is less than 2048 bytes');
+            this.throw(4300,'appClearProgram must be a Uint8Array that is less than 2048 bytes');
           }
           if(!this.checkInt({value:txn.appGlobalByteSlices})){
             this.throw(4300, 'appGlobalByteSlices must be a uint64 between 0 and 18446744073709551615');
@@ -297,7 +297,8 @@ export default class TxnVerifer{
         throw(4300, 'must specify the type of transaction');
       }
     }
-
+    console.log("error check is");
+    console.log(this.errorCheck);
     return this.errorCheck;
   }
   buf264(buf){

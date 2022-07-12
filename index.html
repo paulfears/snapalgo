@@ -55,6 +55,7 @@
     <button id="getAssetInfoButton">get asset info</button>
     <button id="signTransaction">Ezsign Transaction</button>
     <button id="signAndPostTransactionButton">Sign and Post Transaction Test</button>
+    <button id="deployButton">deploy</button>
     <br/>
     <br/>
     <p>create new Account</p>
@@ -92,6 +93,7 @@
     const signTransactionButton = document.getElementById("signTransaction")
     const signAndPostTransactionButton = document.getElementById("signAndPostTransactionButton")
     const logicsigButton = document.getElementById("logicsigButton")
+    const deployButton = document.getElementById("deployButton")
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -113,6 +115,7 @@
     signAndPostTransactionButton.addEventListener('click', signAndPostTransaction)
     logicsigButton.addEventListener('click', signLogicSig)
     signTransactionButton.addEventListener('click', signTransaction);
+    deployButton.addEventListener('click', deploy);
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -369,6 +372,86 @@
         }]        
       })
     }
+
+  async function deploy(){
+    var deployParams = {
+      from:'',
+      suggestedParams:{},             
+      onComplete:0,             
+      approvalProgram:null,
+      clearProgram:null,
+      numLocalInts:5,
+      numLocalByteSlices:5,
+      numGlobalInts:5,
+      numGlobalByteSlices:5
+    }
+    //compile from TEAL to Uint8Array machine code
+  async function tealcompile(data){
+    let compiled;
+    try{
+      let url = 'https://tealcompBackend.deatheye.repl.co/compile-teal';
+      
+      const res = await fetch(url, {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        mode: 'cors', // no-cors, *cors, same-origin
+        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: 'same-origin', // include, *same-origin, omit
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key':'CkCQ04Vtng4VB8xMxa0mr8qxA179pJwW6For09eb'
+        },
+        redirect: 'follow', // manual, *follow, error
+        referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+        body: JSON.stringify({inputcode:data}) // body data type must match "Content-Type" header
+      });
+      compiled = await res.json();
+    
+      let output = []
+      for(let i = 0; i<Object.keys(compiled.result).length; i++){
+        output.push(compiled.result[i]);
+      }
+    
+      compiled = Uint8Array.from(output);
+    } catch {}
+    return compiled;
+  }
+  async function compile(){
+    let error = [];
+    deployParams.approvalProgram=await tealcompile(editor.getValue());
+    deployParams.clearProgram=await tealcompile('#pragma version 4\nint 1');
+
+    if(deployParams.approvalProgram.hasOwnProperty('message')){
+      error += (deployParams.approvalProgram.message+'\n');
+    }
+    if(deployParams.clearProgram.hasOwnProperty('message')){
+      error += deployParams.clearProgram.message;
+    }
+  
+    if(error.length===0){
+      document.getElementById('langNav').style.display='block';
+      document.getElementById('deployButton').style.display='block';
+    } else{alert(error)}
+  }
+  
+  try {
+    let algodClientParams = await window.algorand.getAlgodv2Client();
+    let algodClient = new algosdk.Algodv2(algodClientParams);
+    deployParams.from = await window.ethereum.request({
+      method: 'wallet_invokeSnap',
+      params:['npm:algorand',{
+        method: 'getAddress'
+      }]
+    });
+    deployParams.suggestedParams = await algodClient.getTransactionParams().do();
+    const signedTxn = await window.algorand.EZsign(txn);
+    console.log('signed\n\n\n\n\n');
+    //const response = await window.algorand.postTxns(signedTxn);
+     //console.log('posted\n\n\n\n\n');
+    
+    //alert('Deploy successful\ntxId: '+response.txId);
+  } catch(err) {alert(err)}
+  
+}
 
     async function isValidAddress(){
       const address = document.getElementById('SendTo').value
