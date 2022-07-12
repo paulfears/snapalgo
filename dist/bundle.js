@@ -33248,10 +33248,15 @@ class SnapAlgo {
   }
 
   async postTxns(stxns) {
+    console.log(stxns);
+    stxns = stxns.map(stxB64 => Buffer.from(stxB64, "base64"));
+    console.log(stxns);
     const algod = this.getAlgod();
     const {
       txId
-    } = await algod.sendRawTransaction(stxns.map(stxB64 => Buffer.from(stxB64, "base64"))).do();
+    } = await algod.sendRawTransaction(stxns).do();
+    console.log("txId is: ");
+    console.log(txId);
     algosdk.waitForConfirmation(algod, txId, 4).then(result => {
       console.log(result);
       this.notify("transaction was successful ", result['confirmed-round']);
@@ -33265,6 +33270,8 @@ class SnapAlgo {
   async signAndPostTxns(txns) {
     const signedTxns = await this.signTxns(txns);
     let txId = await this.postTxns(signedTxns);
+    console.log("txId is: ");
+    console.log(txId);
     return txId;
   }
 
