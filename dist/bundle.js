@@ -33580,7 +33580,7 @@ class TxnVerifer {
             this.throw(4300, 'to must be a valid address');
           }
         } else {
-          throw 4300, 'amount, assetIndex, and to fields are required in Asset Transfer Txn';
+          this.throw(4300, 'amount, assetIndex, and to fields are required in Asset Transfer Txn');
         }
 
         if (txn.hasOwnProperty('closeRemainderTo') && !this.checkAddress(txn.closeRemainderTo)) {
@@ -33609,120 +33609,20 @@ class TxnVerifer {
           this.throw(4300, 'assetIndex, freezeState, and freezeTarget are required in Asset Freeze Txn');
         }
       } else if (txn.type === "appl") {
-        console.log("in appl"); 
-
-        console.log(txn);
-        console.log(txn.hasOwnProperty('appIndex'));
-        console.log("can check property");
-        console.log(txn.hasOwnProperty('appApprovalProgram'));
-        console.log(txn.appApprovalProgram);
-        console.log("can check property");
-
-        for (let key in txn) {
-          console.log(key);
-          console.log(txn[key]);
-        }
-
-        if (txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('appOnComplete')) {
-          console.log("appl create");
-
-          if (!this.checkInt({
-            value: txn.appIndex
-          })) {
-            this.throw(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
-          }
-
-          if (!this.checkUint8({
-            value: txn.appApprovalProgram,
-            max: 2048
-          })) {
-            this.throw(4300, 'appApprovalProgram must be a Uint8Array that is less than 2048 bytes');
-          }
-
-          if (!this.checkUint8({
-            value: txn.appClearProgram,
-            max: 2048
-          })) {
-            this.throw(4300, 'appClearProgram must be a Uint8Array that is less than 2048 bytes');
-          }
-
-          if (!this.checkInt({
-            value: txn.appGlobalByteSlices
-          })) {
-            this.throw(4300, 'appGlobalByteSlices must be a uint64 between 0 and 18446744073709551615');
-          }
-
-          if (!this.checkInt({
-            value: txn.appGlobalInts
-          })) {
-            this.throw(4300, 'appGlobalInts must be a uint64 between 0 and 18446744073709551615');
-          }
-
-          if (!this.checkInt({
-            value: txn.appLocalByteSlices
-          })) {
-            this.throw(4300, 'appLocalByteSlices must be a uint64 between 0 and 18446744073709551615');
-          }
-
-          if (!this.checkInt({
-            value: txn.appLocalInts
-          })) {
-            this.throw(4300, 'appLocalInts must be a uint64 between 0 and 18446744073709551615');
-          }
-
-          if (!this.checkInt({
-            value: txn.appOnComplete,
-            max: 5
-          })) {
-            this.throw(4300, 'appOnComplete must be a uint64 between 0 and 5');
-          }
-
-          console.log("done here");
+        
+        if (txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts')) {
+          console.log('appl create');
         } 
         else if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appOnComplete')) {
-          console.log("appl call");
-
-          if (!this.checkInt({
-            value: txn.appIndex
-          })) {
-            this.throw(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
-          }
-
-          if (!this.checkInt({
-            value: txn.appOnComplete,
-            max: 5
-          })) {
-            this.throw(4300, 'appOnComplete must be a uint64 between 0 and 5');
-          }
-        } else if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram')) {
-          if (!this.checkInt({
-            value: txn.appIndex
-          })) {
-            this.throw(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
-          }
-
-          if (!this.checkUint8({
-            value: txn.appApprovalProgram,
-            max: 2048
-          })) {
-            throw 4300, 'appApprovalProgram must be a Uint8Array that is less than 2048 bytes';
-          }
-
-          if (!this.checkUint8({
-            value: txn.appClearProgram,
-            max: 2048
-          })) {
-            throw 4300, 'appClearProgram must be a Uint8Array that is less than 2048 bytes';
-          }
+          console.log('appl call');
+        } 
+        else if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram')) {
+          console.log('appl update');
         } 
         else if (txn.hasOwnProperty('appIndex')) {
-          if (!this.checkInt({
-            value: txn.appIndex
-          })) {
-            this.throw(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
-          }
+          console.log('appl clearState, closeOut, delete, noOp, or optIn txn');
         } else {
-          throw 4300, 'all required fields need to be filled depending on the target ApplicationTxn';
+          this.throw(4300, 'all required fields need to be filled depending on the target ApplicationTxn');
         } 
 
 
@@ -33738,14 +33638,14 @@ class TxnVerifer {
           value: txn.appApprovalProgram,
           max: 2048
         })) {
-          throw 4300, 'appApprovalProgram must be a Uint8Array that is less than 2048 bytes';
+          this.throw(4300, 'appApprovalProgram must be a Uint8Array that is less than 2048 bytes');
         }
 
         if (txn.hasOwnProperty('appClearProgram') && !this.checkUint8({
           value: txn.appClearProgram,
           max: 2048
         })) {
-          throw 4300, 'appClearProgram must be a Uint8Array that is less than 2048 bytes';
+          this.throw(4300, 'appClearProgram must be a Uint8Array that is less than 2048 bytes');
         }
 
         if (txn.hasOwnProperty('appGlobalByteSlices') && !this.checkInt({
@@ -33760,6 +33660,12 @@ class TxnVerifer {
           this.throw(4300, 'appGlobalInts must be a uint64 between 0 and 18446744073709551615');
         }
 
+        if (txn.hasOwnProperty('appIndex') && !this.checkInt({
+          value: txn.appIndex
+        })) {
+          this.throw(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
+        }
+
         if (txn.hasOwnProperty('appLocalByteSlices') && !this.checkInt({
           value: txn.appLocalByteSlices
         })) {
@@ -33770,6 +33676,13 @@ class TxnVerifer {
           value: txn.appLocalInts
         })) {
           this.throw(4300, 'appLocalInts must be a uint64 between 0 and 18446744073709551615');
+        }
+
+        if (txn.hasOwnProperty('appOnComplete') && !this.checkInt({
+          value: txn.appOnComplete,
+          max: 5
+        })) {
+          this.throw(4300, 'appOnComplete must be a uint64 between 0 and 5');
         }
 
         if (txn.hasOwnProperty('extraPages') && !this.checkInt({
@@ -33787,12 +33700,10 @@ class TxnVerifer {
           this.throw(4300, 'appForeignAssets must be an array of uint64s between 0 and 18446744073709551615');
         }
       } else {
-        throw 4300, 'must specify the type of transaction';
+        this.throw(4300, 'must specify the type of transaction');
       }
     }
 
-    console.log("error check is");
-    console.log(this.errorCheck);
     return this.errorCheck;
   }
 
@@ -33804,8 +33715,6 @@ class TxnVerifer {
   }
 
   checkInt(intObj) {
-    console.log("in checkInt");
-
     if (!intObj.hasOwnProperty('min')) {
       intObj.min = 0;
     }
