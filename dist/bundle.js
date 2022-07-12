@@ -32804,7 +32804,6 @@ class HTTPClient {
       });
     };
 
-    console.log(baseHTTPClient);
     return baseHTTPClient;
   }
 
@@ -33615,8 +33614,11 @@ class TxnVerifer {
         console.log(txn);
         console.log(txn.hasOwnProperty('appIndex'));
         console.log("can check property");
+        console.log(txn.hasOwnProperty('appApprovalProgram'));
+        console.log(txn.appApprovalProgram);
+        console.log("can check property");
 
-        if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('appOnComplete')) {
+        if (txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('appOnComplete')) {
           console.log("appl create");
 
           if (!this.checkInt({

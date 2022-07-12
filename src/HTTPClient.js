@@ -77,7 +77,7 @@ export default class HTTPClient{
           return output
         })
     }
-    console.log(baseHTTPClient)
+    
     return baseHTTPClient;
   }
 
