@@ -33620,7 +33620,7 @@ class TxnVerifer {
 
         console.log(txn);
 
-        if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('onComplete')) {
+        if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('appOnComplete')) {
           console.log("appl create");
 
           if (!this.checkInt({
@@ -33676,7 +33676,7 @@ class TxnVerifer {
 
           console.log("done here");
         } 
-        else if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('onComplete')) {
+        else if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appOnComplete')) {
           console.log("appl call");
 
           if (!this.checkInt({
