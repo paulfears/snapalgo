@@ -33625,10 +33625,11 @@ class TxnVerifer {
           this.throw(4300, 'assetIndex, freezeState, and freezeTarget are required in Asset Freeze Txn');
         }
       } else if (txn.type === "appl") {
-        
-        console.log("appl create");
+        console.log("in appl"); 
 
         if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('onComplete')) {
+          console.log("appl create");
+
           if (!this.checkInt({
             value: txn.appIndex
           })) {
@@ -33679,8 +33680,12 @@ class TxnVerifer {
           })) {
             this.throw(4300, 'appOnComplete must be a uint64 between 0 and 5');
           }
+
+          console.log("done here");
         } 
         else if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('onComplete')) {
+          console.log("appl call");
+
           if (!this.checkInt({
             value: txn.appIndex
           })) {

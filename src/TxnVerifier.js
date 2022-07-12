@@ -202,9 +202,11 @@ export default class TxnVerifer{
         }
       }
       else if(txn.type === "appl"){
+        console.log("in appl");
         //appl create
-        console.log("appl create");
+      
         if(txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('onComplete')){
+          console.log("appl create");
           if(!this.checkInt({value:txn.appIndex})){
             this.throw(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
           }
@@ -229,9 +231,11 @@ export default class TxnVerifer{
           if(!this.checkInt({value:txn.appOnComplete,max:5})){
             this.throw(4300, 'appOnComplete must be a uint64 between 0 and 5');
           }
+          console.log("done here");
         }
         //appl call
         else if(txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('onComplete')){
+          console.log("appl call");
           if(!this.checkInt({value:txn.appIndex})){
             this.throw(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
           }
