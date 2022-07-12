@@ -15,13 +15,12 @@ export default class Accounts{
 
     async load(){
         //load acount Data
-        console.log("load function called")
+        
         const storedAccounts = await this.wallet.request({
             method: 'snap_manageState',
             params: ['get'],
         });
-        console.log("stored accounts is");
-        console.log(storedAccounts);
+        
   
         if(storedAccounts === null || Object.keys(storedAccounts).length === 0){
             
@@ -45,7 +44,6 @@ export default class Accounts{
             return {"currentAccountId": address, "Accounts": accounts};
           }
           else{
-            console.log("please be here")
             this.accounts = storedAccounts.Accounts;
             this.currentAccountId = storedAccounts.currentAccountId;
             this.loaded = true;
@@ -176,7 +174,6 @@ export default class Accounts{
       
         //dirive private key using metamask key tree
         const coinTypeNode = entropy;
-        console.log(coinTypeNode);
         // Get an address key deriver for the coin_type node.
         // In this case, its path will be: m / 44' / 60' / 0' / 0 / address_index
         // Alternatively you can use an extended key (`xprv`) as well.

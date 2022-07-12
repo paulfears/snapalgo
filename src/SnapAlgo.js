@@ -42,8 +42,6 @@ export default class SnapAlgo{
     async getTransactions(){
         const indexerClient = this.getIndexer();
         const transactions =  await indexerClient.lookupAccountTransactions(this.account.addr).do();
-        
-        console.log(await transactions)
         return transactions;
     }
     async getAssets(){

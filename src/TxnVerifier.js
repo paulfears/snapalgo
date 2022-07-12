@@ -205,6 +205,8 @@ export default class TxnVerifer{
         console.log("in appl");
         //appl create
         console.log(txn);
+        console.log(txn.hasOwnProperty('appIndex'));
+        console.log("can check property");
         if(txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('appOnComplete')){
           console.log("appl create");
           if(!this.checkInt({value:txn.appIndex})){

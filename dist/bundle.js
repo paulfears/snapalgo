@@ -32494,13 +32494,10 @@ class Accounts {
 
   async load() {
     
-    console.log("load function called");
     const storedAccounts = await this.wallet.request({
       method: 'snap_manageState',
       params: ['get']
     });
-    console.log("stored accounts is");
-    console.log(storedAccounts);
 
     if (storedAccounts === null || Object.keys(storedAccounts).length === 0) {
       const Account = await this.generateAccount(2);
@@ -32527,7 +32524,6 @@ class Accounts {
         "Accounts": accounts
       };
     } else {
-      console.log("please be here");
       this.accounts = storedAccounts.Accounts;
       this.currentAccountId = storedAccounts.currentAccountId;
       this.loaded = true;
@@ -32694,8 +32690,7 @@ class Accounts {
       method: 'snap_getBip44Entropy_283'
     }); 
 
-    const coinTypeNode = entropy;
-    console.log(coinTypeNode); 
+    const coinTypeNode = entropy; 
     
     
 
@@ -32878,7 +32873,6 @@ class SnapAlgo {
   async getTransactions() {
     const indexerClient = this.getIndexer();
     const transactions = await indexerClient.lookupAccountTransactions(this.account.addr).do();
-    console.log(await transactions);
     return transactions;
   }
 
@@ -33619,6 +33613,8 @@ class TxnVerifer {
         console.log("in appl"); 
 
         console.log(txn);
+        console.log(txn.hasOwnProperty('appIndex'));
+        console.log("can check property");
 
         if (txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts') && txn.hasOwnProperty('appOnComplete')) {
           console.log("appl create");
