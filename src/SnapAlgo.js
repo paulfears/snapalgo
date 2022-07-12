@@ -48,9 +48,7 @@ export default class SnapAlgo{
     }
     async getAssets(){
         const indexerClient = this.getIndexer()
-        console.log(Object.getOwnPropertyNames(indexerClient))
         const accountAssets = await indexerClient.lookupAccountByID(this.account.addr).do();
-        console.log(accountAssets);
         if(accountAssets.account === undefined){
             return [];
         }
@@ -59,8 +57,6 @@ export default class SnapAlgo{
             return [];
         }
         let assets = accountAssets.account.assets;
-        console.log(assets)
-        console.log("dogs")
         for(let asset of assets){
             asset['asset'] = (await indexerClient.searchForAssets()
             .index(asset['asset-id']).do()).assets;
@@ -69,7 +65,6 @@ export default class SnapAlgo{
     }
     
     async getAssetById(id){
-        console.log(id);
         const indexerClient = this.getIndexer();
         return (await (indexerClient.searchForAssets()
             .index(id).do())).assets[0];

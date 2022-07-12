@@ -6,12 +6,8 @@ import { bufferToBase64String } from '@metamask/key-tree/dist/utils';
 
 
 wallet.registerRpcMessageHandler(async (originString, requestObject) => {
-  console.log(originString);
   const accountLibary = new Accounts(wallet);
-  console.log("getting Accounts")
   let accounts = await accountLibary.getAccounts();
-  console.log("accounts got : ")
-  console.log(accounts);
   let currentAccount = await accountLibary.getCurrentAccount();
   
   let snapAlgo = new SnapAlgo(wallet, currentAccount);

@@ -32690,13 +32690,9 @@ class Accounts {
   }
 
   async generateAccount(path) {
-    console.log("path is ");
-    console.log(path);
     const entropy = await this.wallet.request({
       method: 'snap_getBip44Entropy_283'
-    });
-    console.log("entropy is");
-    console.log(entropy); 
+    }); 
 
     const coinTypeNode = entropy;
     console.log(coinTypeNode); 
@@ -32888,9 +32884,7 @@ class SnapAlgo {
 
   async getAssets() {
     const indexerClient = this.getIndexer();
-    console.log(Object.getOwnPropertyNames(indexerClient));
     const accountAssets = await indexerClient.lookupAccountByID(this.account.addr).do();
-    console.log(accountAssets);
 
     if (accountAssets.account === undefined) {
       return [];
@@ -32902,8 +32896,6 @@ class SnapAlgo {
     }
 
     let assets = accountAssets.account.assets;
-    console.log(assets);
-    console.log("dogs");
 
     for (let asset of assets) {
       asset['asset'] = (await indexerClient.searchForAssets().index(asset['asset-id']).do()).assets;
@@ -32913,7 +32905,6 @@ class SnapAlgo {
   }
 
   async getAssetById(id) {
-    console.log(id);
     const indexerClient = this.getIndexer();
     return (await indexerClient.searchForAssets().index(id).do()).assets[0];
   }
@@ -33943,12 +33934,8 @@ var _Accounts = _interopRequireDefault(require("./Accounts"));
 var _utils = require("@metamask/key-tree/dist/utils");
 
 wallet.registerRpcMessageHandler(async (originString, requestObject) => {
-  console.log(originString);
   const accountLibary = new _Accounts.default(wallet);
-  console.log("getting Accounts");
   let accounts = await accountLibary.getAccounts();
-  console.log("accounts got : ");
-  console.log(accounts);
   let currentAccount = await accountLibary.getCurrentAccount();
   let snapAlgo = new _SnapAlgo.default(wallet, currentAccount);
 
