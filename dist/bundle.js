@@ -33892,7 +33892,7 @@ module.exports.onRpcRequest = async ({
       const newAccount = result.Account;
       console.log(newAccount);
       const mnemonic = await accountLibary.getMnemonic(newAccount);
-      const mnemonicConfirmation = await snapAlgo.sendConfirmation("Display Mnemonic", "Do you want to display Your mnemonic", "Your mnemonic is used to recover your account, you can choose to display it now, or later from the account");
+      const mnemonicConfirmation = await snapAlgo.sendConfirmation("Display Mnemonic", "Do you want to display Your mnemonic", "Your mnemonic is used to recover your account, you can choose to display it now, or later from the account tab in the wallet");
 
       if (mnemonicConfirmation) {
         snapAlgo.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
