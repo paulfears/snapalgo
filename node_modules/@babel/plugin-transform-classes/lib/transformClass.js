@@ -37,7 +37,7 @@ function transformClass(path, file, builtinClasses, isLoose, assumptions) {
     classId: undefined,
     classRef: undefined,
     superFnId: undefined,
-    superName: undefined,
+    superName: null,
     superReturns: [],
     isDerived: false,
     extendsNative: false,
@@ -46,7 +46,6 @@ function transformClass(path, file, builtinClasses, isLoose, assumptions) {
     userConstructor: undefined,
     userConstructorPath: undefined,
     hasConstructor: false,
-    staticPropBody: [],
     body: [],
     superThises: [],
     pushedConstructor: false,
@@ -279,7 +278,7 @@ function transformClass(path, file, builtinClasses, isLoose, assumptions) {
       thisPath.replaceWith(_core.types.callExpression(classState.file.addHelper("assertThisInitialized"), [thisRef()]));
     }
 
-    const bareSupers = new Set();
+    const bareSupers = [];
     path.traverse(_core.traverse.visitors.merge([_helperEnvironmentVisitor.default, {
       Super(path) {
         const {
@@ -290,12 +289,12 @@ function transformClass(path, file, builtinClasses, isLoose, assumptions) {
         if (parentPath.isCallExpression({
           callee: node
         })) {
-          bareSupers.add(parentPath);
+          bareSupers.unshift(parentPath);
         }
       }
 
     }]));
-    let guaranteedSuperBeforeFinish = !!bareSupers.size;
+    let guaranteedSuperBeforeFinish = !!bareSupers.length;
 
     for (const bareSuper of bareSupers) {
       wrapSuperCall(bareSuper, classState.superName, thisRef, body);
@@ -323,7 +322,15 @@ function transformClass(path, file, builtinClasses, isLoose, assumptions) {
         return returnArg ? _core.types.logicalExpression("||", returnArg, thisExpr) : thisExpr;
       };
     } else {
-      wrapReturn = returnArg => _core.types.callExpression(classState.file.addHelper("possibleConstructorReturn"), [thisRef()].concat(returnArg || []));
+      wrapReturn = returnArg => {
+        const returnParams = [thisRef()];
+
+        if (returnArg != null) {
+          returnParams.push(returnArg);
+        }
+
+        return _core.types.callExpression(classState.file.addHelper("possibleConstructorReturn"), returnParams);
+      };
     }
 
     const bodyPaths = body.get("body");
@@ -556,7 +563,7 @@ function transformClass(path, file, builtinClasses, isLoose, assumptions) {
       constructorBody: _core.types.blockStatement([])
     });
     setState({
-      extendsNative: classState.isDerived && builtinClasses.has(classState.superName.name) && !classState.scope.hasBinding(classState.superName.name, true)
+      extendsNative: _core.types.isIdentifier(classState.superName) && builtinClasses.has(classState.superName.name) && !classState.scope.hasBinding(classState.superName.name, true)
     });
     const {
       classRef,
@@ -580,7 +587,6 @@ function transformClass(path, file, builtinClasses, isLoose, assumptions) {
       constructorBody.body.unshift(_core.types.expressionStatement(_core.types.callExpression(classState.file.addHelper("classCallCheck"), [_core.types.thisExpression(), _core.types.cloneNode(classState.classRef)])));
     }
 
-    body.push(...classState.staticPropBody.map(fn => fn(_core.types.cloneNode(classState.classRef))));
     const isStrict = path.isInStrictMode();
     let constructorOnly = classState.classId && body.length === 1;
 

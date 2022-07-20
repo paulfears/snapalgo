@@ -1,5 +1,5 @@
-import t from "@babel/types";
-import virtualTypes from "../../lib/path/lib/virtual-types.js";
+import * as t from "@babel/types";
+import * as virtualTypes from "../../lib/path/lib/virtual-types.js";
 
 export default function generateValidators() {
   let output = `/*
@@ -14,16 +14,19 @@ export interface NodePathValidators {
 `;
 
   for (const type of [...t.TYPES].sort()) {
-    output += `is${type}(opts?: object): this is NodePath<t.${type}>;`;
+    output += `is${type}<T extends t.Node>(this: NodePath<T>, opts?: object): this is NodePath<T & t.${type}>;`;
   }
 
   for (const type of Object.keys(virtualTypes)) {
+    // TODO: Remove this check once we stop compiling to CJS
+    if (type === "default" || type === "__esModule") continue;
+
     const { types } = virtualTypes[type];
     if (type[0] === "_") continue;
     if (t.NODE_FIELDS[type] || t.FLIPPED_ALIAS_KEYS[type]) {
-      output += `is${type}(opts?: object): this is NodePath<t.${type}>;`;
+      output += `is${type}<T extends t.Node>(this: NodePath<T>, opts?: object): this is NodePath<T & t.${type}>;`;
     } else if (types /* in VirtualTypeAliases */) {
-      output += `is${type}(opts?: object): this is NodePath<VirtualTypeAliases["${type}"]>;`;
+      output += `is${type}<T extends t.Node>(this: NodePath<T>, opts?: object): this is NodePath<T & VirtualTypeAliases["${type}"]>;`;
     } else if (type === "Pure") {
       output += `isPure(constantsOnly?: boolean): boolean;`;
     } else {

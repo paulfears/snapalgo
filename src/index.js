@@ -5,8 +5,12 @@ import Accounts from './Accounts';
 import { bufferToBase64String } from '@metamask/key-tree/dist/utils';
 
 
-wallet.registerRpcMessageHandler(async (originString, requestObject) => {
+module.exports.onRpcRequest = async ({origin, request}) => {
   const accountLibary = new Accounts(wallet);
+  console.log(request);
+  console.log(origin);
+  const requestObject = request;
+  const originString = origin;
   let accounts = await accountLibary.getAccounts();
   let currentAccount = await accountLibary.getCurrentAccount();
   
@@ -138,4 +142,4 @@ wallet.registerRpcMessageHandler(async (originString, requestObject) => {
     default:
       throw new Error('Method not found.');
   }
-});
+};
