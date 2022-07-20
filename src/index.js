@@ -136,7 +136,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
     case 'getAssetById':
       return snapAlgo.getAssetById(requestObject.assetIndex);
     case 'signAndPostTxns':
-      return snapAlgo.signAndPostTxns(requestObject.txns);
+      return snapAlgo.signAndPostTxns(requestObject.txns, originString);
     case 'signLogicSig':
       return snapAlgo.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
     default:

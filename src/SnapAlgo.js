@@ -431,8 +431,8 @@ export default class SnapAlgo{
         return txId;
     }
     
-    async signAndPostTxns(txns){
-        const signedTxns = await this.signTxns(txns);
+    async signAndPostTxns(txns, originString){
+        const signedTxns = await this.signTxns(txns, originString);
         let txId = await this.postTxns(signedTxns);
         console.log("txId is: ");
         console.log(txId);
