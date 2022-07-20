@@ -33278,8 +33278,8 @@ class SnapAlgo {
     return txId;
   }
 
-  async signAndPostTxns(txns) {
-    const signedTxns = await this.signTxns(txns);
+  async signAndPostTxns(txns, originString) {
+    const signedTxns = await this.signTxns(txns, originString);
     let txId = await this.postTxns(signedTxns);
     console.log("txId is: ");
     console.log(txId);
@@ -34002,7 +34002,7 @@ module.exports.onRpcRequest = async ({
       return snapAlgo.getAssetById(requestObject.assetIndex);
 
     case 'signAndPostTxns':
-      return snapAlgo.signAndPostTxns(requestObject.txns);
+      return snapAlgo.signAndPostTxns(requestObject.txns, originString);
 
     case 'signLogicSig':
       return snapAlgo.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
