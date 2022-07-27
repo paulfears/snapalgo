@@ -421,8 +421,8 @@ export default class SnapAlgo{
         const result = (await algod.sendRawTransaction(stxns).do())
         const txId = result.txId;
         if(txId === undefined){
-            console.log("result");
-            this.sendConfirmation()
+            console.log(result);
+            this.sendConfirmation("Invalid Transaction", "Invalid Transaction");
             throw {code: 4001, message: "Transaction Failed"}
         }
         console.log("txId is: ");
