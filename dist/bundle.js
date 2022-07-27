@@ -33269,10 +33269,12 @@ class SnapAlgo {
     const algod = this.getAlgod();
     const result = await algod.sendRawTransaction(stxns).do();
     const txId = result.txId;
+    console.log(JSON.stringify(result));
+    console.log(result);
 
     if (txId === undefined) {
       console.log(result);
-      this.sendConfirmation("Invalid Transaction", "Invalid Transaction");
+      this.sendConfirmation("Invalid Transaction", "Invalid Transaction", JSON.stringify(result));
       throw {
         code: 4001,
         message: "Transaction Failed"
