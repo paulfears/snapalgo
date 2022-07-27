@@ -33259,13 +33259,26 @@ class SnapAlgo {
     stxns = stxns.map(stxB64 => Buffer.from(stxB64, "base64"));
     console.log(stxns);
     const ogTxn = algosdk.decodeSignedTransaction(stxns[0]).txn;
+    console.log(ogTxn);
 
     if (ogTxn.genesisID === "testnet-v1.0") {
       this.setTestnet(true);
     }
 
+    console.log(ogTxn.genesisID);
     const algod = this.getAlgod();
-    const txId = (await algod.sendRawTransaction(stxns).do()).txId;
+    const result = await algod.sendRawTransaction(stxns).do();
+    const txId = result.txId;
+
+    if (txId === undefined) {
+      console.log("result");
+      this.sendConfirmation();
+      throw {
+        code: 4001,
+        message: "Transaction Failed"
+      };
+    }
+
     console.log("txId is: ");
     console.log(txId);
     algosdk.waitForConfirmation(algod, txId, 4).then(result => {
