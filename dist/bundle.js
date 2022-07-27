@@ -33389,6 +33389,7 @@ class TxnVerifer {
     };
     const Required = ["type", "from", "fee", "firstRound", "lastRound", "genesisHash"];
     const Optional = ["genesisId", "group", "lease", "note", "reKeyTo"];
+    Object.keys(txn).forEach(prop => console.log(prop + ': ' + txn[prop]));
 
     for (var requirement of Required) {
       if (!txn[requirement]) {
