@@ -438,8 +438,8 @@ export default class SnapAlgo{
         if(txId === undefined){
             console.log(result);
             await this.sendConfirmation("Invalid Transaction", "Invalid Transaction", result.message);
+            throw ("4001\n"+"Invalid Transaction");
             
-            this.throwError(4001, result.message);
             
         }
         console.log("txId is: ");
