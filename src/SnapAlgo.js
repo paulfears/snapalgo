@@ -24,7 +24,7 @@ export default class SnapAlgo{
         //metamask overrides Error codes
         //This function encodes an arc complient error code
         //into the error message, and is then seperated by the SDK
-        throw String(code)+"\n"+msg;
+        throw {message:`${code}\n${msg}`};
     }
     
     getIndexer(){
@@ -365,21 +365,21 @@ export default class SnapAlgo{
                 if(txn.group !== undefined){
                     for(let i = 0; i<txn.group.length; i++){
                         if(txn.group[i] !== firstGroup[i]){
-                            this.throwError(4001, "Transaction Groups do not match");
+                            this.throwError(4300, "Transaction Groups do not match");
                         }
                     }
                     verifyObj = verify(txn);
                 }
                 else{
                     if(firstGroup !== null || firstGroup !== undefined){
-                        this.throwError(4001, "Transaction Groups do not match");
+                        this.throwError(4300, "Transaction Groups do not match");
                     }
                 }
             }
             console.log("first check verification complete")
             if(verifyObj.error){
                 this.notify("Error: "+verifyObj.code);
-                this.throwError(verifyObj.code, "Transaction Verification Error");
+                this.throwError(verifyObj.code, verifiedObj.message);
             }
             if(verifyObj.message){
                 msg = verifyObj.message;
@@ -409,7 +409,7 @@ export default class SnapAlgo{
                 signedTxns.push(b64signedTxn);
             }
             else{
-                this.throwError(4001, verifiedObj.error[0]);
+                this.throwError(4300, verifiedObj.error[0]);
             }
             
             index += 1;
@@ -438,9 +438,7 @@ export default class SnapAlgo{
         if(txId === undefined){
             console.log(result);
             await this.sendConfirmation("Invalid Transaction", "Invalid Transaction", result.message);
-            throw ("4001\n"+"Invalid Transaction");
-            
-            
+            this.throwError(4300, result.message);
         }
         console.log("txId is: ");
         console.log(txId);

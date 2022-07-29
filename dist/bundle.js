@@ -32854,7 +32854,9 @@ class SnapAlgo {
     
     
     
-    throw String(code) + "\n" + msg;
+    throw {
+      message: `${code}\n${msg}`
+    };
   }
 
   getIndexer() {
@@ -33187,14 +33189,14 @@ class SnapAlgo {
         if (txn.group !== undefined) {
           for (let i = 0; i < txn.group.length; i++) {
             if (txn.group[i] !== firstGroup[i]) {
-              this.throwError(4001, "Transaction Groups do not match");
+              this.throwError(4300, "Transaction Groups do not match");
             }
           }
 
           verifyObj = (0, _verifier.default)(txn);
         } else {
           if (firstGroup !== null || firstGroup !== undefined) {
-            this.throwError(4001, "Transaction Groups do not match");
+            this.throwError(4300, "Transaction Groups do not match");
           }
         }
       }
@@ -33203,7 +33205,7 @@ class SnapAlgo {
 
       if (verifyObj.error) {
         this.notify("Error: " + verifyObj.code);
-        this.throwError(verifyObj.code, "Transaction Verification Error");
+        this.throwError(verifyObj.code, verifiedObj.message);
       }
 
       if (verifyObj.message) {
@@ -33234,7 +33236,7 @@ class SnapAlgo {
         const b64signedTxn = Buffer.from(signedTxn).toString('base64');
         signedTxns.push(b64signedTxn);
       } else {
-        this.throwError(4001, verifiedObj.error[0]);
+        this.throwError(4300, verifiedObj.error[0]);
       }
 
       index += 1;
@@ -33267,7 +33269,7 @@ class SnapAlgo {
     if (txId === undefined) {
       console.log(result);
       await this.sendConfirmation("Invalid Transaction", "Invalid Transaction", result.message);
-      throw "4001\n" + "Invalid Transaction";
+      this.throwError(4300, result.message);
     }
 
     console.log("txId is: ");
