@@ -3,6 +3,10 @@ import HTTPClient from './HTTPClient';
 import TxnVerifer from "./TxnVerifier";
 import verify from './verifier.js';
 
+
+
+
+
 export default class SnapAlgo{
     constructor(wallet, account){
         this.wallet = wallet;
@@ -14,6 +18,13 @@ export default class SnapAlgo{
             "testnet-v1.0":	"SGO1GKSzyE7IEPItTxCByw9x8FmnrCDexi9/cOUJOiI=",
             "betanet-v1.0":	"mFgazF+2uRS1tMiL9dsj01hJGySEmPN28B/TjjvpVW0="
           };
+    }
+
+    throwError(code, msg){
+        //metamask overrides Error codes
+        //This function encodes an arc complient error code
+        //into the error message, and is then seperated by the SDK
+        throw String(code)+"\n"+msg;
     }
     
     getIndexer(){
@@ -318,7 +329,8 @@ export default class SnapAlgo{
         let msg = "Do you want to sign transactions from "+originString+"?"
         const confirm = await this.sendConfirmation("sign TXNS?", "This can result in spending of funds", msg);
         if(!confirm){
-            throw {code: 4001, message: "User Rejected Request"}
+            this.throwError(4001, "user rejected Request");
+            
         }
         let index = 0;
         let signedTxns = [];
@@ -330,7 +342,7 @@ export default class SnapAlgo{
             if(txn.message){
                 const msgConfirmation = await this.sendConfirmation("Untrusted Message", originString+" says:", txn.message)
                 if(!msgConfirmation){
-                    throw {code: 4001, message: "User Rejected Request"}
+                    this.throwError(4001, "user rejected Request");
                 }
             }
             if(txn.signers){
@@ -353,21 +365,21 @@ export default class SnapAlgo{
                 if(txn.group !== undefined){
                     for(let i = 0; i<txn.group.length; i++){
                         if(txn.group[i] !== firstGroup[i]){
-                            throw {code: 4001, message: "Transaction Groups do not match"}
+                            this.throwError(4001, "Transaction Groups do not match");
                         }
                     }
                     verifyObj = verify(txn);
                 }
                 else{
                     if(firstGroup !== null || firstGroup !== undefined){
-                        throw {code: 4001, message: "Transaction Groups do not match"}
+                        this.throwError(4001, "Transaction Groups do not match");
                     }
                 }
             }
             console.log("first check verification complete")
             if(verifyObj.error){
                 this.notify("Error: "+verifyObj.code);
-                throw verifyObj;
+                this.throwError(verifyObj.code, "Transaction Verification Error");
             }
             if(verifyObj.message){
                 msg = verifyObj.message;
@@ -387,7 +399,8 @@ export default class SnapAlgo{
                 for(let warning of verifiedObj.warnings){
                     let confirmWarning = await this.sendConfirmation("warning", "txn Warning", warning);
                     if(!confirmWarning){
-                        throw {code: 4001, message: "User Rejected Request"}
+                        this.throwError(4001, "user rejected Request");
+                        
                     }
                 }
                 let signedTxn = decoded_txn.signTxn(this.account.sk)
@@ -396,7 +409,7 @@ export default class SnapAlgo{
                 signedTxns.push(b64signedTxn);
             }
             else{
-                throw verifiedObj.error[0];
+                this.throwError(4001, verifiedObj.error[0]);
             }
             
             index += 1;
@@ -424,8 +437,10 @@ export default class SnapAlgo{
         console.log(result);
         if(txId === undefined){
             console.log(result);
-            this.sendConfirmation("Invalid Transaction", "Invalid Transaction", JSON.stringify(result));
-            throw {code: 4001, message: "Transaction Failed"}
+            await this.sendConfirmation("Invalid Transaction", "Invalid Transaction", result.message);
+            
+            this.throwError(4001, result.message);
+            
         }
         console.log("txId is: ");
         console.log(txId);
@@ -452,7 +467,7 @@ export default class SnapAlgo{
     async signLogicSig(logicSigAccount){
         let confirm = await this.sendConfirmation("sign logic sig?", "Are you sure", "Signing a logic signature gives a smart contract the ability to sign transactions on your behalf. This can result in the loss of funds");
         if(!confirm){
-            throw {code: 4001, message: "User Rejected Request"}
+            this.throwError(4001, "user rejected Request");
         }
         const logicBytes = new Uint8Array(Buffer.from(logicSigAccount, 'base64'));
         logicSigAccount = algosdk.LogicSigAccount.fromByte(logicBytes)

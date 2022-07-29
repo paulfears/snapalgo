@@ -193,7 +193,7 @@
       let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         from: sender, 
         to: receiver, 
-        amount: 10000,  
+        amount: 10000000,  
         suggestedParams: params
       });
 
@@ -204,11 +204,11 @@
       let txn2 = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         from: sender, 
         to: receiver, 
-        amount: 250,  
+        amount: 25000000, 
         suggestedParams: params
       });
       console.log('here yup yes poop')
-      const out = await window.algorand.EZsign(txn);
+      const out = await window.algorand.EZsignAndPost(txn);
       console.log(out);
       /*
       await ethereum.request({
