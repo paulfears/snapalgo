@@ -273,7 +273,7 @@
       const algodClient = new algosdk.Algodv2(client);
       let params = await algodClient.getTransactionParams().do();
       const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
-      const sender = '37G4YMHO2N4MBRUN4NMUIZEOO5A44UMKRF26O3WIN7WRUTDPT6Z2NU46RE';
+      const sender = 'DV23SHRW3JUPCXJN2KNCRIMQ75M3JV7RDYH3NP5CESZAUXHC7JPCP4GK6Y';
       let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         from: sender, 
         to: receiver, 
@@ -281,7 +281,7 @@
         suggestedParams: params
       });
       
-      const encodedTxn = await algorand._SNAPALGO_EncodeTxn(txn);
+      const encodedTxn = await algorand.encodeTxn(txn);
       let txns = [{txn: encodedTxn, message: "this transaction is a test of sign and post transaction"}]
       const out = await ethereum.request({
         method: 'wallet_invokeSnap',

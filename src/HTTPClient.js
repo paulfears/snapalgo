@@ -6,14 +6,14 @@ export default class HTTPClient{
       
       this.urlTable = {
           "algod":{
-              "mainnet": "https://mainnet-api.algonode.cloud",
-              "testnet": "https://testnet-api.algonode.cloud",
-              "betanet": "https://betanet-api.algonode.cloud"
+              "mainnet-v1.0": "https://mainnet-api.algonode.cloud",
+              "testnet-v1.0": "https://testnet-api.algonode.cloud",
+              "betanet-v1.0": "https://betanet-api.algonode.cloud"
           },
           "index":{
-              "mainnet": "https://mainnet-idx.algonode.cloud",
-              "testnet": "https://testnet-idx.algonode.cloud",
-              "betanet": "https://betanet-idx.algonode.cloud"
+              "mainnet-v1.0": "https://mainnet-idx.algonode.cloud",
+              "testnet-v1.0": "https://testnet-idx.algonode.cloud",
+              "betanet-v1.0": "https://betanet-idx.algonode.cloud"
           }
       }
 

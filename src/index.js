@@ -1,9 +1,11 @@
 
 import nacl from 'tweetnacl';
-import SnapAlgo from './SnapAlgo';
 import Accounts from './Accounts';
-import { bufferToBase64String } from '@metamask/key-tree/dist/utils';
-
+import AlgoWallet from './AlgoWallet';
+import WalletFuncs from './walletFuncs';
+import Arcs from './Arcs';
+import Utils from './Utils';
+import { algo } from 'crypto-js';
 
 module.exports.onRpcRequest = async ({origin, request}) => {
   const accountLibary = new Accounts(wallet);
@@ -13,10 +15,12 @@ module.exports.onRpcRequest = async ({origin, request}) => {
   const originString = origin;
   let accounts = await accountLibary.getAccounts();
   let currentAccount = await accountLibary.getCurrentAccount();
-  
-  let snapAlgo = new SnapAlgo(wallet, currentAccount);
+  const algoWallet = new AlgoWallet(currentAccount);
+  const walletFuncs = new WalletFuncs(algoWallet);
+  const arcs = new Arcs(algoWallet);
+
   if(requestObject.hasOwnProperty('testnet')){
-    snapAlgo.setTestnet(requestObject.testnet);
+    algoWallet.setTestnet(requestObject.testnet);
   }
   switch (requestObject.method) {
     
@@ -31,11 +35,11 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       const newAccount = result.Account;
       console.log(newAccount);
       const mnemonic = await accountLibary.getMnemonic(newAccount);
-      const mnemonicConfirmation = await snapAlgo.sendConfirmation("Display Mnemonic", "Do you want to display Your mnemonic", "Your mnemonic is used to recover your account, you can choose to display it now, or later from the account tab in the wallet");
+      const mnemonicConfirmation = await Utils.sendConfirmation("Display Mnemonic", "Do you want to display Your mnemonic", "Your mnemonic is used to recover your account, you can choose to display it now, or later from the account tab in the wallet");
       if(mnemonicConfirmation){
-        snapAlgo.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
+        Utils.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
       }
-      snapAlgo.notify("account created");
+      Utils.notify("account created");
       return true
       
     
@@ -48,25 +52,25 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return await accountLibary.setCurrentAccount(requestObject.address);
 
     case 'getAssets':
-      return snapAlgo.getAssets();
+      return walletFuncs.getAssets();
       
     case 'isValidAddress':
-      return snapAlgo.isValidAddress(requestObject.address);
+      return walletFuncs.isValidAddress(requestObject.address);
     
     case 'getTransactions':
-      return snapAlgo.getTransactions();
+      return walletFuncs.getTransactions();
     
     case 'getBalance': 
-      return snapAlgo.getBalance();
+      return walletFuncs.getBalance();
 
     case 'clearAccounts':
-      const clearAccountConfirm = await snapAlgo.sendConfirmation(
+      const clearAccountConfirm = await Utils.sendConfirmation(
         'Clear all accounts?',
         'imported Accounts will be gone forever',
       );
       if(clearAccountConfirm){
         await accountLibary.clearAccounts();
-        snapAlgo.notify('Accounts cleared');
+        Utils.notify('Accounts cleared');
         return 'true';
       }
       return false;
@@ -74,10 +78,10 @@ module.exports.onRpcRequest = async ({origin, request}) => {
     
     //display balance in metamask window
     case 'displayBalance': 
-      return await snapAlgo.sendConfirmation(
+      return await Utils.sendConfirmation(
         "your balance is",
-        snapAlgo.getAddress(),
-        (await snapAlgo.getBalance()).toString()+" Algos"
+        algoWallet.getAddress(),
+        (await walletFuncs.getBalance()).toString()+" Algos"
       );
     
     case 'signData':
@@ -90,12 +94,12 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       case 'secureReceive':
         console.log(originString);
         if(originString === "https://snapalgo.com"){
-          let confirm = await snapAlgo.sendConfirmation("Do you want to display your address?", currentAccount.addr);
+          let confirm = await Utils.sendConfirmation("Do you want to display your address?", currentAccount.addr);
           if(confirm){
             return currentAccount.addr;
           }
           else{
-            return 4001;
+            return Utils.throwError(4001, "user Rejected Request");
           }
           
         }
@@ -103,42 +107,36 @@ module.exports.onRpcRequest = async ({origin, request}) => {
         
     
     case 'getAddress':
-      return snapAlgo.getAddress();
+      return algoWallet.getAddress();
     
     case 'displayMnemonic':
-      return await snapAlgo.displayMnemonic();
+      return await walletFuncs.displayMnemonic();
     
     case 'transfer':
-      return snapAlgo.Transfer(requestObject.to, requestObject.amount);
+      return walletFuncs.transfer(requestObject.to, requestObject.amount);
     
     case 'getAccount':
       return await getAccount();
-    case 'encodeTransaction':
-        console.log("encoding transaction");
-        return snapAlgo.encodeUnsignedTransaction(requestObject.txn);
-    case 'encodeTransactions':
-        console.log("encoding transactions");
-        return snapAlgo.encodeUnsignedTransactions(requestObject.txns);
     case 'Uint8ArrayToBase64':
-        return snapAlgo.Uint8ArrayToBase64(requestObject.data);
+        return walletFuncs.Uint8ArrayToBase64(requestObject.data);
     case 'signTxns':
-      return snapAlgo.signTxns(requestObject.txns, originString);
+      return arcs.signTxns(requestObject.txns, originString);
     case 'postTxns':
-      return snapAlgo.postTxns(requestObject.stxns);
+      return arcs.postTxns(requestObject.stxns);
     case 'AppOptIn':
-      return snapAlgo.AppOptIn(requestObject.appIndex);
+      return walletFuncs.AppOptIn(requestObject.appIndex);
     case 'AssetOptIn':
-      return snapAlgo.AssetOptIn(requestObject.assetIndex);
+      return walletFuncs.AssetOptIn(requestObject.assetIndex);
     case 'AssetOptOut':
-      return snapAlgo.assetOptOut(requestObject.assetIndex);
+      return walletFuncs.assetOptOut(requestObject.assetIndex);
     case 'transferAsset':
-      return snapAlgo.TransferAsset( requestObject.assetIndex, requestObject.to, requestObject.amount);
+      return walletFuncs.TransferAsset( requestObject.assetIndex, requestObject.to, requestObject.amount);
     case 'getAssetById':
-      return snapAlgo.getAssetById(requestObject.assetIndex);
+      return walletFuncs.getAssetById(requestObject.assetIndex);
     case 'signAndPostTxns':
-      return snapAlgo.signAndPostTxns(requestObject.txns, originString);
+      return arcs.signAndPostTxns(requestObject.txns, originString);
     case 'signLogicSig':
-      return snapAlgo.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
+      return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
     default:
       throw new Error('Method not found.');
   }
