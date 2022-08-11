@@ -56,6 +56,7 @@
     <button id="signTransaction">Ezsign Transaction</button>
     <button id="signAndPostTransactionButton">Sign and Post Transaction Test</button>
     <button id="deployButton">deploy</button>
+    <button id="importButton">importAccount</button>
     <br/>
     <br/>
     <p>create new Account</p>
@@ -94,6 +95,7 @@
     const signAndPostTransactionButton = document.getElementById("signAndPostTransactionButton")
     const logicsigButton = document.getElementById("logicsigButton")
     const deployButton = document.getElementById("deployButton")
+    const importButton = document.getElementById("importButton")
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -116,6 +118,7 @@
     logicsigButton.addEventListener('click', signLogicSig)
     signTransactionButton.addEventListener('click', signTransaction);
     deployButton.addEventListener('click', deploy);
+    importButton.addEventListener('click', import_account);
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -562,6 +565,18 @@
         alert('Problem happened: ' + err.message || err)
       }
     }      
+
+    async function import_account(){
+      await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'importAccount',
+          name: "imported",
+          mnemonic:'gallery hood dizzy coin puppy time hazard subway they woman step syrup guard elite rookie avoid hip isolate left play gain pave blind abandon category'
+        }]
+      })
+    }
+    
       
     
     async function display_mnemonic () {

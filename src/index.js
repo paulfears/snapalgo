@@ -9,8 +9,6 @@ import Utils from './Utils';
 
 module.exports.onRpcRequest = async ({origin, request}) => {
   const accountLibary = new Accounts(wallet);
-  console.log(request);
-  console.log(origin);
   const requestObject = request;
   const originString = origin;
   let accounts = await accountLibary.getAccounts();

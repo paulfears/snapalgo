@@ -1,7 +1,7 @@
 import nacl from 'tweetnacl';
 const algo =  require('algosdk/dist/cjs');
 import { getBIP44AddressKeyDeriver, JsonBIP44CoinTypeNode} from '@metamask/key-tree';
-
+import {AES, SHA256} from "crypto-js";
 export default class Accounts{
     constructor(wallet){
         
@@ -64,7 +64,9 @@ export default class Accounts{
                 return Account;
             }
             else if(tempAccount.type === 'imported'){
+                const key = await this.#getencryptionKey();
                 let b64Seed = tempAccount.seed;
+                b64Seed = AES.decrypt(b64Seed, key).toString();
                 const seed = new Uint8Array(Buffer.from(b64Seed, 'base64'));
                 const keys = nacl.sign.keyPair.fromSeed(seed);
                 const Account = {}
@@ -147,6 +149,26 @@ export default class Accounts{
         return {"currentAccountId": address, "Accounts": this.accounts, "Account": Account};
     }
 
+    async #getencryptionKey(){
+        const entropy = await this.wallet.request({
+            method: 'snap_getBip44Entropy_283',
+        });
+        
+        //dirive private key using metamask key tree
+        const coinTypeNode = entropy;
+        // Get an address key deriver for the coin_type node.
+        // In this case, its path will be: m / 44' / 60' / 0' / 0 / address_index
+        // Alternatively you can use an extended key (`xprv`) as well.
+        const addressKeyDeriver = await getBIP44AddressKeyDeriver(coinTypeNode);
+
+        
+        //generate an extended private key then grab the first 32 bytes
+        //this coresponds to the private key portion of the extended private key
+        
+        const privateKey = (await addressKeyDeriver(0)).privateKeyBuffer;
+        return SHA256(privateKey).toString();
+    }
+
     async importAccount(name, mnemonic){
         if(!this.loaded){
             await this.load();
@@ -158,7 +180,12 @@ export default class Accounts{
         const keys = nacl.sign.keyPair.fromSeed(seed);
         const address = algo.encodeAddress(keys.publicKey);
         let b64Seed = Buffer.from(seed).toString('base64');
-        this.accounts[address] = {type: 'imported', seed:b64Seed, name:name, addr: address};
+
+
+        const key = await this.#getencryptionKey();
+        const encryptedSeed = AES.encrypt(b64Seed, key).toString();
+
+        this.accounts[address] = {type: 'imported', seed:encryptedSeed, name:name, addr: address};
         await this.wallet.request({
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
