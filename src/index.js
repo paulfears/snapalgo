@@ -5,7 +5,7 @@ import AlgoWallet from './AlgoWallet';
 import WalletFuncs from './walletFuncs';
 import Arcs from './Arcs';
 import Utils from './Utils';
-import { algo } from 'crypto-js';
+
 
 module.exports.onRpcRequest = async ({origin, request}) => {
   const accountLibary = new Accounts(wallet);
