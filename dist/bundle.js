@@ -37774,7 +37774,7 @@ class Accounts {
       } else if (tempAccount.type === 'imported') {
         const key = await _classPrivateMethodGet(this, _getencryptionKey, _getencryptionKey2).call(this);
         let b64Seed = tempAccount.seed;
-        b64Seed = _cryptoJs.AES.decrypt(b64Seed, key).toString();
+        b64Seed = _cryptoJs.AES.decrypt(b64Seed, key).toString(_cryptoJs.enc.Utf8);
         const seed = new Uint8Array(Buffer.from(b64Seed, 'base64'));
 
         const keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);

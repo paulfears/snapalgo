@@ -1,7 +1,7 @@
 import nacl from 'tweetnacl';
 const algo =  require('algosdk/dist/cjs');
 import { getBIP44AddressKeyDeriver, JsonBIP44CoinTypeNode} from '@metamask/key-tree';
-import {AES, SHA256} from "crypto-js";
+import {AES, SHA256, enc} from "crypto-js";
 export default class Accounts{
     constructor(wallet){
         
@@ -66,7 +66,7 @@ export default class Accounts{
             else if(tempAccount.type === 'imported'){
                 const key = await this.#getencryptionKey();
                 let b64Seed = tempAccount.seed;
-                b64Seed = AES.decrypt(b64Seed, key).toString();
+                b64Seed = AES.decrypt(b64Seed, key).toString(enc.Utf8);
                 const seed = new Uint8Array(Buffer.from(b64Seed, 'base64'));
                 const keys = nacl.sign.keyPair.fromSeed(seed);
                 const Account = {}
@@ -180,8 +180,6 @@ export default class Accounts{
         const keys = nacl.sign.keyPair.fromSeed(seed);
         const address = algo.encodeAddress(keys.publicKey);
         let b64Seed = Buffer.from(seed).toString('base64');
-
-
         const key = await this.#getencryptionKey();
         const encryptedSeed = AES.encrypt(b64Seed, key).toString();
 
