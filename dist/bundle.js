@@ -33973,7 +33973,7 @@ class WalletFuncs {
       _Utils.default.throwError(4001, "user rejected Mnemonic Request");
     }
 
-    await this.sendConfirmation("mnemonic", this.wallet.addr, algosdk.secretKeyToMnemonic(this.wallet.sk)); 
+    await _Utils.default.sendConfirmation("mnemonic", this.wallet.addr, algosdk.secretKeyToMnemonic(this.wallet.sk)); 
 
     return true;
   }
