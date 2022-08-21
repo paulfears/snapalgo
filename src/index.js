@@ -60,6 +60,9 @@ module.exports.onRpcRequest = async ({origin, request}) => {
     
     case 'getBalance': 
       return walletFuncs.getBalance();
+    
+    case 'getSpendable':
+      return walletFuncs.getSpendable();
 
     case 'clearAccounts':
       const clearAccountConfirm = await Utils.sendConfirmation(

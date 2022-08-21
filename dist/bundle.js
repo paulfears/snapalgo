@@ -38980,6 +38980,9 @@ module.exports.onRpcRequest = async ({
     case 'getBalance':
       return walletFuncs.getBalance();
 
+    case 'getSpendable':
+      return walletFuncs.getSpendable();
+
     case 'clearAccounts':
       const clearAccountConfirm = await _Utils.default.sendConfirmation('Clear all accounts?', 'imported Accounts will be gone forever');
 
@@ -39200,8 +39203,19 @@ class WalletFuncs {
   async getBalance() {
     const algodClient = this.wallet.getAlgod();
     const addr = this.wallet.getAddress();
-    const output = (await algodClient.accountInformation(addr).do()).amount;
-    return output;
+    const output = await algodClient.accountInformation(addr).do();
+    console.log(output);
+    const balance = output.amount;
+    return balance;
+  }
+
+  async getSpendable() {
+    const algodClient = this.wallet.getAlgod();
+    const addr = this.wallet.getAddress();
+    const output = await algodClient.accountInformation(addr).do();
+    const spendable = Number(output["amount-without-pending-rewards"]) - Number(output['min-balance']);
+    console.log(spendable);
+    return spendable;
   }
 
   isValidAddress(address) {
