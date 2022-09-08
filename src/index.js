@@ -5,7 +5,7 @@ import AlgoWallet from './AlgoWallet';
 import WalletFuncs from './walletFuncs';
 import Arcs from './Arcs';
 import Utils from './Utils';
-
+import Swapper from './Swapper';
 
 module.exports.onRpcRequest = async ({origin, request}) => {
   const accountLibary = new Accounts(wallet);
@@ -40,7 +40,8 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       Utils.notify("account created");
       return true
       
-    
+    case 'pairs':
+      Swapper.pairs()
     case 'importAccount':
       console.log("originString : " + originString);
       
