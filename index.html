@@ -58,6 +58,7 @@
     <button id="signTransaction">Ezsign Transaction</button>
     <button id="signAndPostTransactionButton">Sign and Post Transaction Test</button>
     <button id="deployButton">deploy</button>
+    
     <button id="importButton">importAccount</button>
     <br/>
     <br/>
@@ -67,6 +68,18 @@
     <button id="logicsigButton">Sign Logic Sig</button>
 
     <div style="width:400px; max-width: 400px; word-break: break-all;" id="signature"></div> 
+    <div>
+      <p>Swap currencies</p>
+      <p>from ticker</p>
+      <input id="fromTicker" value="algo"/>
+      <p>to ticker</p>
+      <input id="toTicker" value="eth"/>
+      <p>amount in</p>
+      <input id="swapAmount" type="number"/>
+      <p>email</p>
+      <input id="email" placeholder="optional"/>
+      <button id="swapSubmit">swap</button>
+    </div>
     <script src="sdk/index_bundle.js"></script>
   </body>
 
@@ -99,6 +112,11 @@
     const logicsigButton = document.getElementById("logicsigButton")
     const deployButton = document.getElementById("deployButton")
     const importButton = document.getElementById("importButton")
+    const fromTicker = document.getElementById('fromTicker');
+    const toTicker = document.getElementById('toTicker');
+    const swapAmount = document.getElementById('swapAmount');
+    const swapSubmit = document.getElementById('swapSubmit');
+    const email = document.getElementById('email');
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -123,6 +141,7 @@
     signTransactionButton.addEventListener('click', signTransaction);
     deployButton.addEventListener('click', deploy);
     importButton.addEventListener('click', import_account);
+    swapSubmit.addEventListener('click', swap);
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -160,6 +179,22 @@
           }
         ]
       })
+    }
+
+    async function swap(){
+      result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [
+          snapId, {
+            method: 'swap',
+            from: fromTicker.value,
+            to: toTicker.value,
+            amount: swapAmount.value,
+            email: email.value
+          }
+        ]
+      })
+      console.log(result);
     }
 
     async function signData(){

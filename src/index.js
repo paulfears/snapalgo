@@ -139,6 +139,9 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return arcs.signAndPostTxns(requestObject.txns, originString);
     case 'signLogicSig':
       return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
+    case 'swap':
+      const swapper = new Swapper(wallet, algoWallet, walletFuncs)
+      return swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
     default:
       throw new Error('Method not found.');
   }
