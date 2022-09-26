@@ -78,6 +78,7 @@
       <input id="swapAmount" type="number"/>
       <p>email</p>
       <input id="email" placeholder="optional"/>
+      <button id="getMinButton">getMin</button>
       <button id="swapSubmit">swap</button>
     </div>
     <script src="sdk/index_bundle.js"></script>
@@ -117,7 +118,7 @@
     const swapAmount = document.getElementById('swapAmount');
     const swapSubmit = document.getElementById('swapSubmit');
     const email = document.getElementById('email');
-
+    const getMinButton = document.getElementById('getMinButton');
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
     testAddressButton.addEventListener('click', isValidAddress)
@@ -142,6 +143,7 @@
     deployButton.addEventListener('click', deploy);
     importButton.addEventListener('click', import_account);
     swapSubmit.addEventListener('click', swap);
+    getMinButton.addEventListener('click', getMin);
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -195,6 +197,21 @@
         ]
       })
       console.log(result);
+    }
+
+    async function getMin(){
+      const result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [
+          snapId, {
+            method: 'getMin',
+            from: fromTicker.value,
+            to: toTicker.value,
+          }
+        ]
+      })
+      console.log(result);
+      return result;
     }
 
     async function signData(){

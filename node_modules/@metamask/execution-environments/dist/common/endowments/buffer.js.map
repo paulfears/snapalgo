@@ -1,0 +1,1 @@
+{"version":3,"file":"buffer.js","sourceRoot":"","sources":["../../../src/common/endowments/buffer.ts"],"names":[],"mappings":";;AAAA;;;;;;GAMG;AACH,MAAM,YAAY,GAAG,GAAG,EAAE;IACxB,OAAO,EAAE,MAAM,EAAW,CAAC;AAC7B,CAAC,CAAC;AAEF,MAAM,eAAe,GAAG;IACtB,KAAK,EAAE,CAAC,QAAQ,CAAU;IAC1B,OAAO,EAAE,YAAY;CACtB,CAAC;AACF,kBAAe,eAAe,CAAC"}

@@ -39377,6 +39377,7 @@
             "from": chains[from].changeNowName,
             "to": chains[to].changeNowName
           });
+          return data.body;
         }
 
         async preSwap(from, to, amount) {
@@ -39394,7 +39395,7 @@
             "to": chains[to].changeNowName,
             "amount": amount
           });
-          return await data.json();
+          return data.body;
         }
 
         async swap(from, to, amount, email) {
@@ -40182,8 +40183,24 @@
             return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
 
           case 'swap':
-            const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-            return swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
+            return await (async () => {
+              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
+              return await swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
+            })();
+
+          case 'getMin':
+            return await (async () => {
+              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
+              const result = await swapper.getMin(requestObject.from, requestObject.to);
+              console.log(result);
+              return result;
+            })();
+
+          case 'preSwap':
+            return await (async () => {
+              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
+              return await swapper.getMin(requestObject.from, requestObject.to);
+            })();
 
           default:
             throw new Error('Method not found.');

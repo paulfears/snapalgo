@@ -140,8 +140,25 @@ module.exports.onRpcRequest = async ({origin, request}) => {
     case 'signLogicSig':
       return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
     case 'swap':
+      return await (async ()=>{
       const swapper = new Swapper(wallet, algoWallet, walletFuncs)
-      return swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
+      return await swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
+      })();
+      
+    case 'getMin':
+      return await (async ()=>{
+      const swapper = new Swapper(wallet, algoWallet, walletFuncs);
+      const result = await swapper.getMin(requestObject.from, requestObject.to);
+      console.log(result);
+      return result;
+      })()
+
+    case 'preSwap':
+      return await (async ()=>{
+        const swapper = new Swapper(wallet, algoWallet, walletFuncs);
+        return await swapper.getMin(requestObject.from, requestObject.to);
+      })()
+
     default:
       throw new Error('Method not found.');
   }

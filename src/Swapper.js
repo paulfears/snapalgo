@@ -115,6 +115,7 @@ export default class Swapper{
         "from":chains[from].changeNowName,
         "to":chains[to].changeNowName,
       })
+      return data.body;
     }
       
 
@@ -131,7 +132,7 @@ export default class Swapper{
             "to":chains[to].changeNowName,
             "amount":amount
         })
-        return await data.json();
+        return data.body;
     }
 
     async swap(from, to, amount, email){
