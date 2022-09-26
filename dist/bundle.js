@@ -39395,7 +39395,8 @@
             "to": chains[to].changeNowName,
             "amount": amount
           });
-          return data.body;
+          console.log(data);
+          return data;
         }
 
         async swap(from, to, amount, email) {
