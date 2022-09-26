@@ -156,7 +156,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
     case 'preSwap':
       return await (async ()=>{
         const swapper = new Swapper(wallet, algoWallet, walletFuncs);
-        return await swapper.getMin(requestObject.from, requestObject.to);
+        return await swapper.preSwap(requestObject.from, requestObject.to, requestObject.amount);
       })()
 
     default:
