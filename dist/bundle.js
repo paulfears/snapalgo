@@ -39264,6 +39264,8 @@
 
       var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 
+      const BigNumber = require('bignumber.js');
+
       async function postData(url = '', data = {}) {
         const response = await fetch(url, {
           method: 'POST',
@@ -39330,12 +39332,16 @@
         }
 
         static toSmallestUnit(amount, ticker) {
-          return BigInt(amount) * BigInt(10) ** BigInt(chains[ticker].data.nativeCurrency.decimals);
+          amount = new BigNumber(amount);
+          console.log("here");
+          const output = amount.times(new BigNumber(10).exponentiatedBy(chains[ticker].data.nativeCurrency.decimals)).toFixed();
+          console.log(output);
+          return output;
         }
 
         async sendEvm(to, wei, ticker) {
           await this.switchChain(ticker);
-          const amount = '0x' + wei.toString(16);
+          const amount = '0x' + BigInt(wei).toString(16);
           const transactionParameters = {
             nonce: '0x00',
             to: to,
@@ -39428,6 +39434,8 @@
           }
 
           const sendAmount = Swapper.toSmallestUnit(amount, from);
+          console.log('converted send amount is: ');
+          console.log(sendAmount);
 
           if (chains[from].type === "imported" || chains[from].type === "native") {
             await this.sendEvm(swapData.body.payinAddress, sendAmount, from);
@@ -39450,7 +39458,8 @@
       });
     }, {
       "@babel/runtime/helpers/defineProperty": 1,
-      "@babel/runtime/helpers/interopRequireDefault": 2
+      "@babel/runtime/helpers/interopRequireDefault": 2,
+      "bignumber.js": 123
     }],
     205: [function (require, module, exports) {
       "use strict";
@@ -40316,6 +40325,8 @@
 
           const algosdk = require('algosdk/dist/cjs');
 
+          const BigNumber = require('bignumber.js');
+
           var _signAndPost = new WeakSet();
 
           var _getParams = new WeakSet();
@@ -40404,7 +40415,7 @@
               }
 
               const algod = this.wallet.getAlgod();
-              amount = BigInt(amount);
+              amount = new BigNumber(amount).toFixed();
               let params = await _classPrivateMethodGet(this, _getParams, _getParams2).call(this, algod);
               let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
                 from: this.wallet.addr,
@@ -40628,6 +40639,7 @@
       "./Utils": 206,
       "@babel/runtime/helpers/interopRequireDefault": 2,
       "algosdk/dist/cjs": 34,
+      "bignumber.js": 123,
       "buffer": 125
     }]
   }, {}, [207])(207);

@@ -1,5 +1,6 @@
 const algosdk =  require('algosdk/dist/cjs');
 import Utils from './Utils';
+const BigNumber = require('bignumber.js');
 
 export default class WalletFuncs{
     
@@ -106,7 +107,7 @@ export default class WalletFuncs{
         }
 
         const algod = this.wallet.getAlgod();
-        amount = BigInt(amount);
+        amount = new BigNumber(amount).toFixed();
         let params = await this.#getParams(algod);
 
         //create a payment transaction

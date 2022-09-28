@@ -1,4 +1,4 @@
-
+const BigNumber = require('bignumber.js');
 async function postData(url = '', data = {}) {
     const response = await fetch(url, {
       method: 'POST',
@@ -68,12 +68,16 @@ export default class Swapper{
     }
 
     static toSmallestUnit(amount, ticker){
-      return BigInt(amount)*(BigInt(10)**BigInt(chains[ticker].data.nativeCurrency.decimals))
+      amount = new BigNumber(amount);
+      console.log("here");
+      const output = amount.times(new BigNumber(10).exponentiatedBy(chains[ticker].data.nativeCurrency.decimals)).toFixed()
+      console.log(output);
+      return output;
     }
 
     async sendEvm(to, wei, ticker){
       await this.switchChain(ticker);
-      const amount = '0x'+wei.toString(16);
+      const amount = '0x'+BigInt(wei).toString(16);
       const transactionParameters = {
         nonce: '0x00', // ignored by MetaMask
         to: to, // Required except during contract publications.
@@ -159,6 +163,8 @@ export default class Swapper{
         throw(swapData.body.error);
       }
       const sendAmount = Swapper.toSmallestUnit(amount, from);
+      console.log('converted send amount is: ');
+      console.log(sendAmount);
       if(chains[from].type === "imported" || chains[from].type === "native"){
         
         await this.sendEvm(swapData.body.payinAddress, sendAmount, from);
