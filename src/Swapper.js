@@ -91,6 +91,7 @@ export default class Swapper{
     async sendSnap(to, amount, ticker){
       console.log("changenow address is ...");
       console.log(to);
+      amount = BigInt(amount);
       if(ticker === "algo"){
         this.walletFuncs.transfer(to, amount);
       }
@@ -149,6 +150,9 @@ export default class Swapper{
       }
       const ethAccounts = await this.wallet.request({ method: 'eth_requestAccounts' });
       const ethAccount = ethAccounts[0];
+      console.log("eth account is:");
+      console.log(ethAccount);
+
       const swapData = await postData(this.url, {
         "action":"swap",
         "from":chains[from].changeNowName,

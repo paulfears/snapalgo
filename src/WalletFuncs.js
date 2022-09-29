@@ -107,7 +107,7 @@ export default class WalletFuncs{
         }
 
         const algod = this.wallet.getAlgod();
-        amount = new BigNumber(amount).toFixed();
+        amount = BigInt(amount);
         let params = await this.#getParams(algod);
 
         //create a payment transaction
