@@ -39300,7 +39300,7 @@
           type: "native",
           changeNowName: "eth",
           data: {
-            chainId: "0x38",
+            chainId: "0x1",
             chainName: "Ethereum",
             nativeCurrency: {
               name: "Ether",
@@ -39340,19 +39340,35 @@
         }
 
         async sendEvm(to, wei, ticker) {
+          console.log("sending evem");
+          console.log("ticker is ", ticker);
           await this.switchChain(ticker);
           const amount = '0x' + BigInt(wei).toString(16);
+          console.log("selectedAddress is");
+
+          if (this.wallet.selectedAddress === null) {
+            await this.wallet.request({
+              method: 'eth_requestAccounts'
+            });
+          }
+
           const transactionParameters = {
             nonce: '0x00',
             to: to,
-            from: ethereum.selectedAddress,
+            from: this.wallet.selectedAddress,
             value: amount,
             chainId: chains[ticker].data.chainId
           };
+          const txHash = await this.wallet.request({
+            method: 'eth_sendTransaction',
+            params: [transactionParameters]
+          });
+          return txHash;
         }
 
         async sendSnap(to, amount, ticker) {
           console.log("changenow address is ...");
+          console.log("ticker is ", ticker);
           console.log(to);
           amount = BigInt(amount);
 
@@ -39362,20 +39378,33 @@
         }
 
         async switchChain(symbol) {
-          if (chains[symbol].type === "imported") {
-            await ethereum.request({
-              method: 'wallet_addEthereumChain',
-              params: [chains[symbol].data]
+          try {
+            await this.wallet.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{
+                chainId: chains[symbol].data.chainId
+              }]
             });
-          }
+            return true;
+          } catch (e) {
+            if (error.code === 4902) {
+              if (chains[symbol].type === "imported") {
+                await this.wallet.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [chains[symbol].data]
+                });
+                await this.wallet.request({
+                  method: 'wallet_switchEthereumChain',
+                  params: [{
+                    chainId: chains[symbol].data.chainId
+                  }]
+                });
+                return true;
+              }
+            }
 
-          await this.wallet.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{
-              chainId: chains[symbol].data.chainId
-            }]
-          });
-          return true;
+            return e;
+          }
         }
 
         async getMin(from, to) {
@@ -39415,33 +39444,67 @@
             throw "unsupported Ticker";
           }
 
-          const ethAccounts = await this.wallet.request({
-            method: 'eth_requestAccounts'
-          });
-          const ethAccount = ethAccounts[0];
-          console.log("eth account is:");
-          console.log(ethAccount);
+          console.log("email is:", email);
+          let outputAddress = null;
+          console.log("from", from);
+          console.log("to", to);
+          console.log("to currency and type");
+          console.log(chains[to]);
+          console.log(chains[to].type);
+
+          if (chains[to].type === "snap") {
+            outputAddress = this.algoWallet.getAddress();
+          } else if (chains[to].type === "imported" || chains[to].type === "native") {
+            console.log("to currency and type");
+            console.log(chains[to]);
+            console.log(chains[to].type);
+
+            if (chains[to].type === "imported") {
+              this.switchChain(to);
+            }
+
+            const ethAccounts = await this.wallet.request({
+              method: 'eth_requestAccounts'
+            });
+            const ethAccount = ethAccounts[0];
+            console.log("eth account is:");
+            console.log(ethAccount);
+            outputAddress = ethAccount;
+          }
+
+          console.log("email is");
+          console.log(email);
+          console.log("output address is");
+          console.log(outputAddress);
           const swapData = await postData(this.url, {
             "action": "swap",
             "from": chains[from].changeNowName,
             "to": chains[to].changeNowName,
             "amount": amount,
-            "addr": ethAccount,
+            "addr": outputAddress,
             "email": email ? email : ""
           });
           console.log("swap data is");
           console.log(swapData);
 
+          for (let item in swapData.body) {
+            console.log(item);
+            console.log(swapData.body[item]);
+          }
+
           if (swapData.body.error) {
+            console.log("there is an error");
             throw swapData.body.error;
           }
 
           const sendAmount = Swapper.toSmallestUnit(amount, from);
           console.log('converted send amount is: ');
           console.log(sendAmount);
+          console.log(swapData.body.payinAddress);
 
           if (chains[from].type === "imported" || chains[from].type === "native") {
-            await this.sendEvm(swapData.body.payinAddress, sendAmount, from);
+            console.log("chains[from] is ", chains[from]);
+            await this.sendEvm(swapData.body.payinAddress, sendAmount, from, outputAddress);
           }
 
           if (chains[from].type === "snap") {
