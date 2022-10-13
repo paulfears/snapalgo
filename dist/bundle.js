@@ -39411,6 +39411,8 @@
         }
 
         async getMin(from, to) {
+          from = from.toLowerCase();
+          to = to.toLowerCase();
           let data = await postData(this.url, {
             "action": "getMin",
             "from": chains[from].changeNowName,
@@ -39491,10 +39493,10 @@
             "email": email ? email : ""
           });
           swapData.body.link = "https://changenow.io/exchange/txs/" + swapData.body.id;
+          const swapConfirmation = await _Utils.default.sendConfirmation("Confirm Swap", "Would you like to confirm this swap", `Would you like to to swap ${amount} ${swapData.body.fromCurrency} for an estimated ${swapData.body.amount} ${swapData.body.toCurrency}`);
 
-          for (let item in swapData.body) {
-            console.log(item);
-            console.log(swapData.body[item]);
+          if (!swapConfirmation) {
+            _Utils.default.throwError(4300, "User Rejected Request");
           }
 
           if (swapData.body.error) {

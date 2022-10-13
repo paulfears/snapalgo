@@ -144,6 +144,8 @@ export default class Swapper{
     }
 
     async getMin(from, to){
+      from = from.toLowerCase();
+      to = to.toLowerCase();
       let data = await postData(this.url, {
         "action":"getMin",
         "from":chains[from].changeNowName,
@@ -213,10 +215,15 @@ export default class Swapper{
         "addr": outputAddress,
         "email": email?email:""
       })
+        
       swapData.body.link = "https://changenow.io/exchange/txs/"+ swapData.body.id;
-      for(let item in swapData.body){
-        console.log(item);
-        console.log(swapData.body[item]);
+      const swapConfirmation = await Utils.sendConfirmation(
+        "Confirm Swap", 
+        "Would you like to confirm this swap", 
+        `Would you like to to swap ${amount} ${swapData.body.fromCurrency} for an estimated ${swapData.body.amount} ${swapData.body.toCurrency}`
+      );
+      if(!swapConfirmation){
+        Utils.throwError(4300, "User Rejected Request");
       }
       if(swapData.body.error){
         console.log("there is an error");
