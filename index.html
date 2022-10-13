@@ -81,6 +81,7 @@
       <button id="getMinButton">getMin</button>
       <button id="preSwapButton">preSwap</button>
       <button id="swapSubmit">swap</button>
+      <button id="getSwapHistory">swaphistory</button>
       
     </div>
     <script src="sdk/index_bundle.js"></script>
@@ -122,6 +123,7 @@
     const email = document.getElementById('email');
     const getMinButton = document.getElementById('getMinButton');
     const preSwapButton = document.getElementById('preSwapButton');
+    const getSwapHistoryButton = document.getElementById('getSwapHistory');
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -149,6 +151,7 @@
     swapSubmit.addEventListener('click', swap);
     getMinButton.addEventListener('click', getMin);
     preSwapButton.addEventListener('click', preSwap);
+    getSwapHistoryButton.addEventListener('click', getSwapHistory);
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -174,6 +177,17 @@
         }]  
       })
       console.log(result)   
+    }
+    async function getSwapHistory(){
+      const result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [
+          snapId, {
+            method: 'swapHistory'
+          }
+        ]
+      })
+      console.log(result);
     }
 
     async function createNewAccount(){

@@ -1,3 +1,5 @@
+import Utils from './Utils';
+
 const BigNumber = require('bignumber.js');
 async function postData(url = '', data = {}) {
     const response = await fetch(url, {
@@ -149,14 +151,24 @@ export default class Swapper{
       })
       return data.body;
     }
+
+    async getSwapHistory(){
+      const state = await this.wallet.request({
+        method: 'snap_manageState',
+        params: ['get'],
+      });
+      return state.Accounts[state.currentAccountId].swaps;
+    }
       
 
     async preSwap(from, to, amount){
+        from = from.toLowerCase();
+        to = to.toLowerCase();
         if(!(from in chains)){
-            throw("unsupported Ticker");
+            Utils.throwError(500, "unsupported Ticker");
         }
         if(!(to in chains)){
-            throw("unsupported Ticker");
+            Utils.throwError(500, "unsupported Ticker");
         }
         let data = await postData(this.url, {
             "action":"preSwap",
@@ -169,41 +181,31 @@ export default class Swapper{
     }
 
     async swap(from, to, amount, email){
+      from = from.toLowerCase();
+      to = to.toLowerCase();
       if(!(from in chains)){
-        throw("unsupported Ticker");
+        Utils.throwError(500, "unsupported Ticker");
       }
       if(!(to in chains)){
-          throw("unsupported Ticker");
+        Utils.throwError(500, "unsupported Ticker");
       }
-      
-      console.log("email is:", email);
       let outputAddress =  null;
-      console.log("from", from);
-      console.log("to", to);
-      console.log("to currency and type");
-      console.log(chains[to]);
-      console.log(chains[to].type);
       if(chains[to].type === "snap"){
         outputAddress = this.algoWallet.getAddress()
+        console.log(outputAddress);
       }
       else if(chains[to].type === "imported" || chains[to].type === "native"){
         console.log("to currency and type");
         console.log(chains[to]);
         console.log(chains[to].type);
         if(chains[to].type === "imported"){
-          this.switchChain(to);
+          await this.switchChain(to);
         }
         const ethAccounts = await this.wallet.request({ method: 'eth_requestAccounts' });
         const ethAccount = ethAccounts[0];
-        console.log("eth account is:");
-        console.log(ethAccount);
         outputAddress = ethAccount
       }
-      console.log("email is");
-      console.log(email);
-      console.log("output address is");
-      console.log(outputAddress);
-      const swapData = await postData(this.url, {
+      let swapData = await postData(this.url, {
         "action":"swap",
         "from":chains[from].changeNowName,
         "to":chains[to].changeNowName,
@@ -211,15 +213,14 @@ export default class Swapper{
         "addr": outputAddress,
         "email": email?email:""
       })
-      console.log("swap data is");
-      console.log(swapData);
+      swapData.body.link = "https://changenow.io/exchange/txs/"+ swapData.body.id;
       for(let item in swapData.body){
         console.log(item);
         console.log(swapData.body[item]);
       }
       if(swapData.body.error){
         console.log("there is an error");
-        throw(swapData.body.error);
+        Utils.throwError(500, "Error in Swap")
       }
       const sendAmount = Swapper.toSmallestUnit(amount, from);
       console.log('converted send amount is: ');
@@ -233,7 +234,25 @@ export default class Swapper{
         await this.sendSnap(swapData.body.payinAddress, sendAmount, from);
       }
       
-      return swapData;
+
+      let state = await this.wallet.request({
+        method: 'snap_manageState',
+        params: ['get'],
+      });
+      console.log(state);
+      console.log(state[state.currentAccountId]);
+      if(state.Accounts[state.currentAccountId].swaps == undefined){
+        console.log("swap history for this address is undefined");
+        state.Accounts[state.currentAccountId].swaps = [swapData.body]
+      }
+      else{
+        state.Accounts[state.currentAccountId].swaps.unshift(swapData.body)
+      }
+      await this.wallet.request({
+        method: 'snap_manageState',
+        params: ['update', state]
+      })
+      return swapData.body;
     }
 
 }

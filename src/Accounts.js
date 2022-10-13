@@ -2,6 +2,32 @@ import nacl from 'tweetnacl';
 const algo =  require('algosdk/dist/cjs');
 import { getBIP44AddressKeyDeriver, JsonBIP44CoinTypeNode} from '@metamask/key-tree';
 import {AES, SHA256, enc} from "crypto-js";
+/*
+This class defines handles storing keys, and all account related code
+
+
+
+accounts are stored on the metamask state object.
+Which is essentially a javascript {} object
+This object is encrypted by metamask.
+{
+    currentAccountId: account_address,
+    Accounts: {
+        "0xaddresskjhiuhu": {
+            type: string("generated"|"imported"),
+            seed: The Seed for the account if the account type is imported,
+            path: A path Integer if the account type is generated,
+            name: the Display name of the Account
+            addr: //the address of the account the same as the Account Key
+            swaps: [ //an array that records swap history for an account
+                {}
+            ]
+            
+        },
+        ...
+    }
+}
+*/
 export default class Accounts{
     constructor(wallet){
         
@@ -43,14 +69,15 @@ export default class Accounts{
             
             return {"currentAccountId": address, "Accounts": accounts};
           }
-          else{
-            this.accounts = storedAccounts.Accounts;
-            this.currentAccountId = storedAccounts.currentAccountId;
-            this.loaded = true;
-            return storedAccounts;
-          }
+          
+          this.accounts = storedAccounts.Accounts;
+          this.currentAccountId = storedAccounts.currentAccountId;
+          this.loaded = true;
+          return storedAccounts;
     }
-    
+    /*
+    this function takes in an address gets an account from 
+    */
     async unlockAccount(addr){
         
         if(!this.loaded){
@@ -129,11 +156,11 @@ export default class Accounts{
     async createNewAccount(name){
         console.log(name);
         if(!this.loaded){
-            console.log("loading")
             await this.load();
         }
         if(!name){
-            name = 'Account ' + (Object.keys(this.accounts).length+1);
+            const accountIndex = (Object.keys(this.accounts).length+1) //generates an account number from the number of accounts
+            name = 'Account ' + accountIndex;
         }
         const path = Object.keys(this.accounts).length+2;
         const Account = await this.generateAccount(path);
@@ -141,7 +168,7 @@ export default class Accounts{
         const address = Account.addr;
         
         
-        this.accounts[address] = {type: 'generated', path: path, name: name, addr: address};
+        this.accounts[address] = {type: 'generated', path: path, name: name, addr: address, swaps: []};
         await this.wallet.request({
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
@@ -221,9 +248,9 @@ export default class Accounts{
         return Account;
       
     }
-    
-    async getMnemonic(account){
-        return algo.secretKeyToMnemonic(account.sk)
+    //return a Mnemonic for a given KeyPair
+    async getMnemonic(keypair){
+        return algo.secretKeyToMnemonic(keypair.sk)
     }
 
 }

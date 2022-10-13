@@ -10,7 +10,7 @@ export default class Utils {
         //metamask overrides Error codes
         //This function encodes an arc complient error code
         //into the error message, and is then seperated by the SDK
-        throw {message:`${code}\n${msg}`};
+        throw new Error(`${code}\n${msg}`);
     }
 
     static async notify(message){

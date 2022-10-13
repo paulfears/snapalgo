@@ -38658,12 +38658,12 @@
                   "currentAccountId": address,
                   "Accounts": accounts
                 };
-              } else {
-                this.accounts = storedAccounts.Accounts;
-                this.currentAccountId = storedAccounts.currentAccountId;
-                this.loaded = true;
-                return storedAccounts;
               }
+
+              this.accounts = storedAccounts.Accounts;
+              this.currentAccountId = storedAccounts.currentAccountId;
+              this.loaded = true;
+              return storedAccounts;
             }
 
             async unlockAccount(addr) {
@@ -38756,12 +38756,12 @@
               console.log(name);
 
               if (!this.loaded) {
-                console.log("loading");
                 await this.load();
               }
 
               if (!name) {
-                name = 'Account ' + (Object.keys(this.accounts).length + 1);
+                const accountIndex = Object.keys(this.accounts).length + 1;
+                name = 'Account ' + accountIndex;
               }
 
               const path = Object.keys(this.accounts).length + 2;
@@ -38772,7 +38772,8 @@
                 type: 'generated',
                 path: path,
                 name: name,
-                addr: address
+                addr: address,
+                swaps: []
               };
               await this.wallet.request({
                 method: 'snap_manageState',
@@ -38842,8 +38843,8 @@
               return Account;
             }
 
-            async getMnemonic(account) {
-              return algo.secretKeyToMnemonic(account.sk);
+            async getMnemonic(keypair) {
+              return algo.secretKeyToMnemonic(keypair.sk);
             }
 
           }
@@ -39264,6 +39265,8 @@
 
       var _defineProperty2 = _interopRequireDefault(require("@babel/runtime/helpers/defineProperty"));
 
+      var _Utils = _interopRequireDefault(require("./Utils"));
+
       const BigNumber = require('bignumber.js');
 
       async function postData(url = '', data = {}) {
@@ -39416,13 +39419,24 @@
           return data.body;
         }
 
+        async getSwapHistory() {
+          const state = await this.wallet.request({
+            method: 'snap_manageState',
+            params: ['get']
+          });
+          return state.Accounts[state.currentAccountId].swaps;
+        }
+
         async preSwap(from, to, amount) {
+          from = from.toLowerCase();
+          to = to.toLowerCase();
+
           if (!(from in chains)) {
-            throw "unsupported Ticker";
+            _Utils.default.throwError(500, "unsupported Ticker");
           }
 
           if (!(to in chains)) {
-            throw "unsupported Ticker";
+            _Utils.default.throwError(500, "unsupported Ticker");
           }
 
           let data = await postData(this.url, {
@@ -39436,47 +39450,39 @@
         }
 
         async swap(from, to, amount, email) {
+          from = from.toLowerCase();
+          to = to.toLowerCase();
+
           if (!(from in chains)) {
-            throw "unsupported Ticker";
+            _Utils.default.throwError(500, "unsupported Ticker");
           }
 
           if (!(to in chains)) {
-            throw "unsupported Ticker";
+            _Utils.default.throwError(500, "unsupported Ticker");
           }
 
-          console.log("email is:", email);
           let outputAddress = null;
-          console.log("from", from);
-          console.log("to", to);
-          console.log("to currency and type");
-          console.log(chains[to]);
-          console.log(chains[to].type);
 
           if (chains[to].type === "snap") {
             outputAddress = this.algoWallet.getAddress();
+            console.log(outputAddress);
           } else if (chains[to].type === "imported" || chains[to].type === "native") {
             console.log("to currency and type");
             console.log(chains[to]);
             console.log(chains[to].type);
 
             if (chains[to].type === "imported") {
-              this.switchChain(to);
+              await this.switchChain(to);
             }
 
             const ethAccounts = await this.wallet.request({
               method: 'eth_requestAccounts'
             });
             const ethAccount = ethAccounts[0];
-            console.log("eth account is:");
-            console.log(ethAccount);
             outputAddress = ethAccount;
           }
 
-          console.log("email is");
-          console.log(email);
-          console.log("output address is");
-          console.log(outputAddress);
-          const swapData = await postData(this.url, {
+          let swapData = await postData(this.url, {
             "action": "swap",
             "from": chains[from].changeNowName,
             "to": chains[to].changeNowName,
@@ -39484,8 +39490,7 @@
             "addr": outputAddress,
             "email": email ? email : ""
           });
-          console.log("swap data is");
-          console.log(swapData);
+          swapData.body.link = "https://changenow.io/exchange/txs/" + swapData.body.id;
 
           for (let item in swapData.body) {
             console.log(item);
@@ -39494,7 +39499,8 @@
 
           if (swapData.body.error) {
             console.log("there is an error");
-            throw swapData.body.error;
+
+            _Utils.default.throwError(500, "Error in Swap");
           }
 
           const sendAmount = Swapper.toSmallestUnit(amount, from);
@@ -39511,7 +39517,25 @@
             await this.sendSnap(swapData.body.payinAddress, sendAmount, from);
           }
 
-          return swapData;
+          let state = await this.wallet.request({
+            method: 'snap_manageState',
+            params: ['get']
+          });
+          console.log(state);
+          console.log(state[state.currentAccountId]);
+
+          if (state.Accounts[state.currentAccountId].swaps == undefined) {
+            console.log("swap history for this address is undefined");
+            state.Accounts[state.currentAccountId].swaps = [swapData.body];
+          } else {
+            state.Accounts[state.currentAccountId].swaps.unshift(swapData.body);
+          }
+
+          await this.wallet.request({
+            method: 'snap_manageState',
+            params: ['update', state]
+          });
+          return swapData.body;
         }
 
       }
@@ -39523,6 +39547,7 @@
         'eth': 'eth'
       });
     }, {
+      "./Utils": 206,
       "@babel/runtime/helpers/defineProperty": 1,
       "@babel/runtime/helpers/interopRequireDefault": 2,
       "bignumber.js": 123
@@ -40052,9 +40077,7 @@
 
       class Utils {
         static throwError(code, msg) {
-          throw {
-            message: `${code}\n${msg}`
-          };
+          throw new Error(`${code}\n${msg}`);
         }
 
         static async notify(message) {
@@ -40118,168 +40141,178 @@
         origin,
         request
       }) => {
-        const accountLibary = new _Accounts.default(wallet);
-        const requestObject = request;
-        const originString = origin;
-        let accounts = await accountLibary.getAccounts();
-        let currentAccount = await accountLibary.getCurrentAccount();
-        const algoWallet = new _AlgoWallet.default(currentAccount);
-        const walletFuncs = new _walletFuncs.default(algoWallet);
-        const arcs = new _Arcs.default(algoWallet);
+        try {
+          const accountLibary = new _Accounts.default(wallet);
+          const requestObject = request;
+          const originString = origin;
+          let accounts = await accountLibary.getAccounts();
+          let currentAccount = await accountLibary.getCurrentAccount();
+          const algoWallet = new _AlgoWallet.default(currentAccount);
+          const walletFuncs = new _walletFuncs.default(algoWallet);
+          const arcs = new _Arcs.default(algoWallet);
 
-        if (requestObject.hasOwnProperty('testnet')) {
-          algoWallet.setTestnet(requestObject.testnet);
-        }
+          if (requestObject.hasOwnProperty('testnet')) {
+            algoWallet.setTestnet(requestObject.testnet);
+          }
 
-        switch (requestObject.method) {
-          case 'getAccounts':
-            return accounts;
+          switch (requestObject.method) {
+            case 'getAccounts':
+              return accounts;
 
-          case 'getCurrentAccount':
-            return currentAccount;
+            case 'getCurrentAccount':
+              return currentAccount;
 
-          case 'createAccount':
-            const result = await accountLibary.createNewAccount(requestObject.name);
-            const newAccount = result.Account;
-            console.log(newAccount);
-            const mnemonic = await accountLibary.getMnemonic(newAccount);
-            const mnemonicConfirmation = await _Utils.default.sendConfirmation("Display Mnemonic", "Do you want to display Your mnemonic", "Your mnemonic is used to recover your account, you can choose to display it now, or later from the account tab in the wallet");
+            case 'createAccount':
+              const result = await accountLibary.createNewAccount(requestObject.name);
+              const newAccount = result.Account;
+              console.log(newAccount);
+              const mnemonic = await accountLibary.getMnemonic(newAccount);
+              const mnemonicConfirmation = await _Utils.default.sendConfirmation("Display Mnemonic", "Do you want to display Your mnemonic", "Your mnemonic is used to recover your account, you can choose to display it now, or later from the account tab in the wallet");
 
-            if (mnemonicConfirmation) {
-              _Utils.default.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
-            }
-
-            _Utils.default.notify("account created");
-
-            return true;
-
-          case 'pairs':
-            _Swapper.default.pairs();
-
-          case 'importAccount':
-            console.log("originString : " + originString);
-            return await accountLibary.importAccount(requestObject.name, requestObject.mnemonic);
-
-          case 'setAccount':
-            return await accountLibary.setCurrentAccount(requestObject.address);
-
-          case 'getAssets':
-            return walletFuncs.getAssets();
-
-          case 'isValidAddress':
-            return walletFuncs.isValidAddress(requestObject.address);
-
-          case 'getTransactions':
-            return walletFuncs.getTransactions();
-
-          case 'getBalance':
-            return walletFuncs.getBalance();
-
-          case 'getSpendable':
-            return walletFuncs.getSpendable();
-
-          case 'clearAccounts':
-            const clearAccountConfirm = await _Utils.default.sendConfirmation('Clear all accounts?', 'imported Accounts will be gone forever');
-
-            if (clearAccountConfirm) {
-              await accountLibary.clearAccounts();
-
-              _Utils.default.notify('Accounts cleared');
-
-              return 'true';
-            }
-
-            return false;
-
-          case 'displayBalance':
-            return await _Utils.default.sendConfirmation("your balance is", algoWallet.getAddress(), (await walletFuncs.getBalance()).toString() + " Algos");
-
-          case 'signData':
-            let pk = account.sk;
-            console.log("request data");
-            console.log(requestObject.data);
-
-            let out = _tweetnacl.default.sign(new Uint8Array(requestObject.data), account.sk);
-
-            return out;
-
-          case 'secureReceive':
-            console.log(originString);
-
-            if (originString === "https://snapalgo.com") {
-              let confirm = await _Utils.default.sendConfirmation("Do you want to display your address?", currentAccount.addr);
-
-              if (confirm) {
-                return currentAccount.addr;
-              } else {
-                return _Utils.default.throwError(4001, "user Rejected Request");
+              if (mnemonicConfirmation) {
+                _Utils.default.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
               }
-            }
 
-          case 'getAddress':
-            return algoWallet.getAddress();
+              _Utils.default.notify("account created");
 
-          case 'displayMnemonic':
-            return await walletFuncs.displayMnemonic();
+              return true;
 
-          case 'transfer':
-            return walletFuncs.transfer(requestObject.to, requestObject.amount);
+            case 'pairs':
+              _Swapper.default.pairs();
 
-          case 'getAccount':
-            return await getAccount();
+            case 'importAccount':
+              console.log("originString : " + originString);
+              return await accountLibary.importAccount(requestObject.name, requestObject.mnemonic);
 
-          case 'Uint8ArrayToBase64':
-            return walletFuncs.Uint8ArrayToBase64(requestObject.data);
+            case 'setAccount':
+              return await accountLibary.setCurrentAccount(requestObject.address);
 
-          case 'signTxns':
-            return arcs.signTxns(requestObject.txns, originString);
+            case 'getAssets':
+              return walletFuncs.getAssets();
 
-          case 'postTxns':
-            return arcs.postTxns(requestObject.stxns);
+            case 'isValidAddress':
+              return walletFuncs.isValidAddress(requestObject.address);
 
-          case 'AppOptIn':
-            return walletFuncs.AppOptIn(requestObject.appIndex);
+            case 'getTransactions':
+              return walletFuncs.getTransactions();
 
-          case 'AssetOptIn':
-            return walletFuncs.AssetOptIn(requestObject.assetIndex);
+            case 'getBalance':
+              return walletFuncs.getBalance();
 
-          case 'AssetOptOut':
-            return walletFuncs.assetOptOut(requestObject.assetIndex);
+            case 'getSpendable':
+              return walletFuncs.getSpendable();
 
-          case 'transferAsset':
-            return walletFuncs.TransferAsset(requestObject.assetIndex, requestObject.to, requestObject.amount);
+            case 'clearAccounts':
+              const clearAccountConfirm = await _Utils.default.sendConfirmation('Clear all accounts?', 'imported Accounts will be gone forever');
 
-          case 'getAssetById':
-            return walletFuncs.getAssetById(requestObject.assetIndex);
+              if (clearAccountConfirm) {
+                await accountLibary.clearAccounts();
 
-          case 'signAndPostTxns':
-            return arcs.signAndPostTxns(requestObject.txns, originString);
+                _Utils.default.notify('Accounts cleared');
 
-          case 'signLogicSig':
-            return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
+                return 'true';
+              }
 
-          case 'swap':
-            return await (async () => {
-              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-              return await swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
-            })();
+              return false;
 
-          case 'getMin':
-            return await (async () => {
-              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-              const result = await swapper.getMin(requestObject.from, requestObject.to);
-              console.log(result);
-              return result;
-            })();
+            case 'displayBalance':
+              return await _Utils.default.sendConfirmation("your balance is", algoWallet.getAddress(), (await walletFuncs.getBalance()).toString() + " Algos");
 
-          case 'preSwap':
-            return await (async () => {
-              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-              return await swapper.preSwap(requestObject.from, requestObject.to, requestObject.amount);
-            })();
+            case 'signData':
+              let pk = account.sk;
+              console.log("request data");
+              console.log(requestObject.data);
 
-          default:
-            throw new Error('Method not found.');
+              let out = _tweetnacl.default.sign(new Uint8Array(requestObject.data), account.sk);
+
+              return out;
+
+            case 'secureReceive':
+              console.log(originString);
+
+              if (originString === "https://snapalgo.com") {
+                let confirm = await _Utils.default.sendConfirmation("Do you want to display your address?", currentAccount.addr);
+
+                if (confirm) {
+                  return currentAccount.addr;
+                } else {
+                  return _Utils.default.throwError(4001, "user Rejected Request");
+                }
+              }
+
+            case 'getAddress':
+              return algoWallet.getAddress();
+
+            case 'displayMnemonic':
+              return await walletFuncs.displayMnemonic();
+
+            case 'transfer':
+              return walletFuncs.transfer(requestObject.to, requestObject.amount);
+
+            case 'getAccount':
+              return await getAccount();
+
+            case 'Uint8ArrayToBase64':
+              return walletFuncs.Uint8ArrayToBase64(requestObject.data);
+
+            case 'signTxns':
+              return arcs.signTxns(requestObject.txns, originString);
+
+            case 'postTxns':
+              return arcs.postTxns(requestObject.stxns);
+
+            case 'AppOptIn':
+              return walletFuncs.AppOptIn(requestObject.appIndex);
+
+            case 'AssetOptIn':
+              return walletFuncs.AssetOptIn(requestObject.assetIndex);
+
+            case 'AssetOptOut':
+              return walletFuncs.assetOptOut(requestObject.assetIndex);
+
+            case 'transferAsset':
+              return walletFuncs.TransferAsset(requestObject.assetIndex, requestObject.to, requestObject.amount);
+
+            case 'getAssetById':
+              return walletFuncs.getAssetById(requestObject.assetIndex);
+
+            case 'signAndPostTxns':
+              return arcs.signAndPostTxns(requestObject.txns, originString);
+
+            case 'signLogicSig':
+              return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
+
+            case 'swap':
+              return await (async () => {
+                const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
+                return await swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
+              })();
+
+            case 'getMin':
+              return await (async () => {
+                const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
+                const result = await swapper.getMin(requestObject.from, requestObject.to);
+                console.log(result);
+                return result;
+              })();
+
+            case 'preSwap':
+              return await (async () => {
+                const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
+                return await swapper.preSwap(requestObject.from, requestObject.to, requestObject.amount);
+              })();
+
+            case 'swapHistory':
+              return await (async () => {
+                const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
+                return await swapper.getSwapHistory();
+              });
+
+            default:
+              throw new Error('Method not found.');
+          }
+        } catch (error) {
+          throw new Error(error);
         }
       };
     }, {
@@ -40669,19 +40702,6 @@
               logicSigAccount.sign(this.wallet.sk);
               const signedAccount = Buffer.from(logicSigAccount.toByte()).toString('base64');
               return signedAccount;
-            }
-
-            Uint8ArrayToBase64(uint8ArrayObject) {
-              let array = [];
-
-              for (let i = 0; i < Object.keys(uint8ArrayObject).length; i++) {
-                array.push(uint8ArrayObject[i]);
-              }
-
-              let output = new Uint8Array(array);
-              output = Buffer.from(output).toString('base64');
-              console.log(output);
-              return output;
             }
 
           }

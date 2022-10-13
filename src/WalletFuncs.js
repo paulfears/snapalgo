@@ -299,15 +299,4 @@ export default class WalletFuncs{
         return signedAccount;
     }
 
-    Uint8ArrayToBase64(uint8ArrayObject){
-        let array = []
-        for(let i =0; i<Object.keys(uint8ArrayObject).length; i++){
-          array.push(uint8ArrayObject[i]);
-        }
-        let output = new Uint8Array(array);
-        output = Buffer.from(output).toString('base64');
-        console.log(output)
-        return output;
-    }
-
 }

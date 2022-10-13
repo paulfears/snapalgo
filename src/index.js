@@ -8,6 +8,7 @@ import Utils from './Utils';
 import Swapper from './Swapper';
 
 module.exports.onRpcRequest = async ({origin, request}) => {
+  try{
   const accountLibary = new Accounts(wallet);
   const requestObject = request;
   const originString = origin;
@@ -140,6 +141,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
     case 'signLogicSig':
       return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
     case 'swap':
+      //by putting this code inside its own function be prevent the swapper object from being defined multple times
       return await (async ()=>{
       const swapper = new Swapper(wallet, algoWallet, walletFuncs)
       return await swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
@@ -154,12 +156,22 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       })()
 
     case 'preSwap':
-      return await (async ()=>{
+      return await (async ()=>{ 
         const swapper = new Swapper(wallet, algoWallet, walletFuncs);
         return await swapper.preSwap(requestObject.from, requestObject.to, requestObject.amount);
       })()
+    case 'swapHistory':
+      return await (async ()=>{
+      const swapper = new Swapper(wallet, algoWallet, walletFuncs);
+      return await swapper.getSwapHistory();
+      });
 
     default:
       throw new Error('Method not found.');
   }
+  }
+  catch(error){
+    throw new Error(error);
+  }
+
 };
