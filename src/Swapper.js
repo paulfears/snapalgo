@@ -151,6 +151,7 @@ export default class Swapper{
         "from":chains[from].changeNowName,
         "to":chains[to].changeNowName,
       })
+      console.log(data);
       return data.body;
     }
 
@@ -215,6 +216,14 @@ export default class Swapper{
         "addr": outputAddress,
         "email": email?email:""
       })
+      console.log(swapData);
+      for(let key in swapData){
+        console.log(key, " : ", swapData[key]);
+      }
+      if(swapData.body.error === "true"){
+        console.log("here");
+        Utils.throwError(500, JSON.stringify(swapData.body));
+      }
         
       swapData.body.link = "https://changenow.io/exchange/txs/"+ swapData.body.id;
       const swapConfirmation = await Utils.sendConfirmation(
@@ -238,6 +247,8 @@ export default class Swapper{
         await this.sendEvm(swapData.body.payinAddress, sendAmount, from, outputAddress);
       }
       if(chains[from].type === "snap"){
+        console.log("here");
+        console.log(sendAmount);
         await this.sendSnap(swapData.body.payinAddress, sendAmount, from);
       }
       

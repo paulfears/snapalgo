@@ -24,6 +24,10 @@ declare const messages: {
             networkChanged: string;
             notification: string;
         };
+        rpc: {
+            ethDecryptDeprecation: string;
+            ethGetEncryptionPublicKeyDeprecation: string;
+        };
         experimentalMethods: string;
     };
 };

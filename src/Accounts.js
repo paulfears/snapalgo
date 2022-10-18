@@ -178,7 +178,10 @@ export default class Accounts{
 
     async #getencryptionKey(){
         const entropy = await this.wallet.request({
-            method: 'snap_getBip44Entropy_283',
+            method: 'snap_getBip44Entropy',
+            params: {
+                coinType: 283,
+            },
         });
         
         //dirive private key using metamask key tree
@@ -221,7 +224,10 @@ export default class Accounts{
     
     async generateAccount(path){
         const entropy = await this.wallet.request({
-          method: 'snap_getBip44Entropy_283',
+            method: 'snap_getBip44Entropy',
+            params: {
+                coinType: 283,
+            },
         });
       
         //dirive private key using metamask key tree

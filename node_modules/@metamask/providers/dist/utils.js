@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.NOOP = exports.isValidNetworkVersion = exports.isValidChainId = exports.getRpcPromiseCallback = exports.getDefaultExternalMiddleware = exports.EMITTED_NOTIFICATIONS = void 0;
 const json_rpc_engine_1 = require("json-rpc-engine");
 const eth_rpc_errors_1 = require("eth-rpc-errors");
+const createRpcWarningMiddleware_1 = require("./middleware/createRpcWarningMiddleware");
 // Constants
 exports.EMITTED_NOTIFICATIONS = Object.freeze([
     'eth_subscription', // per eth-json-rpc-filters/subscriptionManager
@@ -18,6 +19,7 @@ exports.EMITTED_NOTIFICATIONS = Object.freeze([
 const getDefaultExternalMiddleware = (logger = console) => [
     json_rpc_engine_1.createIdRemapMiddleware(),
     createErrorMiddleware(logger),
+    createRpcWarningMiddleware_1.createRpcWarningMiddleware(logger),
 ];
 exports.getDefaultExternalMiddleware = getDefaultExternalMiddleware;
 /**

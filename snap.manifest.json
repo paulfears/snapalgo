@@ -7,7 +7,7 @@
     "url": "https://github.com/paulfears/snapalgo.git"
   },
   "source": {
-    "shasum": "ujV9N9UvsNWmwLoWsCIFNoBYXna+MFllrTnRRQBc6r8=",
+    "shasum": "8ZzIPNp/2gyFDJvNdKKYHHPIIR5g5MtC3QS9GbSW3Eg=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -21,8 +21,14 @@
     "snap_confirm": {},
     "snap_getBip44Entropy_283": {},
     "endowment:network-access": {},
+    "snap_getBip44Entropy": [
+      {
+        "coinType": 283
+      }
+    ],
     "snap_notify": {},
-    "snap_manageState": {}
+    "snap_manageState": {},
+    "endowment:long-running": {}
   },
   "manifestVersion": "0.1"
 }

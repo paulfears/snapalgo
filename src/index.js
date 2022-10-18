@@ -8,7 +8,7 @@ import Utils from './Utils';
 import Swapper from './Swapper';
 
 module.exports.onRpcRequest = async ({origin, request}) => {
-  try{
+  
   const accountLibary = new Accounts(wallet);
   const requestObject = request;
   const originString = origin;
@@ -169,9 +169,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
     default:
       throw new Error('Method not found.');
   }
-  }
-  catch(error){
-    throw new Error(error);
-  }
+  
+
 
 };

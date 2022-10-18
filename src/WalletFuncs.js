@@ -109,7 +109,7 @@ export default class WalletFuncs{
         const algod = this.wallet.getAlgod();
         amount = BigInt(amount);
         let params = await this.#getParams(algod);
-
+        console.log(params);
         //create a payment transaction
         let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
             from: this.wallet.addr, 
@@ -120,17 +120,25 @@ export default class WalletFuncs{
 
 
         const txId = this.#signAndPost(txn, algod);
+        console.log(txId);
         
-        return await algosdk.waitForConfirmation(algod, txId, 4)
-        .then((result)=>{
-            Utils.notify("Transaction Successful");
-            return result;
-        })
-        .catch((err)=>{
-            console.log(err);
-            Utils.notify("Transaction Failed");
-            return err;
-        })
+        try{
+        const result = await algosdk.waitForConfirmation(algod, txId, 4)
+        
+        await Utils.notify("Transaction Successful");
+        
+        return result;
+        }
+        catch(e){
+            await Utils.notify("Transaction failed");
+            return e;
+        }
+    
+        
+        console.log(err);
+        await Utils.notify("Transaction Failed");
+        return err;
+        
         
         
     }

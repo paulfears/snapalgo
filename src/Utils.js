@@ -14,15 +14,18 @@ export default class Utils {
     }
 
     static async notify(message){
-        wallet.request({
+        console.log("here");
+        console.log(message);
+        await wallet.request({
             method: 'snap_notify',
             params: [
               {
-                type: 'native',
-                message: `${message}`,
+                type: 'inApp',
+                message: message,
               },
             ],
         });
+        
     }
 
     static async sendConfirmation(prompt, description, textAreaContent){
