@@ -82,6 +82,8 @@
       <button id="preSwapButton">preSwap</button>
       <button id="swapSubmit">swap</button>
       <button id="getSwapHistory">swaphistory</button>
+      <input id="transactionStatusInput" placeholder="changenow transaction id"/>
+      <button id="getStatusButton">get Status</button>
       
     </div>
     <script src="sdk/index_bundle.js"></script>
@@ -124,6 +126,8 @@
     const getMinButton = document.getElementById('getMinButton');
     const preSwapButton = document.getElementById('preSwapButton');
     const getSwapHistoryButton = document.getElementById('getSwapHistory');
+    const getStatusButton = document.getElementById('getStatusButton');
+    const transactionStatusInput = document.getElementById('transactionStatusInput');
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -152,6 +156,7 @@
     getMinButton.addEventListener('click', getMin);
     preSwapButton.addEventListener('click', preSwap);
     getSwapHistoryButton.addEventListener('click', getSwapHistory);
+    getStatusButton.addEventListener('click', getTransactionStatus);
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -184,6 +189,19 @@
         params: [
           snapId, {
             method: 'swapHistory'
+          }
+        ]
+      })
+      console.log(result);
+    }
+
+    async function getTransactionStatus(){
+      result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [
+          snapId, {
+            method: 'getStatus',
+            id: transactionStatusInput.value
           }
         ]
       })

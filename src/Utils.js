@@ -16,15 +16,23 @@ export default class Utils {
     static async notify(message){
         console.log("here");
         console.log(message);
+        try{
         await wallet.request({
             method: 'snap_notify',
             params: [
               {
-                type: 'inApp',
+                type: 'native',
                 message: message,
               },
             ],
         });
+        return true;
+        }
+        catch(e){
+            Utils.sendConfirmation("alert", "notifcation", message);
+            return false;
+        }
+
         
     }
 

@@ -108,7 +108,7 @@ export default class Swapper{
       console.log(to);
       amount = BigInt(amount);
       if(ticker === "algo"){
-        this.walletFuncs.transfer(to, amount);
+        await this.walletFuncs.transfer(to, amount);
       }
     }
 
@@ -161,6 +161,15 @@ export default class Swapper{
         params: ['get'],
       });
       return state.Accounts[state.currentAccountId].swaps;
+    }
+
+    async getStatus(transactionId){
+      let data = await postData(this.url, {
+        "action":"status",
+        "id": transactionId
+      })
+      console.log(data.body);
+      return data.body;
     }
       
 

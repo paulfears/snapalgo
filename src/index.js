@@ -17,7 +17,9 @@ module.exports.onRpcRequest = async ({origin, request}) => {
   const algoWallet = new AlgoWallet(currentAccount);
   const walletFuncs = new WalletFuncs(algoWallet);
   const arcs = new Arcs(algoWallet);
-
+  const swapper = new Swapper(wallet, algoWallet, walletFuncs);
+  console.log(origin);
+  
   if(requestObject.hasOwnProperty('testnet')){
     algoWallet.setTestnet(requestObject.testnet);
   }
@@ -116,7 +118,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return await walletFuncs.displayMnemonic();
     
     case 'transfer':
-      return walletFuncs.transfer(requestObject.to, requestObject.amount);
+      return await walletFuncs.transfer(requestObject.to, requestObject.amount);
     
     case 'getAccount':
       return await getAccount();
@@ -142,29 +144,24 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
     case 'swap':
       //by putting this code inside its own function be prevent the swapper object from being defined multple times
-      return await (async ()=>{
-      const swapper = new Swapper(wallet, algoWallet, walletFuncs)
       return await swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
-      })();
       
     case 'getMin':
-      return await (async ()=>{
-      const swapper = new Swapper(wallet, algoWallet, walletFuncs);
-      const result = await swapper.getMin(requestObject.from, requestObject.to);
-      console.log(result);
-      return result;
-      })()
+      return await swapper.getMin(requestObject.from, requestObject.to);
 
     case 'preSwap':
-      return await (async ()=>{ 
-        const swapper = new Swapper(wallet, algoWallet, walletFuncs);
         return await swapper.preSwap(requestObject.from, requestObject.to, requestObject.amount);
-      })()
+    
     case 'swapHistory':
-      return await (async ()=>{
-      const swapper = new Swapper(wallet, algoWallet, walletFuncs);
-      return await swapper.getSwapHistory();
-      });
+      let history = await swapper.getSwapHistory()
+      if(history === undefined){
+        history = [];
+      }
+      return history;
+    
+    case 'getStatus':
+      return await swapper.getStatus(requestObject.id);
+      
 
     default:
       throw new Error('Method not found.');

@@ -33350,7 +33350,7 @@
           console.log(to);
           amount = BigInt(amount);
           if (ticker === "algo") {
-            this.walletFuncs.transfer(to, amount);
+            await this.walletFuncs.transfer(to, amount);
           }
         }
         async switchChain(symbol) {
@@ -33398,6 +33398,14 @@
             params: ['get']
           });
           return state.Accounts[state.currentAccountId].swaps;
+        }
+        async getStatus(transactionId) {
+          let data = await postData(this.url, {
+            "action": "status",
+            "id": transactionId
+          });
+          console.log(data.body);
+          return data.body;
         }
         async preSwap(from, to, amount) {
           from = from.toLowerCase();
@@ -33960,13 +33968,19 @@
         static async notify(message) {
           console.log("here");
           console.log(message);
-          await wallet.request({
-            method: 'snap_notify',
-            params: [{
-              type: 'inApp',
-              message: message
-            }]
-          });
+          try {
+            await wallet.request({
+              method: 'snap_notify',
+              params: [{
+                type: 'native',
+                message: message
+              }]
+            });
+            return true;
+          } catch (e) {
+            Utils.sendConfirmation("alert", "notifcation", message);
+            return false;
+          }
         }
         static async sendConfirmation(prompt, description, textAreaContent) {
           if (typeof prompt === 'string') {
@@ -34014,6 +34028,8 @@
         const algoWallet = new _AlgoWallet.default(currentAccount);
         const walletFuncs = new _walletFuncs.default(algoWallet);
         const arcs = new _Arcs.default(algoWallet);
+        const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
+        console.log(origin);
         if (requestObject.hasOwnProperty('testnet')) {
           algoWallet.setTestnet(requestObject.testnet);
         }
@@ -34081,7 +34097,7 @@
           case 'displayMnemonic':
             return await walletFuncs.displayMnemonic();
           case 'transfer':
-            return walletFuncs.transfer(requestObject.to, requestObject.amount);
+            return await walletFuncs.transfer(requestObject.to, requestObject.amount);
           case 'getAccount':
             return await getAccount();
           case 'Uint8ArrayToBase64':
@@ -34105,27 +34121,19 @@
           case 'signLogicSig':
             return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
           case 'swap':
-            return await (async () => {
-              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-              return await swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
-            })();
+            return await swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
           case 'getMin':
-            return await (async () => {
-              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-              const result = await swapper.getMin(requestObject.from, requestObject.to);
-              console.log(result);
-              return result;
-            })();
+            return await swapper.getMin(requestObject.from, requestObject.to);
           case 'preSwap':
-            return await (async () => {
-              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-              return await swapper.preSwap(requestObject.from, requestObject.to, requestObject.amount);
-            })();
+            return await swapper.preSwap(requestObject.from, requestObject.to, requestObject.amount);
           case 'swapHistory':
-            return await (async () => {
-              const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-              return await swapper.getSwapHistory();
-            });
+            let history = await swapper.getSwapHistory();
+            if (history === undefined) {
+              history = [];
+            }
+            return history;
+          case 'getStatus':
+            return await swapper.getStatus(requestObject.id);
           default:
             throw new Error('Method not found.');
         }
