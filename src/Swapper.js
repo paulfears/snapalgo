@@ -189,7 +189,7 @@ export default class Swapper{
             "amount":amount
         })
         console.log(data);
-        return data;
+        return data.body;
     }
 
     async swap(from, to, amount, email){

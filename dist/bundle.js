@@ -33423,7 +33423,7 @@
             "amount": amount
           });
           console.log(data);
-          return data;
+          return data.body;
         }
         async swap(from, to, amount, email) {
           from = from.toLowerCase();

@@ -4,11 +4,10 @@
 SnapAlgo is an Algorand wallet built on metamask developmental snaps feature which allows code to be run in a secure execution enviroment inside the metamask extension itself. Because the feature is so new it is currently only available on Metamask Flask which can be found here
 [https://metamask.io/flask/](https://metamask.io/flask/)
 
-## proof of concept
-[https://snapalgo02.paulfears.repl.co](https://snapalgo02.paulfears.repl.co)
+## Demo
+[snapalgo.com](https://snapalgo.com)
 ## example apps
 #### simple wallet
-![snap algo wallet ui](https://miro.medium.com/max/1400/0*QXkWMcX5XByVHJxi.png)
 [https://snapalgowallet.netlify.app/](https://snapalgowallet.netlify.app/)
 #### Simple Swap app
 [https://algoswap.netlify.app/](https://algoswap.netlify.app/)
@@ -22,10 +21,17 @@ compiles the src folder into a functional version of the snap
 > npx mm-snap serve
 
 Serves index.html on port 3000
+### sdk
+It is possible to use an sdk to simplify using snapalgo.
+[repository](https://github.com/Kyraview/SnapAlgoSDK)
+This creates a floating wallet on the dapp for better user experence.
+As well as creating an easier developer experence by not requiring the
+developer to call raw rpc functions.
 
 ### Connect and Install
 Add and Call the below function to connect to the wallet.
 If the user does not have the snap installed, but has metamask flask installed this code will automaticly install it for them. **This code snippet can be added to any website with 0 depenancies otheer than metamask flask**
+
 ```javascript
 async  function  connect () {
 	await window.ethereum.request({
@@ -132,6 +138,89 @@ await window.ethereum.request({
 		data: new Uint8Array()
 	}]
 })
+```
+***
+## swapping functions
+These functions are used to swap crypto between
+Algorand, Etherum, and Binance Smart Chain
+The ticker values are
+algo | eth | bsc
+
+***
+
+### get Minimum
+get minimum input amount for a specific swap
+```javascript
+    async function getMin(){
+      const result = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [
+          'npm:algorand', {
+            method: 'getMin',
+            from: 'eth' | 'bsc' | 'algo',
+            to: 'eth' | 'bsc' | 'algo',
+          }
+        ]
+      })
+      return result;
+    }
+```
+### preSwap
+Get infomation about a swap without actually swapping
+```javascript
+	async function preSwap(){
+		const result = await ethereum.request({
+			method: 'wallet_invokeSnap',
+			params: [
+			'npm:algorand', {
+				method: 'preSwap',
+				from: 'eth' | 'bsc' | 'algo',
+				to: 'eth' | 'bsc' | 'algo',
+				amount: Number(amount) //done in base units i.e. eth not wei
+			}
+			]
+		})
+		return result
+	}
+```
+
+### swap
+swap currencies
+this will automatically send send the required currency to the exchange and use the selected address to receive the cash
+```javascript
+	async function swap(){
+		const result = await ethereum.request({
+			method: 'wallet_invokeSnap',
+			params: [
+			'npm:algorand', {
+				method: 'swap',
+				from: 'eth' | 'bsc' | 'algo',
+				to: 'eth' | 'bsc' | 'algo',
+				amount: Number(amount) //done in base units i.e. eth not wei
+				email: String("emailAddress@example.com") //completely optional
+			}
+			]
+		})
+		return result
+	}
+
+```
+
+### swapHistory
+the method returns an array of swap objects that give info about a swap performed by a given wallet.
+```javascript
+	async function swapHistory(){
+		const result = await ethereum.request({
+			method: 'wallet_invokeSnap',
+			params: [
+			'npm:algorand', {
+				method: 'swapHistory',
+			}
+			]
+		})
+		return result
+	}
+
 ```
 
 More RPC methods to come
