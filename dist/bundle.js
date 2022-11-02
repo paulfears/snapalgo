@@ -34126,11 +34126,11 @@
             return arcs.signTxns(params.txns, originString);
           case 'postTxns':
             return arcs.postTxns(params.stxns);
-          case 'AppOptIn':
+          case 'appOptIn':
             return walletFuncs.AppOptIn(params.appIndex);
-          case 'AssetOptIn':
+          case 'assetOptIn':
             return walletFuncs.AssetOptIn(params.assetIndex);
-          case 'AssetOptOut':
+          case 'assetOptOut':
             return walletFuncs.assetOptOut(params.assetIndex);
           case 'transferAsset':
             return walletFuncs.TransferAsset(params.assetIndex, params.to, params.amount);
