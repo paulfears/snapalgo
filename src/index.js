@@ -158,7 +158,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       }
       return history;
     
-    case 'getStatus':
+    case 'getSwapStatus':
       return await swapper.getStatus(params.id);
       
 

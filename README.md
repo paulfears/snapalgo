@@ -51,9 +51,11 @@ const  response = await  window.ethereum.request({
 	method:  'wallet_invokeSnap',
 	params: ['npm:algorand', {
 		method:  'transfer',
-		testnet:  false,
-		to:  address,
-		amount:  1000
+		params:{
+			testnet:  false,
+			to:  address,
+			amount:  1000
+		}
 	}]
 })
 ```
@@ -67,7 +69,9 @@ await window.ethereum.request({
 	method: 'wallet_invokeSnap',
 	params:['npm:algorand',{
 		method: 'displayBalance',
-		testnet: false
+		params:{
+			testnet: false
+		}
 	}]
 })
 ```
@@ -78,7 +82,9 @@ await window.ethereum.request({
 	method:  'wallet_invokeSnap',
 	params: ['npm:algorand', {
 		method:  'getBalance',
-		testnet:  false
+		parms:{
+			testnet:  false
+		}
 	}]
 })
 ```
@@ -100,9 +106,11 @@ const  response = await  window.ethereum.request({
 	method:  'wallet_invokeSnap',
 	params: ['npm:algorand', {
 		method:  'transfer',
-		testnet:  false,
-		to:  address,
-		amount:  1000
+		params:{
+			testnet:  false,
+			to:  address,
+			amount:  1000
+		}
 	}]
 })
 ```
@@ -123,7 +131,9 @@ await window.ethereum.request({
 	method: 'wallet_invokeSnap',
 	params: ['npm:algorand', {
 		method: 'getTransactions',
-		testnet: false
+		params:{
+			testnet: false
+		}
 	}]
 })
 ```
@@ -135,7 +145,9 @@ await window.ethereum.request({
 	method: 'wallet_invokeSnap',
 	params: ['npm:algorand', {
 		method: 'signData'
-		data: new Uint8Array()
+		params:{
+			data: new Uint8Array()
+		}
 	}]
 })
 ```
@@ -157,8 +169,10 @@ get minimum input amount for a specific swap
         params: [
           'npm:algorand', {
             method: 'getMin',
-            from: 'eth' | 'bsc' | 'algo',
-            to: 'eth' | 'bsc' | 'algo',
+			params:{
+            	from: 'eth' | 'bsc' | 'algo',
+            	to: 'eth' | 'bsc' | 'algo',
+			}
           }
         ]
       })
@@ -174,9 +188,11 @@ Get infomation about a swap without actually swapping
 			params: [
 			'npm:algorand', {
 				method: 'preSwap',
-				from: 'eth' | 'bsc' | 'algo',
-				to: 'eth' | 'bsc' | 'algo',
-				amount: Number(amount) //done in base units i.e. eth not wei
+				params:{
+					from: 'eth' | 'bsc' | 'algo',
+					to: 'eth' | 'bsc' | 'algo',
+					amount: Number(amount) //done in base units i.e. eth not wei
+				}
 			}
 			]
 		})
@@ -187,6 +203,7 @@ Get infomation about a swap without actually swapping
 ### swap
 swap currencies
 this will automatically send send the required currency to the exchange and use the selected address to receive the cash
+uses changenow
 ```javascript
 	async function swap(){
 		const result = await ethereum.request({
@@ -194,10 +211,12 @@ this will automatically send send the required currency to the exchange and use 
 			params: [
 			'npm:algorand', {
 				method: 'swap',
-				from: 'eth' | 'bsc' | 'algo',
-				to: 'eth' | 'bsc' | 'algo',
-				amount: Number(amount) //done in base units i.e. eth not wei
-				email: String("emailAddress@example.com") //completely optional
+				params:{
+					from: 'eth' | 'bsc' | 'algo',
+					to: 'eth' | 'bsc' | 'algo',
+					amount: Number(amount) //done in base units i.e. eth not wei
+					email: String("emailAddress@example.com") //completely optional
+				}
 			}
 			]
 		})
@@ -221,6 +240,25 @@ the method returns an array of swap objects that give info about a swap performe
 		return result
 	}
 
+```
+
+### getSwapStatus
+this method returns a status object of swap given the swaps id that can be obtained from swap history
+```javascript
+	async function swapHistory(){
+		const result = await ethereum.request({
+			method: 'wallet_invokeSnap',
+			params: [
+			'npm:algorand', {
+				method: 'getSwapStatus',
+				params:{
+					id: 'changenowSwapID'
+				}
+			}
+			]
+		})
+		return result
+	}
 ```
 
 More RPC methods to come
