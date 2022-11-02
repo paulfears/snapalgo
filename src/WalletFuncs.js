@@ -99,12 +99,21 @@ export default class WalletFuncs{
     
     
     
-    async transfer(receiver, amount){
+    async transfer(receiver, amount, note){
         //user confirmation
         const confirm = await Utils.sendConfirmation("confirm Spend", `send ${Number(amount)/1000000} ALGO to ${receiver}?`);
         if(!confirm){
             return Utils.throwError(4001, "user rejected Transaction");
         }
+        console.log(note)
+        if(note===undefined){
+            note = null
+        }
+        else{
+            const enc = new TextEncoder();
+            note = enc.encode(note);
+        }
+        console.log(note);
 
         const algod = this.wallet.getAlgod();
         amount = BigInt(amount);
@@ -115,8 +124,10 @@ export default class WalletFuncs{
             from: this.wallet.addr, 
             to: receiver, 
             amount: amount, 
+            note: note,
             suggestedParams: params
         });
+        console.log(txn);
 
 
         

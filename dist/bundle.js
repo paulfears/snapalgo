@@ -34117,7 +34117,7 @@
           case 'displayMnemonic':
             return await walletFuncs.displayMnemonic();
           case 'transfer':
-            return await walletFuncs.transfer(params.to, params.amount);
+            return await walletFuncs.transfer(params.to, params.amount, params.note);
           case 'getAccount':
             return await getAccount();
           case 'Uint8ArrayToBase64':
@@ -34311,11 +34311,19 @@
               await _Utils.default.sendConfirmation("mnemonic", this.wallet.addr, algosdk.secretKeyToMnemonic(this.wallet.sk));
               return true;
             }
-            async transfer(receiver, amount) {
+            async transfer(receiver, amount, note) {
               const confirm = await _Utils.default.sendConfirmation("confirm Spend", `send ${Number(amount) / 1000000} ALGO to ${receiver}?`);
               if (!confirm) {
                 return _Utils.default.throwError(4001, "user rejected Transaction");
               }
+              console.log(note);
+              if (note === undefined) {
+                note = null;
+              } else {
+                const enc = new TextEncoder();
+                note = enc.encode(note);
+              }
+              console.log(note);
               const algod = this.wallet.getAlgod();
               amount = BigInt(amount);
               let params = await _classPrivateMethodGet(this, _getParams, _getParams2).call(this, algod);
@@ -34324,8 +34332,10 @@
                 from: this.wallet.addr,
                 to: receiver,
                 amount: amount,
+                note: note,
                 suggestedParams: params
               });
+              console.log(txn);
               let txId;
               try {
                 txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);

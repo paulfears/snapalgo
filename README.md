@@ -110,6 +110,7 @@ const  response = await  window.ethereum.request({
 			testnet:  false,
 			to:  address,
 			amount:  1000
+			?note: "string"
 		}
 	}]
 })
@@ -151,6 +152,54 @@ await window.ethereum.request({
 	}]
 })
 ```
+***
+## Asset Functions
+the functions are used to interact with algorand assets
+***
+### assetOptIn
+opts into an algorand asset
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'assetOptIn'
+		params:{
+			assetIndex: int
+		}
+	}]
+})
+```
+
+### assetOptOut
+opts out of an algorand asset
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'assetOptOut'
+		params:{
+			assetIndex: int
+		}
+	}]
+})
+```
+### transferAsset
+sends an algorand asset to another wallet that is opted into the given asset
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'assetOptOut'
+		params:{
+			assetIndex: int
+			to: "algorandAddress"
+			amount: string
+		}
+	}]
+})
+```
+
+
 ***
 ## swapping functions
 These functions are used to swap crypto between

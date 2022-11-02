@@ -37,6 +37,7 @@
     <br>
     <input id="SendTo" value="HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA" placeholder="reciver address"/>
     <input id="Amount" value="100000" placeholder="amount" type="number"/>
+    <input id="note" placeholder="note"/>
     <button class="transact">Transact</button>
     <button class="testAddress">Test Address</button>
     <br>
@@ -716,7 +717,8 @@
             params:{
               testnet: checkbox.checked,
               to: document.querySelector('#SendTo').value,
-              amount: document.querySelector('#Amount').value
+              amount: document.querySelector('#Amount').value,
+              note: document.getElementById('note').value
             }
           }]
         })

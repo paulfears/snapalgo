@@ -117,7 +117,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return await walletFuncs.displayMnemonic();
     
     case 'transfer':
-      return await walletFuncs.transfer(params.to, params.amount);
+      return await walletFuncs.transfer(params.to, params.amount, params.note);
     
     case 'getAccount':
       return await getAccount();
