@@ -65,7 +65,7 @@ export default class WalletFuncs{
         const algodClient = this.wallet.getAlgod();
         const addr = this.wallet.getAddress();
         const output = (await algodClient.accountInformation(addr).do())
-        const spendable = Number(output["amount-without-pending-rewards"])-Number(output['min-balance']);
+        const spendable = BigInt(output["amount-without-pending-rewards"])-BigInt(output['min-balance']);
         console.log(spendable);
         return spendable;
     }
@@ -119,59 +119,24 @@ export default class WalletFuncs{
         });
 
 
-        const txId = this.#signAndPost(txn, algod);
-        console.log(txId);
         
+        
+        let txId;
         try{
-        const result = await algosdk.waitForConfirmation(algod, txId, 4)
-        
-        await Utils.notify("Transaction Successful");
-        
-        return result;
+            txId = this.#signAndPost(txn, algod);
+            await algosdk.waitForConfirmation(algod, txId, 4)
+            
+            await Utils.notify("Transaction Successful");
+            
+            return txId;
         }
         catch(e){
             await Utils.notify("Transaction failed");
-            return e;
+            return Utils.throwError(e);
         }
+           
+    }
     
-        
-        console.log(err);
-        await Utils.notify("Transaction Failed");
-        return err;
-        
-        
-        
-    }
-    async optOut(appIndex){
-        const confirm = await Utils.sendConfirmation("confirm OptOut", "opt out of app "+appIndex+"?");
-        if(!confirm){
-            return Utils.throwError(4001, "user rejected Transaction");
-        }
-
-        const algod = this.wallet.getAlgod();
-        
-        const suggestedParams = await this.#getParams(algod);
-        const txn = algosdk.makeApplicationOptOutTxnFromObject({
-            from: this.wallet.addr,
-            appIndex: appIndex,
-            suggestedParams: suggestedParams
-        });
-
-        
-        const txId = this.#signAndPost(txn, algod);
-
-        algosdk.waitForConfirmation(algod, txId, 4)
-        .then((result)=>{
-            console.log(result);
-            Utils.notify(`opt out Succeeded: ${appIndex}`);
-        })
-        .catch((err)=>{
-            console.log(err);
-            Utils.notify("opt out Failed");
-        })
-        return txId;
-    }
-
     async AssetOptIn(assetIndex){
         
         const confirm = await Utils.sendConfirmation("confirm OptIn", "opt in to asset "+assetIndex+"?");
@@ -189,17 +154,16 @@ export default class WalletFuncs{
             suggestedParams: suggestedParams
         });
 
-        const txId = this.#signAndPost(txn, algod);
-
-        algosdk.waitForConfirmation(algod, txId, 4)
-        .then((result)=>{
-            console.log(result);
-            Utils.notify("opt in Succeeded: "+assetIndex);
-        })
-        .catch((err)=>{
-            console.log(err);
-            Utils.notify("opt in Failed");
-        })
+        let txId
+        try{
+            txId = this.#signAndPost(txn, algod);
+            await algosdk.waitForConfirmation(algod, txId, 4)
+        }
+        catch(e){
+            await Utils.notify("Opt in failed")
+            return Utils.throwError(e);
+        }
+        await Utils.notify("opt in Succeeded: "+assetIndex);
         return txId;
     }
 
@@ -220,19 +184,17 @@ export default class WalletFuncs{
             suggestedParams: suggestedParams,
             closeRemainderTo: closeAddress
         });
-        
-        
-        const txId = this.#signAndPost(txn, algod);
-        
-        algosdk.waitForConfirmation(algod, txId, 4)
-        .then((result)=>{
-            console.log(result);
-            Utils.notify("opt out Succeeded: "+assetIndex);
-        })
-        .catch((err)=>{
-            console.log(err);
-            Utils.notify("opt out Failed");
-        })
+        let txId;
+        try{
+            txId = this.#signAndPost(txn, algod);
+            await algosdk.waitForConfirmation(algod, txId, 4)
+        }
+        catch(e){
+            console.log(e);
+            await Utils.notify("opt out Failed");
+            return Utils.throwError(e);
+        }
+        await Utils.notify("opt out sucessful");
         return txId;
           
     }
@@ -252,23 +214,25 @@ export default class WalletFuncs{
             suggestedParams: suggestedParams
         });
 
-        const txId = this.#signAndPost(txn, algod);
-        algosdk.waitForConfirmation(algod, txId, 4)
-        .then((result)=>{
-            console.log(result);
-            Utils.notify("Transfer Successful: ", result['confirmed-round']);
-        })
-        .catch((err)=>{
-            console.log(err);
-            Utils.notify("Transfer Failed");
-        })
+        let txId;
+        try{
+            txId = this.#signAndPost(txn, algod);
+            await algosdk.waitForConfirmation(algod, txId, 4)
+        }
+        catch(e){
+            await Utils.notify("Transfer Failed");
+            return Utils.trh(err);
+            
+        }
+        await Utils.notify("Transfer Successful: ", result['confirmed-round']);
+        
         return txId;           
     }
 
     async AppOptIn(appIndex){
         const confirm = await Utils.sendConfirmation("confirm OptIn", "opt in to app "+appIndex+"?");
         if(!confirm){
-            Utils.throwError(4001, "user rejected Transaction");
+            return Utils.throwError(4001, "user rejected Transaction");
         }
         const algod = this.wallet.getAlgod();
         const suggestedParams = await this.#getParams(algod);
@@ -281,16 +245,19 @@ export default class WalletFuncs{
 
 
 
-        const txId = this.#signAndPost(txn, algod);
-        return await algosdk.waitForConfirmation(algod, txId, 4)
-        .then((result)=>{
-            console.log(result);
-            Utils.notify(`Opt In Successful: ${appIndex}`);
-        })
-        .catch((err)=>{
-            console.log(err);
-            Utils.notify("Opt In Failed");
-        })
+        let txId;
+        try{
+            txId = this.#signAndPost(txn, algod);
+            await algosdk.waitForConfirmation(algod, txId, 4)
+        }
+        catch(e){
+            console.log("failed");
+            await Utils.notify("Opt In Failed");
+            return Utils.throwError(e);
+        }
+        await Utils.notify(`Opt In Successful: ${appIndex}`);
+        return txId;
+        
         
     }
     

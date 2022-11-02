@@ -7,6 +7,9 @@ wallet is a global in the metamask context
 export default class Utils {
     
     static throwError(code, msg){
+        if(code === undefined){
+            code = 0
+        }
         //metamask overrides Error codes
         //This function encodes an arc complient error code
         //into the error message, and is then seperated by the SDK
@@ -17,19 +20,31 @@ export default class Utils {
         console.log("here");
         console.log(message);
         try{
-        await wallet.request({
-            method: 'snap_notify',
-            params: [
-              {
-                type: 'native',
-                message: message,
-              },
-            ],
-        });
-        return true;
+            await wallet.request({
+                method: 'snap_notify',
+                params: [
+                    {
+                        type: 'inApp',
+                        message: message,
+                    },
+                ],
+            });
+            
+            const result = await wallet.request({
+                method: 'snap_notify',
+                params: [
+                {
+                    type: 'native',
+                    message: message,
+                },
+                ],
+            });
+            console.log(result);
+            return true;
         }
         catch(e){
-            Utils.sendConfirmation("alert", "notifcation", message);
+            console.log(e);
+            await Utils.sendConfirmation("alert", "notifcation", message);
             return false;
         }
 

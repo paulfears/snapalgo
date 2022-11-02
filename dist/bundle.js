@@ -33028,8 +33028,9 @@
           var _TxnVerifier = _interopRequireDefault(require("./TxnVerifier"));
           const algosdk = require('algosdk/dist/cjs');
           class Arcs {
-            constructor(algoWallet) {
+            constructor(algoWallet, walletFuncs) {
               this.wallet = algoWallet;
+              this.walletFuncs = walletFuncs;
             }
             async signTxns(TxnObjs, originString) {
               const Txn_Verifer = new _TxnVerifier.default();
@@ -33070,7 +33071,7 @@
                 }
                 let txnBuffer = Buffer.from(txn.txn, 'base64');
                 let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
-                const verifiedObj = Txn_Verifer.verifyTxn(decoded_txn);
+                const verifiedObj = Txn_Verifer.verifyTxn(decoded_txn, await this.walletFuncs.getSpendable());
                 console.log(verifiedObj);
                 if (txn.message) {
                   const msgConfirmation = await _Utils.default.sendConfirmation("Untrusted Message", originString + " says:", txn.message);
@@ -33094,7 +33095,7 @@
                   const b64signedTxn = Buffer.from(signedTxn).toString('base64');
                   signedTxns.push(b64signedTxn);
                 } else {
-                  _Utils.default.throwError(4300, verifiedObj.error[0]);
+                  return _Utils.default.throwError(4300, verifiedObj.error[0]);
                 }
               }
               console.log(signedTxns);
@@ -33537,7 +33538,7 @@
             warnings: []
           };
           const Required = ["type", "from", "fee", "firstRound", "lastRound", "genesisHash"];
-          const Optional = ["genesisId", "group", "lease", "note", "reKeyTo"];
+          const Optional = ["genesisId", "group", "lease", "note", "reKeyTo", 'amount'];
           for (var requirement of Required) {
             if (!txn[requirement]) {
               this.throw(4300, 'Required field missing: ' + requirement);
@@ -33549,6 +33550,9 @@
                   min: 1000
                 })) {
                   this.throw(4300, 'fee must be a uint64 between 1000 and 18446744073709551615');
+                }
+                if (BigInt(txn[fee]) > BigInt(balance)) {
+                  this.throw(4100, 'transaction Fee is greator than spendable funds');
                 } else {
                   if (txn[fee] > 1000000) {
                     this.errorCheck.warnings.push('fee is very high: ' + txn[fee] + ' microalgos');
@@ -33637,6 +33641,19 @@
                     this.throw(4300, 'reKeyTo must be a valid authorized address');
                   } else {
                     this.errorCheck.warnings.push('this transaction involves rekeying');
+                  }
+                }
+                if (option === "amount") {
+                  let amount;
+                  let fee;
+                  try {
+                    amount = BigInt(txn[option]);
+                    fee = BigInt(txn['fee']);
+                  } catch (e) {
+                    this.throw(4300, "Invalid Amount parameter");
+                  }
+                  if (amount + fee > BigInt(balance)) {
+                    this.throw(4100, "not a large enough spendable balance");
                   }
                 }
               }
@@ -33955,6 +33972,9 @@
       exports.default = void 0;
       class Utils {
         static throwError(code, msg) {
+          if (code === undefined) {
+            code = 0;
+          }
           throw new Error(`${code}\n${msg}`);
         }
         static async notify(message) {
@@ -33964,13 +33984,22 @@
             await wallet.request({
               method: 'snap_notify',
               params: [{
+                type: 'inApp',
+                message: message
+              }]
+            });
+            const result = await wallet.request({
+              method: 'snap_notify',
+              params: [{
                 type: 'native',
                 message: message
               }]
             });
+            console.log(result);
             return true;
           } catch (e) {
-            Utils.sendConfirmation("alert", "notifcation", message);
+            console.log(e);
+            await Utils.sendConfirmation("alert", "notifcation", message);
             return false;
           }
         }
@@ -34021,7 +34050,7 @@
         let currentAccount = await accountLibary.getCurrentAccount();
         const algoWallet = new _AlgoWallet.default(currentAccount);
         const walletFuncs = new _walletFuncs.default(algoWallet);
-        const arcs = new _Arcs.default(algoWallet);
+        const arcs = new _Arcs.default(algoWallet, walletFuncs);
         const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
         console.log(origin);
         if (requestObject.hasOwnProperty('testnet')) {
@@ -34123,7 +34152,7 @@
               history = [];
             }
             return history;
-          case 'getStatus':
+          case 'getSwapStatus':
             return await swapper.getStatus(params.id);
           default:
             throw new Error('Method not found.');
@@ -34267,7 +34296,7 @@
               const algodClient = this.wallet.getAlgod();
               const addr = this.wallet.getAddress();
               const output = await algodClient.accountInformation(addr).do();
-              const spendable = Number(output["amount-without-pending-rewards"]) - Number(output['min-balance']);
+              const spendable = BigInt(output["amount-without-pending-rewards"]) - BigInt(output['min-balance']);
               console.log(spendable);
               return spendable;
             }
@@ -34297,41 +34326,16 @@
                 amount: amount,
                 suggestedParams: params
               });
-              const txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
-              console.log(txId);
+              let txId;
               try {
-                const result = await algosdk.waitForConfirmation(algod, txId, 4);
+                txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
+                await algosdk.waitForConfirmation(algod, txId, 4);
                 await _Utils.default.notify("Transaction Successful");
-                return result;
+                return txId;
               } catch (e) {
                 await _Utils.default.notify("Transaction failed");
-                return e;
+                return _Utils.default.throwError(e);
               }
-              console.log(err);
-              await _Utils.default.notify("Transaction Failed");
-              return err;
-            }
-            async optOut(appIndex) {
-              const confirm = await _Utils.default.sendConfirmation("confirm OptOut", "opt out of app " + appIndex + "?");
-              if (!confirm) {
-                return _Utils.default.throwError(4001, "user rejected Transaction");
-              }
-              const algod = this.wallet.getAlgod();
-              const suggestedParams = await _classPrivateMethodGet(this, _getParams, _getParams2).call(this, algod);
-              const txn = algosdk.makeApplicationOptOutTxnFromObject({
-                from: this.wallet.addr,
-                appIndex: appIndex,
-                suggestedParams: suggestedParams
-              });
-              const txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
-              algosdk.waitForConfirmation(algod, txId, 4).then(result => {
-                console.log(result);
-                _Utils.default.notify(`opt out Succeeded: ${appIndex}`);
-              }).catch(err => {
-                console.log(err);
-                _Utils.default.notify("opt out Failed");
-              });
-              return txId;
             }
             async AssetOptIn(assetIndex) {
               const confirm = await _Utils.default.sendConfirmation("confirm OptIn", "opt in to asset " + assetIndex + "?");
@@ -34347,14 +34351,15 @@
                 amount: 0,
                 suggestedParams: suggestedParams
               });
-              const txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
-              algosdk.waitForConfirmation(algod, txId, 4).then(result => {
-                console.log(result);
-                _Utils.default.notify("opt in Succeeded: " + assetIndex);
-              }).catch(err => {
-                console.log(err);
-                _Utils.default.notify("opt in Failed");
-              });
+              let txId;
+              try {
+                txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
+                await algosdk.waitForConfirmation(algod, txId, 4);
+              } catch (e) {
+                await _Utils.default.notify("Opt in failed");
+                return _Utils.default.throwError(e);
+              }
+              await _Utils.default.notify("opt in Succeeded: " + assetIndex);
               return txId;
             }
             async assetOptOut(assetIndex) {
@@ -34373,14 +34378,16 @@
                 suggestedParams: suggestedParams,
                 closeRemainderTo: closeAddress
               });
-              const txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
-              algosdk.waitForConfirmation(algod, txId, 4).then(result => {
-                console.log(result);
-                _Utils.default.notify("opt out Succeeded: " + assetIndex);
-              }).catch(err => {
-                console.log(err);
-                _Utils.default.notify("opt out Failed");
-              });
+              let txId;
+              try {
+                txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
+                await algosdk.waitForConfirmation(algod, txId, 4);
+              } catch (e) {
+                console.log(e);
+                await _Utils.default.notify("opt out Failed");
+                return _Utils.default.throwError(e);
+              }
+              await _Utils.default.notify("opt out sucessful");
               return txId;
             }
             async TransferAsset(assetIndex, receiver, amount) {
@@ -34397,20 +34404,21 @@
                 amount: amount,
                 suggestedParams: suggestedParams
               });
-              const txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
-              algosdk.waitForConfirmation(algod, txId, 4).then(result => {
-                console.log(result);
-                _Utils.default.notify("Transfer Successful: ", result['confirmed-round']);
-              }).catch(err => {
-                console.log(err);
-                _Utils.default.notify("Transfer Failed");
-              });
+              let txId;
+              try {
+                txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
+                await algosdk.waitForConfirmation(algod, txId, 4);
+              } catch (e) {
+                await _Utils.default.notify("Transfer Failed");
+                return _Utils.default.trh(err);
+              }
+              await _Utils.default.notify("Transfer Successful: ", result['confirmed-round']);
               return txId;
             }
             async AppOptIn(appIndex) {
               const confirm = await _Utils.default.sendConfirmation("confirm OptIn", "opt in to app " + appIndex + "?");
               if (!confirm) {
-                _Utils.default.throwError(4001, "user rejected Transaction");
+                return _Utils.default.throwError(4001, "user rejected Transaction");
               }
               const algod = this.wallet.getAlgod();
               const suggestedParams = await _classPrivateMethodGet(this, _getParams, _getParams2).call(this, algod);
@@ -34419,14 +34427,17 @@
                 appIndex: appIndex,
                 suggestedParams: suggestedParams
               });
-              const txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
-              return await algosdk.waitForConfirmation(algod, txId, 4).then(result => {
-                console.log(result);
-                _Utils.default.notify(`Opt In Successful: ${appIndex}`);
-              }).catch(err => {
-                console.log(err);
-                _Utils.default.notify("Opt In Failed");
-              });
+              let txId;
+              try {
+                txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
+                await algosdk.waitForConfirmation(algod, txId, 4);
+              } catch (e) {
+                console.log("failed");
+                await _Utils.default.notify("Opt In Failed");
+                return _Utils.default.throwError(e);
+              }
+              await _Utils.default.notify(`Opt In Successful: ${appIndex}`);
+              return txId;
             }
             async signLogicSig(logicSigAccount) {
               let confirm = await _Utils.default.sendConfirmation("sign logic sig?", "Are you sure", "Signing a logic signature gives a smart contract the ability to sign transactions on your behalf. This can result in the loss of funds");

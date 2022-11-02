@@ -355,7 +355,7 @@
       await ethereum.request({
         method: 'wallet_invokeSnap',
         params: [snapId, {
-          method: 'AssetOptIn',
+          method: 'assetOptIn',
           params:{
             assetIndex: 31566704
           }
@@ -368,9 +368,9 @@
       await ethereum.request({
         method: 'wallet_invokeSnap',
         params: [snapId, {
-          method: 'AssetOptOut',
+          method: 'assetOptOut',
           params:{
-            assetIndex: 	312769
+            assetIndex: 31566704
           }
         }]        
       })
@@ -408,7 +408,7 @@
       const algodClient = new algosdk.Algodv2(client);
       let params = await algodClient.getTransactionParams().do();
       const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
-      const sender = 'DV23SHRW3JUPCXJN2KNCRIMQ75M3JV7RDYH3NP5CESZAUXHC7JPCP4GK6Y';
+      const sender = 'FH44W5YXJHBA5WGOAGXML2QARU4TP7E4J5KVPNKRV5JTN23QD75G5RSQHA';
       let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         from: sender, 
         to: receiver, 

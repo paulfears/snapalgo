@@ -18,7 +18,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
   let currentAccount = await accountLibary.getCurrentAccount();
   const algoWallet = new AlgoWallet(currentAccount);
   const walletFuncs = new WalletFuncs(algoWallet);
-  const arcs = new Arcs(algoWallet);
+  const arcs = new Arcs(algoWallet, walletFuncs);
   const swapper = new Swapper(wallet, algoWallet, walletFuncs);
   console.log(origin);
   
@@ -127,11 +127,11 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return arcs.signTxns(params.txns, originString);
     case 'postTxns':
       return arcs.postTxns(params.stxns);
-    case 'AppOptIn':
+    case 'appOptIn':
       return walletFuncs.AppOptIn(params.appIndex);
-    case 'AssetOptIn':
+    case 'assetOptIn':
       return walletFuncs.AssetOptIn(params.assetIndex);
-    case 'AssetOptOut':
+    case 'assetOptOut':
       return walletFuncs.assetOptOut(params.assetIndex);
     case 'transferAsset':
       return walletFuncs.TransferAsset( params.assetIndex, params.to, params.amount);

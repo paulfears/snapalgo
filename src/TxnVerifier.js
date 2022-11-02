@@ -17,7 +17,8 @@ export default class TxnVerifer{
     };
 
     const Required = ["type", "from", "fee", "firstRound", "lastRound", "genesisHash"];
-    const Optional = ["genesisId", "group", "lease", "note", "reKeyTo"];
+    const Optional = ["genesisId", "group", "lease", "note", "reKeyTo", 'amount'];
+    
     for(var requirement of Required){
       if(!txn[requirement]){
         this.throw(4300, 'Required field missing: '+requirement);
@@ -26,6 +27,9 @@ export default class TxnVerifer{
           const fee = requirement
           if(!this.checkInt({value:txn[fee],min:1000})){
             this.throw(4300,'fee must be a uint64 between 1000 and 18446744073709551615');
+          }
+          if(BigInt(txn[fee]) > BigInt(balance)){
+            this.throw(4100, 'transaction Fee is greator than spendable funds')
           }
           else{
             if(txn[fee] > 1000000){
@@ -98,6 +102,20 @@ export default class TxnVerifer{
               this.throw(4300, 'reKeyTo must be a valid authorized address');
             } else {
               this.errorCheck.warnings.push('this transaction involves rekeying');
+            }
+          }
+          if(option === "amount"){
+            let amount;
+            let fee;
+            try{
+              amount = BigInt(txn[option])
+              fee = BigInt(txn['fee'])
+            }
+            catch(e){
+              this.throw(4300, "Invalid Amount parameter")
+            }
+            if((amount+fee) > BigInt(balance)){
+              this.throw(4100, "not a large enough spendable balance")
             }
           }
         }

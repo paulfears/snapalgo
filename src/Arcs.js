@@ -4,8 +4,9 @@ import TxnVerifer from "./TxnVerifier";
 const algosdk =  require('algosdk/dist/cjs');
 export default class Arcs{
 
-    constructor(algoWallet){
+    constructor(algoWallet, walletFuncs){
         this.wallet = algoWallet;
+        this.walletFuncs = walletFuncs
     }
 
     async signTxns(TxnObjs, originString){
@@ -14,6 +15,7 @@ export default class Arcs{
         
         
         const Txn_Verifer = new TxnVerifer();
+        
         let msg = "Do you want to sign transactions from "+originString+"?"
         const confirm = await Utils.sendConfirmation("sign TXNS?", this.wallet.network, msg);
         if(!confirm){
@@ -24,6 +26,8 @@ export default class Arcs{
         let firstLoop = true;
         for(let txn of TxnObjs){
             const verifyObj = verifyArgs(txn, firstLoop);
+            
+            
             if(firstLoop){
                 firstGroup = txn.txn.group;
                 firstLoop = false;
@@ -55,7 +59,7 @@ export default class Arcs{
             }
             let txnBuffer = Buffer.from(txn.txn, 'base64');
             let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
-            const verifiedObj = Txn_Verifer.verifyTxn(decoded_txn);
+            const verifiedObj = Txn_Verifer.verifyTxn(decoded_txn, await this.walletFuncs.getSpendable());
             console.log(verifiedObj);
             if(txn.message){
                 const msgConfirmation = await Utils.sendConfirmation("Untrusted Message", originString+" says:", txn.message)
@@ -82,7 +86,7 @@ export default class Arcs{
                 signedTxns.push(b64signedTxn);
             }
             else{
-                Utils.throwError(4300, verifiedObj.error[0]);
+                return Utils.throwError(4300, verifiedObj.error[0]);
             }
         }
         console.log(signedTxns);
