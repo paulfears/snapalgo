@@ -178,7 +178,9 @@
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'getAssetById',
-          assetIndex: 312769
+          params:{
+            assetIndex: 312769
+          }
         }]  
       })
       console.log(result)   
@@ -201,7 +203,9 @@
         params: [
           snapId, {
             method: 'getStatus',
-            id: transactionStatusInput.value
+            params:{
+              id: transactionStatusInput.value
+            }
           }
         ]
       })
@@ -214,7 +218,9 @@
         params: [
           snapId, {
             method: 'createAccount',
-            name: document.getElementById("Account_name").value
+            params:{
+              name: document.getElementById("Account_name").value
+            }
           }
         ]
       })
@@ -228,10 +234,12 @@
         params: [
           snapId, {
             method: 'swap',
-            from: fromTicker.value,
-            to: toTicker.value,
-            amount: swapAmount.value,
-            email: email.value
+            params:{
+              from: fromTicker.value,
+              to: toTicker.value,
+              amount: swapAmount.value,
+              email: email.value
+            }
           }
         ]
       })
@@ -244,9 +252,11 @@
         params: [
           snapId, {
             method: 'preSwap',
-            from: fromTicker.value,
-            to: toTicker.value,
-            amount: swapAmount.value
+            params:{
+              from: fromTicker.value,
+              to: toTicker.value,
+              amount: swapAmount.value
+            }
           }
         ]
       })
@@ -259,8 +269,10 @@
         params: [
           snapId, {
             method: 'getMin',
-            from: fromTicker.value,
-            to: toTicker.value,
+            params:{
+              from: fromTicker.value,
+              to: toTicker.value,
+            }
           }
         ]
       })
@@ -276,7 +288,9 @@
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'signData',
-          data: thing
+          params:{
+            data: thing
+          }
         }]        
       })
       console.log(sig)
@@ -288,7 +302,9 @@
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'Uint8ArrayToBase64',
-          data: new Uint8Array(new TextEncoder().encode("hello"))
+          params:{
+            data: new Uint8Array(new TextEncoder().encode("hello"))
+          }
         }]        
       })
       console.log(b64);
@@ -340,7 +356,9 @@
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'AssetOptIn',
-          assetIndex: 31566704
+          params:{
+            assetIndex: 31566704
+          }
         }]        
       })
     }
@@ -351,7 +369,9 @@
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'AssetOptOut',
-          assetIndex: 	312769
+          params:{
+            assetIndex: 	312769
+          }
         }]        
       })
     }
@@ -374,9 +394,11 @@
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'TransferAsset',
-          to: to,
-          amount: amount,
-          assetIndex: asset
+          params:{
+            to: to,
+            amount: amount,
+            assetIndex: asset
+          }
         }]        
       })
     }
@@ -400,7 +422,9 @@
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'signAndPostTxns',
-          txns: txns
+          params:{
+            txns: txns
+          }
         }]
       })
       console.log(out);
@@ -572,7 +596,9 @@
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'isValidAddress',
-          address: document.getElementById('SendTo').value
+          params:{
+            address: document.getElementById('SendTo').value
+          }
         }]
       })
       alert("adress is valid : " + isValid)
@@ -583,7 +609,9 @@
           method: 'wallet_invokeSnap',
           params: [snapId, {
             method: 'getAddress',
+            params:{
             testnet: checkbox.checked
+            }
           }]
         })
       document.getElementById('address').innerHTML = address
@@ -596,7 +624,9 @@
           method: 'wallet_invokeSnap',
           params: [snapId, {
             method: 'displayBalance',
-            testnet: checkbox.checked
+            params:{
+              testnet: checkbox.checked
+            }
           }]
         })
       }catch(e){
@@ -610,7 +640,9 @@
           method: 'wallet_invokeSnap',
           params: [snapId, {
             method: 'getSpendable',
-            testnet: checkbox.checked
+            params: {
+              testnet: checkbox.checked
+            }
           }]
         })
         alert(response)
@@ -625,7 +657,9 @@
           method: 'wallet_invokeSnap',
           params: [snapId, {
             method: 'getTransactions',
-            testnet: checkbox.checked
+            params: {
+              testnet: checkbox.checked
+            }
           }]
         })
         document.getElementById('transactionOutput').innerHTML = JSON.stringify(response);
@@ -659,8 +693,10 @@
           method: 'wallet_invokeSnap',
           params: [snapId, {
             method: 'signLogicSig',
-            logicSigAccount: algorand.base64Encode(logicSigAccount.toByte()),
-            sender: 'info About the signature'
+            params:{
+              logicSigAccount: algorand.base64Encode(logicSigAccount.toByte()),
+              sender: 'info About the signature'
+            }
           }]
       })
       let msgpack = algorand.base64Decode(response);
@@ -677,9 +713,11 @@
           method: 'wallet_invokeSnap',
           params: [snapId, {
             method: 'transfer',
-            testnet: checkbox.checked,
-            to: document.querySelector('#SendTo').value,
-            amount: document.querySelector('#Amount').value
+            params:{
+              testnet: checkbox.checked,
+              to: document.querySelector('#SendTo').value,
+              amount: document.querySelector('#Amount').value
+            }
           }]
         })
         console.log("transaction returned");
@@ -696,8 +734,10 @@
         method: 'wallet_invokeSnap',
         params: [snapId, {
           method: 'importAccount',
-          name: "imported",
-          mnemonic:'gallery hood dizzy coin puppy time hazard subway they woman step syrup guard elite rookie avoid hip isolate left play gain pave blind abandon category'
+          params:{
+            name: "imported",
+            mnemonic:'gallery hood dizzy coin puppy time hazard subway they woman step syrup guard elite rookie avoid hip isolate left play gain pave blind abandon category'
+          }
         }]
       })
     }

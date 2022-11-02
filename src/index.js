@@ -11,6 +11,8 @@ module.exports.onRpcRequest = async ({origin, request}) => {
   
   const accountLibary = new Accounts(wallet);
   const requestObject = request;
+  const params = requestObject.params
+  console.log(params);
   const originString = origin;
   let accounts = await accountLibary.getAccounts();
   let currentAccount = await accountLibary.getCurrentAccount();
@@ -21,7 +23,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
   console.log(origin);
   
   if(requestObject.hasOwnProperty('testnet')){
-    algoWallet.setTestnet(requestObject.testnet);
+    algoWallet.setTestnet(params.testnet);
   }
   switch (requestObject.method) {
     
@@ -32,7 +34,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return currentAccount
 
     case 'createAccount':
-      const result = await accountLibary.createNewAccount(requestObject.name);
+      const result = await accountLibary.createNewAccount(params.name);
       const newAccount = result.Account;
       console.log(newAccount);
       const mnemonic = await accountLibary.getMnemonic(newAccount);
@@ -48,16 +50,16 @@ module.exports.onRpcRequest = async ({origin, request}) => {
     case 'importAccount':
       console.log("originString : " + originString);
       
-      return await accountLibary.importAccount( requestObject.name, requestObject.mnemonic);
+      return await accountLibary.importAccount( params.name, params.mnemonic);
 
     case 'setAccount':
-      return await accountLibary.setCurrentAccount(requestObject.address);
+      return await accountLibary.setCurrentAccount(params.address);
 
     case 'getAssets':
       return walletFuncs.getAssets();
       
     case 'isValidAddress':
-      return walletFuncs.isValidAddress(requestObject.address);
+      return walletFuncs.isValidAddress(params.address);
     
     case 'getTransactions':
       return walletFuncs.getTransactions();
@@ -90,24 +92,21 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       );
     
     case 'signData':
-      let pk = account.sk;
-      console.log("request data");
-      console.log(requestObject.data);
-      let out = nacl.sign(new Uint8Array(requestObject.data), account.sk);
+      let out = nacl.sign(new Uint8Array(params.data), currentAccount.sk);
       return out;
     
-      case 'secureReceive':
-        console.log(originString);
-        if(originString === "https://snapalgo.com"){
-          let confirm = await Utils.sendConfirmation("Do you want to display your address?", currentAccount.addr);
-          if(confirm){
-            return currentAccount.addr;
-          }
-          else{
-            return Utils.throwError(4001, "user Rejected Request");
-          }
-          
+    case 'secureReceive':
+      console.log(originString);
+      if(originString === "https://snapalgo.com"){
+        let confirm = await Utils.sendConfirmation("Do you want to display your address?", currentAccount.addr);
+        if(confirm){
+          return currentAccount.addr;
         }
+        else{
+          return Utils.throwError(4001, "user Rejected Request");
+        }
+        
+      }
 
         
     
@@ -118,39 +117,39 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return await walletFuncs.displayMnemonic();
     
     case 'transfer':
-      return await walletFuncs.transfer(requestObject.to, requestObject.amount);
+      return await walletFuncs.transfer(params.to, params.amount);
     
     case 'getAccount':
       return await getAccount();
     case 'Uint8ArrayToBase64':
-        return walletFuncs.Uint8ArrayToBase64(requestObject.data);
+        return walletFuncs.Uint8ArrayToBase64(params.data);
     case 'signTxns':
-      return arcs.signTxns(requestObject.txns, originString);
+      return arcs.signTxns(params.txns, originString);
     case 'postTxns':
-      return arcs.postTxns(requestObject.stxns);
+      return arcs.postTxns(params.stxns);
     case 'AppOptIn':
-      return walletFuncs.AppOptIn(requestObject.appIndex);
+      return walletFuncs.AppOptIn(params.appIndex);
     case 'AssetOptIn':
-      return walletFuncs.AssetOptIn(requestObject.assetIndex);
+      return walletFuncs.AssetOptIn(params.assetIndex);
     case 'AssetOptOut':
-      return walletFuncs.assetOptOut(requestObject.assetIndex);
+      return walletFuncs.assetOptOut(params.assetIndex);
     case 'transferAsset':
-      return walletFuncs.TransferAsset( requestObject.assetIndex, requestObject.to, requestObject.amount);
+      return walletFuncs.TransferAsset( params.assetIndex, params.to, params.amount);
     case 'getAssetById':
-      return walletFuncs.getAssetById(requestObject.assetIndex);
+      return walletFuncs.getAssetById(params.assetIndex);
     case 'signAndPostTxns':
-      return arcs.signAndPostTxns(requestObject.txns, originString);
+      return arcs.signAndPostTxns(params.txns, originString);
     case 'signLogicSig':
-      return walletFuncs.signLogicSig(requestObject.logicSigAccount, requestObject.sender);
+      return walletFuncs.signLogicSig(params.logicSigAccount, params.sender);
     case 'swap':
       //by putting this code inside its own function be prevent the swapper object from being defined multple times
-      return await swapper.swap(requestObject.from, requestObject.to, requestObject.amount, requestObject.email);
+      return await swapper.swap(params.from, params.to, params.amount, params.email);
       
     case 'getMin':
-      return await swapper.getMin(requestObject.from, requestObject.to);
+      return await swapper.getMin(params.from, params.to);
 
     case 'preSwap':
-        return await swapper.preSwap(requestObject.from, requestObject.to, requestObject.amount);
+        return await swapper.preSwap(params.from, params.to, params.amount);
     
     case 'swapHistory':
       let history = await swapper.getSwapHistory()
@@ -160,7 +159,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return history;
     
     case 'getStatus':
-      return await swapper.getStatus(requestObject.id);
+      return await swapper.getStatus(params.id);
       
 
     default:
