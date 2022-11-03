@@ -32774,6 +32774,9 @@
               this.currentAccount = await this.unlockAccount(this.currentAccountId);
               return this.currentAccount;
             }
+            async getCurrentNeuteredAccount() {
+              return this.currentAccount;
+            }
             async setCurrentAccount(addr) {
               if (!this.loaded) {
                 await this.load();
@@ -34060,7 +34063,7 @@
           case 'getAccounts':
             return accounts;
           case 'getCurrentAccount':
-            return currentAccount;
+            return accounts.getCurrentNeuteredAccount();
           case 'createAccount':
             const result = await accountLibary.createNewAccount(params.name);
             const newAccount = result.Account;
@@ -34072,8 +34075,6 @@
             }
             _Utils.default.notify("account created");
             return true;
-          case 'pairs':
-            _Swapper.default.pairs();
           case 'importAccount':
             console.log("originString : " + originString);
             return await accountLibary.importAccount(params.name, params.mnemonic);
@@ -34088,7 +34089,7 @@
           case 'getBalance':
             return walletFuncs.getBalance();
           case 'getSpendable':
-            return walletFuncs.getSpendable();
+            return (await walletFuncs.getSpendable()).toString();
           case 'clearAccounts':
             const clearAccountConfirm = await _Utils.default.sendConfirmation('Clear all accounts?', 'imported Accounts will be gone forever');
             if (clearAccountConfirm) {

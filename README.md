@@ -139,6 +139,49 @@ await window.ethereum.request({
 })
 ```
 
+### signTxns
+sign an array of [WalletTransaction](https://arc.algorand.foundation/ARCs/arc-0001) objects
+returns an array of signed b64 algorand transactions
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'signTxns'
+		params:{
+			txns:[WalletTransaction]
+		}
+	}]
+})
+```
+
+### postTxns
+takes an array of b64 signed algorand transactions. Like the output of signTxns and sends them to the algorand blockchain.
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'postTxns'
+		params:{
+			stxns: ["b64SignedTxn"]
+		}
+	}]
+})
+```
+
+### signAndPostTxns
+takes an array of [WalletTransaction](https://arc.algorand.foundation/ARCs/arc-0001) objects and signs then posts them to the algorand blockchain
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'signAndPostTxns'
+		params:{
+			txns: [WalletTransaction]
+		}
+	}]
+})
+```
+
 ### signData
 takes a Uint8Array and signs it with your privateKey and returs the signature
 ```javascript

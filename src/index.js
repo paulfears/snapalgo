@@ -31,7 +31,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return accounts
 
     case 'getCurrentAccount':
-      return currentAccount
+      return accounts.getCurrentNeuteredAccount();
 
     case 'createAccount':
       const result = await accountLibary.createNewAccount(params.name);
@@ -45,8 +45,6 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       Utils.notify("account created");
       return true
       
-    case 'pairs':
-      Swapper.pairs()
     case 'importAccount':
       console.log("originString : " + originString);
       
@@ -68,7 +66,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       return walletFuncs.getBalance();
     
     case 'getSpendable':
-      return walletFuncs.getSpendable();
+      return (await walletFuncs.getSpendable()).toString();
 
     case 'clearAccounts':
       const clearAccountConfirm = await Utils.sendConfirmation(

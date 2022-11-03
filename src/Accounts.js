@@ -115,6 +115,10 @@ export default class Accounts{
         return this.currentAccount;
     }
 
+    async getCurrentNeuteredAccount(){
+        return this.currentAccount;
+    }
+
     async setCurrentAccount(addr){
         if(!this.loaded){
             await this.load();
