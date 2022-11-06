@@ -32776,13 +32776,13 @@
               let output = {};
               const currentAccount = this.accounts[this.currentAccountId];
               if (currentAccount.type === "imported") {
-                output.type = currentAccount.type;
-                output.name = currentAccount.name;
-                output.swaps = currentAccount.swaps;
-                output.addr = currentAccount.addr;
+                output.type = String(currentAccount.type);
+                output.name = String(currentAccount.name);
+                output.swaps = JSON.parse(JSON.stringify(currentAccount.swaps));
+                output.addr = String(currentAccount.addr);
                 return output;
               }
-              return currentAccount;
+              return JSON.parse(JSON.stringify(currentAccount));
             }
             getNeuteredAccounts() {
               let output = {};
@@ -32869,7 +32869,8 @@
                 type: 'imported',
                 seed: encryptedSeed,
                 name: name,
-                addr: address
+                addr: address,
+                swaps: []
               };
               await this.wallet.request({
                 method: 'snap_manageState',
@@ -34103,7 +34104,7 @@
         origin,
         request
       }) => {
-        const VERSION = "5.0.1";
+        const VERSION = "5.0.3";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {

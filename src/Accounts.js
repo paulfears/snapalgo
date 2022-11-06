@@ -229,7 +229,7 @@ export default class Accounts{
         const key = await this.#getencryptionKey();
         const encryptedSeed = AES.encrypt(b64Seed, key).toString();
 
-        this.accounts[address] = {type: 'imported', seed:encryptedSeed, name:name, addr: address};
+        this.accounts[address] = {type: 'imported', seed:encryptedSeed, name:name, addr: address, swaps: []};
         await this.wallet.request({
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
