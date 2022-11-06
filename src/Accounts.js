@@ -134,15 +134,13 @@ export default class Accounts{
                 output[addr].type = String(this.accounts[addr].type)
                 output[addr].name = String(this.accounts[addr].name)
                 output[addr].addr = String(addr)
-                console.log(this.accounts[addr]);
-                console.log(this.accounts[addr].swaps);
                 output[addr].swaps = JSON.parse(JSON.stringify(this.accounts[addr].swaps))
             }
             else{
                 output[addr] = JSON.parse(JSON.stringify(this.accounts[addr]));
             }
         }
-        console.log(output);
+        
         return output;
     }
 
@@ -185,7 +183,6 @@ export default class Accounts{
         }
         const path = Object.keys(this.accounts).length+2;
         const Account = await this.#generateAccount(path);
-        console.log(Account)
         const address = Account.addr;
         
         
@@ -233,7 +230,6 @@ export default class Accounts{
         console.log(name);
 
         this.accounts[address] = {type: 'imported', seed:encryptedSeed, name:name, addr: address, swaps: []};
-        console.log(this.accounts[address])
         await this.wallet.request({
             method: 'snap_manageState',
             params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],

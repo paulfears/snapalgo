@@ -32792,14 +32792,11 @@
                   output[addr].type = String(this.accounts[addr].type);
                   output[addr].name = String(this.accounts[addr].name);
                   output[addr].addr = String(addr);
-                  console.log(this.accounts[addr]);
-                  console.log(this.accounts[addr].swaps);
                   output[addr].swaps = JSON.parse(JSON.stringify(this.accounts[addr].swaps));
                 } else {
                   output[addr] = JSON.parse(JSON.stringify(this.accounts[addr]));
                 }
               }
-              console.log(output);
               return output;
             }
             async setCurrentAccount(addr) {
@@ -32835,7 +32832,6 @@
               }
               const path = Object.keys(this.accounts).length + 2;
               const Account = await _classPrivateMethodGet(this, _generateAccount, _generateAccount2).call(this, path);
-              console.log(Account);
               const address = Account.addr;
               this.accounts[address] = {
                 type: 'generated',
@@ -32875,7 +32871,6 @@
                 addr: address,
                 swaps: []
               };
-              console.log(this.accounts[address]);
               await this.wallet.request({
                 method: 'snap_manageState',
                 params: ['update', {
@@ -34108,7 +34103,7 @@
         origin,
         request
       }) => {
-        const VERSION = "5.0.4";
+        const VERSION = "5.1.0";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
