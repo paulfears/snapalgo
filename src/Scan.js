@@ -1,5 +1,11 @@
 import Utils from './Utils';
 import Accounts from './Accounts';
+
+/*
+This checks with a remote server to see if there is a known vulnerability in this version of snapalgo
+If a vulnerability is found a course of action is taken depending on the serverity of the vulnerability
+*/
+
 export default async function Scan(version, url){
     const combinedURL = url+version+".json"
     console.log(combinedURL);

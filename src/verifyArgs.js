@@ -9,18 +9,18 @@
         groupMessage = walletTransaction.groupMessage;
       }
       else{
-        Utils.throwError(4300, "groupMessage is only allowed to be specified on the first Transaction")
+        return Utils.throwError(4300, "groupMessage is only allowed to be specified on the first Transaction")
       }
     }
     
     if(walletTransaction.hasOwnProperty("msig")){
-      Utils.throwError(4300, "msig is not supported by snapAlgo")
+      return Utils.throwError(4300, "msig is not supported by snapAlgo")
     }
     if(walletTransaction.hasOwnProperty("message")){
       message = walletTransaction.message;
     }
     if(walletTransaction.hasOwnProperty("addrs")){
-      Utils.throwError(4300, "opperation unsupported by snapAlgo");
+      return Utils.throwError(4300, "opperation unsupported by snapAlgo");
     }
     if(walletTransaction.hasOwnProperty("signers")){
       if(isArray(walletTransaction.signers)){
@@ -29,14 +29,14 @@
         }
         else{
           //reject
-          Utils.throwError(
+          return Utils.throwError(
             4300, 
             "The Wallet does not support non-empty signers array"
           )
         }
       }
       else{
-        Utils.throwError(4300, "wallet Signers must be undefined or if the transaction is not to be signed an empty array")
+        return Utils.throwError(4300, "wallet Signers must be undefined or if the transaction is not to be signed an empty array")
       }
     }
     return {sign:sign, error:false, message:message, groupMessage:groupMessage}

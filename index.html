@@ -28,6 +28,7 @@
     <button class="getBalance">Get Balance</button>
     <button class="getSpendable">Get Spendable Balance</button>
     <button id="getTransactionsButton">getTransactions</button>
+    <button id="getAccounts">getAccounts</button>
     <br>
     <input type="checkbox" id="testnet" checked/>
     <label for="testnet">Testnet</label>
@@ -129,6 +130,7 @@
     const getSwapHistoryButton = document.getElementById('getSwapHistory');
     const getStatusButton = document.getElementById('getStatusButton');
     const transactionStatusInput = document.getElementById('transactionStatusInput');
+    const getAccountsButton = document.getElementById("getAccounts")
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -158,6 +160,7 @@
     preSwapButton.addEventListener('click', preSwap);
     getSwapHistoryButton.addEventListener('click', getSwapHistory);
     getStatusButton.addEventListener('click', getTransactionStatus);
+    getAccountsButton.addEventListener('click', getAccounts);
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -706,6 +709,17 @@
 
       
       console.log(response);
+    }
+
+    async function getAccounts(){
+      const response = await ethereum.request({
+          method: 'wallet_invokeSnap',
+          params: [snapId, {
+            method: 'getAccounts'
+          }]
+        })
+      console.log(response);
+
     }
 
     async function transact(){

@@ -232,26 +232,24 @@ export default class Swapper{
         "email": email?email:""
       })
       console.log(swapData);
-      for(let key in swapData){
-        console.log(key, " : ", swapData[key]);
-      }
       if(swapData.body.error === "true"){
         console.log("here");
         Utils.throwError(500, JSON.stringify(swapData.body));
       }
         
       swapData.body.link = "https://changenow.io/exchange/txs/"+ swapData.body.id;
+      swapData.body.timeStamp = String(new Date());
       const swapConfirmation = await Utils.sendConfirmation(
         "Confirm Swap", 
         "Would you like to confirm this swap", 
         `Would you like to to swap ${amount} ${swapData.body.fromCurrency} for an estimated ${swapData.body.amount} ${swapData.body.toCurrency}`
       );
       if(!swapConfirmation){
-        Utils.throwError(4300, "User Rejected Request");
+        return Utils.throwError(4300, "User Rejected Request");
       }
       if(swapData.body.error){
         console.log("there is an error");
-        Utils.throwError(500, "Error in Swap")
+        return Utils.throwError(500, "Error in Swap")
       }
       const sendAmount = Swapper.toSmallestUnit(amount, from);
       console.log('converted send amount is: ');

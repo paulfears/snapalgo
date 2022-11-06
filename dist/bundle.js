@@ -32681,6 +32681,7 @@
           var _tweetnacl = _interopRequireDefault(require("tweetnacl"));
           var _keyTree = require("@metamask/key-tree");
           var _cryptoJs = require("crypto-js");
+          var _Utils = _interopRequireDefault(require("./Utils"));
           function _classPrivateMethodInitSpec(obj, privateSet) {
             _checkPrivateRedeclaration(obj, privateSet);
             privateSet.add(obj);
@@ -32698,8 +32699,10 @@
           }
           const algo = require('algosdk/dist/cjs');
           var _getencryptionKey = new WeakSet();
+          var _generateAccount = new WeakSet();
           class Accounts {
             constructor(wallet) {
+              _classPrivateMethodInitSpec(this, _generateAccount);
               _classPrivateMethodInitSpec(this, _getencryptionKey);
               this.wallet = wallet;
               this.accounts = {};
@@ -32707,13 +32710,13 @@
               this.currentAccount = null;
               this.loaded = false;
             }
-            async load() {
+            async init() {
               const storedAccounts = await this.wallet.request({
                 method: 'snap_manageState',
                 params: ['get']
               });
               if (storedAccounts === null || Object.keys(storedAccounts).length === 0) {
-                const Account = await this.generateAccount(2);
+                const Account = await _classPrivateMethodGet(this, _generateAccount, _generateAccount2).call(this, 2);
                 let extendedAccount = {};
                 extendedAccount.type = 'generated';
                 extendedAccount.addr = Account.addr;
@@ -32740,16 +32743,13 @@
               this.accounts = storedAccounts.Accounts;
               this.currentAccountId = storedAccounts.currentAccountId;
               this.loaded = true;
-              return storedAccounts;
+              return this.accounts;
             }
             async unlockAccount(addr) {
-              if (!this.loaded) {
-                await this.load();
-              }
               if (this.accounts.hasOwnProperty(addr)) {
                 const tempAccount = this.accounts[addr];
                 if (tempAccount.type === 'generated') {
-                  const Account = await this.generateAccount(tempAccount.path);
+                  const Account = await _classPrivateMethodGet(this, _generateAccount, _generateAccount2).call(this, tempAccount.path);
                   return Account;
                 } else if (tempAccount.type === 'imported') {
                   const key = await _classPrivateMethodGet(this, _getencryptionKey, _getencryptionKey2).call(this);
@@ -32765,9 +32765,6 @@
               }
             }
             async getCurrentAccount() {
-              if (!this.loaded) {
-                await this.load();
-              }
               if (this.currentAccount !== null) {
                 return this.currentAccount;
               }
@@ -32775,12 +32772,33 @@
               return this.currentAccount;
             }
             async getCurrentNeuteredAccount() {
-              return this.accounts[this.currentAccountId];
+              let output = {};
+              const currentAccount = this.accounts[this.currentAccountId];
+              if (currentAccount.type === "imported") {
+                output.type = currentAccount.type;
+                output.name = currentAccount.name;
+                output.swaps = currentAccount.swaps;
+                output.addr = currentAccount.addr;
+                return output;
+              }
+              return currentAccount;
+            }
+            getNeuteredAccounts() {
+              let output = {};
+              for (let addr in this.accounts) {
+                if (this.accounts[addr].type === "imported") {
+                  output[addr] = {};
+                  output[addr].type = this.accounts[addr].type;
+                  output[addr].name = this.accounts[addr].name;
+                  output[addr].addr = addr;
+                  output[addr].swaps = this.accounts[addr].swaps;
+                } else {
+                  output[addr] = this.accounts[addr];
+                }
+              }
+              return output;
             }
             async setCurrentAccount(addr) {
-              if (!this.loaded) {
-                await this.load();
-              }
               if (this.accounts.hasOwnProperty(addr)) {
                 this.currentAccountId = addr;
                 this.currentAccount = await this.unlockAccount(addr);
@@ -32791,20 +32809,12 @@
                     "Accounts": this.accounts
                   }]
                 });
-                return {
-                  "currentAccountId": addr,
-                  "Accounts": this.accounts
-                };
+                return true;
               } else {
-                return {
-                  "error": "account not found"
-                };
+                return _Utils.default.throwError(4300, "account not found");
               }
             }
             async getAccounts() {
-              if (!this.loaded) {
-                await this.load();
-              }
               return this.accounts;
             }
             async clearAccounts() {
@@ -32812,23 +32822,15 @@
                 method: 'snap_manageState',
                 params: ['update', {}]
               });
-              const state = await this.wallet.request({
-                method: 'snap_manageState',
-                params: ['get']
-              });
               return true;
             }
             async createNewAccount(name) {
-              console.log(name);
-              if (!this.loaded) {
-                await this.load();
-              }
               if (!name) {
                 const accountIndex = Object.keys(this.accounts).length + 1;
                 name = 'Account ' + accountIndex;
               }
               const path = Object.keys(this.accounts).length + 2;
-              const Account = await this.generateAccount(path);
+              const Account = await _classPrivateMethodGet(this, _generateAccount, _generateAccount2).call(this, path);
               console.log(Account);
               const address = Account.addr;
               this.accounts[address] = {
@@ -32852,9 +32854,6 @@
               };
             }
             async importAccount(name, mnemonic) {
-              if (!this.loaded) {
-                await this.load();
-              }
               if (!name) {
                 name = 'Account ' + (Object.keys(this.accounts).length + 1);
               }
@@ -32882,22 +32881,6 @@
                 "Accounts": this.accounts
               };
             }
-            async generateAccount(path) {
-              const entropy = await this.wallet.request({
-                method: 'snap_getBip44Entropy',
-                params: {
-                  coinType: 283
-                }
-              });
-              const coinTypeNode = entropy;
-              const addressKeyDeriver = await (0, _keyTree.getBIP44AddressKeyDeriver)(coinTypeNode);
-              const privateKey = (await addressKeyDeriver(path)).privateKeyBuffer;
-              const keys = _tweetnacl.default.sign.keyPair.fromSeed(privateKey);
-              const Account = {};
-              Account.addr = algo.encodeAddress(keys.publicKey);
-              Account.sk = keys.secretKey;
-              return Account;
-            }
             async getMnemonic(keypair) {
               return algo.secretKeyToMnemonic(keypair.sk);
             }
@@ -32915,9 +32898,26 @@
             const privateKey = (await addressKeyDeriver(0)).privateKeyBuffer;
             return (0, _cryptoJs.SHA256)(privateKey).toString();
           }
+          async function _generateAccount2(path) {
+            const entropy = await this.wallet.request({
+              method: 'snap_getBip44Entropy',
+              params: {
+                coinType: 283
+              }
+            });
+            const coinTypeNode = entropy;
+            const addressKeyDeriver = await (0, _keyTree.getBIP44AddressKeyDeriver)(coinTypeNode);
+            const privateKey = (await addressKeyDeriver(path)).privateKeyBuffer;
+            const keys = _tweetnacl.default.sign.keyPair.fromSeed(privateKey);
+            const Account = {};
+            Account.addr = algo.encodeAddress(keys.publicKey);
+            Account.sk = keys.secretKey;
+            return Account;
+          }
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
+      "./Utils": 207,
       "@babel/runtime/helpers/interopRequireDefault": 2,
       "@metamask/key-tree": 16,
       "algosdk/dist/cjs": 34,
@@ -33207,7 +33207,7 @@
               requestHeaders = {};
             }
             if (!data) {
-              let data = {};
+              data = {};
             }
             if (query) {
               query = querystring.stringify(query);
@@ -33517,21 +33517,19 @@
             "email": email ? email : ""
           });
           console.log(swapData);
-          for (let key in swapData) {
-            console.log(key, " : ", swapData[key]);
-          }
           if (swapData.body.error === "true") {
             console.log("here");
             _Utils.default.throwError(500, JSON.stringify(swapData.body));
           }
           swapData.body.link = "https://changenow.io/exchange/txs/" + swapData.body.id;
+          swapData.body.timeStamp = String(new Date());
           const swapConfirmation = await _Utils.default.sendConfirmation("Confirm Swap", "Would you like to confirm this swap", `Would you like to to swap ${amount} ${swapData.body.fromCurrency} for an estimated ${swapData.body.amount} ${swapData.body.toCurrency}`);
           if (!swapConfirmation) {
-            _Utils.default.throwError(4300, "User Rejected Request");
+            return _Utils.default.throwError(4300, "User Rejected Request");
           }
           if (swapData.body.error) {
             console.log("there is an error");
-            _Utils.default.throwError(500, "Error in Swap");
+            return _Utils.default.throwError(500, "Error in Swap");
           }
           const sendAmount = Swapper.toSmallestUnit(amount, from);
           console.log('converted send amount is: ');
@@ -34042,8 +34040,6 @@
           throw new Error(`${code}\n${msg}`);
         }
         static async notify(message) {
-          console.log("here");
-          console.log(message);
           try {
             await wallet.request({
               method: 'snap_notify',
@@ -34094,7 +34090,6 @@
       "use strict";
 
       var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
-      var _tweetnacl = _interopRequireDefault(require("tweetnacl"));
       var _Accounts = _interopRequireDefault(require("./Accounts"));
       var _AlgoWallet = _interopRequireDefault(require("./AlgoWallet"));
       var _walletFuncs = _interopRequireDefault(require("./walletFuncs"));
@@ -34112,45 +34107,42 @@
         if (!safe) {
           return _Utils.default.throwError(4001, "Wallet is not operational");
         }
-        const accountLibary = new _Accounts.default(wallet);
-        const requestObject = request;
-        const params = requestObject.params;
-        console.log(params);
+        const params = request.params;
         const originString = origin;
-        let accounts = await accountLibary.getAccounts();
+        const accountLibary = new _Accounts.default(wallet);
+        const accounts = await accountLibary.init();
         let currentAccount = await accountLibary.getCurrentAccount();
         const algoWallet = new _AlgoWallet.default(currentAccount);
         const walletFuncs = new _walletFuncs.default(algoWallet);
         const arcs = new _Arcs.default(algoWallet, walletFuncs);
         const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-        if (params.hasOwnProperty('testnet')) {
-          console.log("testnetSet");
-          console.log(params.testnet);
+        if (params && params.hasOwnProperty('testnet')) {
           algoWallet.setTestnet(params.testnet);
         }
-        switch (requestObject.method) {
+        switch (request.method) {
           case 'getAccounts':
-            return accounts;
+            return accountLibary.getNeuteredAccounts();
           case 'getCurrentAccount':
-            return accounts.getCurrentNeuteredAccount();
+            return accountLibary.getCurrentNeuteredAccount();
           case 'createAccount':
             const result = await accountLibary.createNewAccount(params.name);
             const newAccount = result.Account;
-            console.log(newAccount);
             const mnemonic = await accountLibary.getMnemonic(newAccount);
             const mnemonicConfirmation = await _Utils.default.sendConfirmation("Display Mnemonic", "Do you want to display Your mnemonic", "Your mnemonic is used to recover your account, you can choose to display it now, or later from the account tab in the wallet");
             if (mnemonicConfirmation) {
-              _Utils.default.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
+              await _Utils.default.sendConfirmation("mnemonic", newAccount.addr, mnemonic);
             }
-            _Utils.default.notify("account created");
+            await _Utils.default.notify("account created");
             return true;
           case 'importAccount':
-            console.log("originString : " + originString);
-            return await accountLibary.importAccount(params.name, params.mnemonic);
+            if (originString === "https://snapalgo.com") {
+              return await accountLibary.importAccount(params.name, params.mnemonic);
+            }
+            return _Utils.default.throwError(4300, "importAccount can only be called from https://snapalgo.com");
           case 'setAccount':
             return await accountLibary.setCurrentAccount(params.address);
           case 'getAssets':
-            return walletFuncs.getAssets();
+            return await walletFuncs.getAssets();
           case 'isValidAddress':
             return walletFuncs.isValidAddress(params.address);
           case 'getTransactions':
@@ -34169,11 +34161,7 @@
             return false;
           case 'displayBalance':
             return await _Utils.default.sendConfirmation("your balance is", algoWallet.getAddress(), (await walletFuncs.getBalance()).toString() + " Algos");
-          case 'signData':
-            let out = _tweetnacl.default.sign(new Uint8Array(params.data), currentAccount.sk);
-            return out;
           case 'secureReceive':
-            console.log(originString);
             if (originString === "https://snapalgo.com") {
               let confirm = await _Utils.default.sendConfirmation("Do you want to display your address?", currentAccount.addr);
               if (confirm) {
@@ -34182,34 +34170,33 @@
                 return _Utils.default.throwError(4001, "user Rejected Request");
               }
             }
+            return _Utils.default.throwError(4300, "this method can only be called from https://snapalgo.com");
           case 'getAddress':
             return algoWallet.getAddress();
           case 'displayMnemonic':
             return await walletFuncs.displayMnemonic();
           case 'transfer':
             return await walletFuncs.transfer(params.to, params.amount, params.note);
-          case 'getAccount':
-            return await getAccount();
           case 'Uint8ArrayToBase64':
             return walletFuncs.Uint8ArrayToBase64(params.data);
           case 'signTxns':
-            return arcs.signTxns(params.txns, originString);
+            return await arcs.signTxns(params.txns, originString);
           case 'postTxns':
-            return arcs.postTxns(params.stxns);
+            return await arcs.postTxns(params.stxns);
           case 'appOptIn':
-            return walletFuncs.AppOptIn(params.appIndex);
+            return await walletFuncs.AppOptIn(params.appIndex);
           case 'assetOptIn':
-            return walletFuncs.AssetOptIn(params.assetIndex);
+            return await walletFuncs.AssetOptIn(params.assetIndex);
           case 'assetOptOut':
-            return walletFuncs.assetOptOut(params.assetIndex);
+            return await walletFuncs.assetOptOut(params.assetIndex);
           case 'transferAsset':
-            return walletFuncs.TransferAsset(params.assetIndex, params.to, params.amount);
+            return await walletFuncs.TransferAsset(params.assetIndex, params.to, params.amount);
           case 'getAssetById':
-            return walletFuncs.getAssetById(params.assetIndex);
+            return await walletFuncs.getAssetById(params.assetIndex);
           case 'signAndPostTxns':
-            return arcs.signAndPostTxns(params.txns, originString);
+            return await arcs.signAndPostTxns(params.txns, originString);
           case 'signLogicSig':
-            return walletFuncs.signLogicSig(params.logicSigAccount, params.sender);
+            return await walletFuncs.signLogicSig(params.logicSigAccount, params.sender);
           case 'swap':
             return await swapper.swap(params.from, params.to, params.amount, params.email);
           case 'getMin':
@@ -34236,8 +34223,7 @@
       "./Swapper": 205,
       "./Utils": 207,
       "./walletFuncs": 210,
-      "@babel/runtime/helpers/interopRequireDefault": 2,
-      "tweetnacl": 198
+      "@babel/runtime/helpers/interopRequireDefault": 2
     }],
     209: [function (require, module, exports) {
       "use strict";
@@ -34249,9 +34235,6 @@
       exports.default = verifyArgs;
       var _Utils = _interopRequireDefault(require("./Utils"));
       function verifyArgs(walletTransaction, first) {
-        let error = false;
-        let errorCode = 0;
-        let errorMsd = "";
         let sign = true;
         let message = "";
         let groupMessage = "";
@@ -34259,27 +34242,27 @@
           if (first === true) {
             groupMessage = walletTransaction.groupMessage;
           } else {
-            _Utils.default.throwError(4300, "groupMessage is only allowed to be specified on the first Transaction");
+            return _Utils.default.throwError(4300, "groupMessage is only allowed to be specified on the first Transaction");
           }
         }
         if (walletTransaction.hasOwnProperty("msig")) {
-          _Utils.default.throwError(4300, "msig is not supported by snapAlgo");
+          return _Utils.default.throwError(4300, "msig is not supported by snapAlgo");
         }
         if (walletTransaction.hasOwnProperty("message")) {
           message = walletTransaction.message;
         }
         if (walletTransaction.hasOwnProperty("addrs")) {
-          _Utils.default.throwError(4300, "opperation unsupported by snapAlgo");
+          return _Utils.default.throwError(4300, "opperation unsupported by snapAlgo");
         }
         if (walletTransaction.hasOwnProperty("signers")) {
           if (isArray(walletTransaction.signers)) {
             if (walletTransaction.signer.length < 1) {
               sign = false;
             } else {
-              _Utils.default.throwError(4300, "The Wallet does not support non-empty signers array");
+              return _Utils.default.throwError(4300, "The Wallet does not support non-empty signers array");
             }
           } else {
-            _Utils.default.throwError(4300, "wallet Signers must be undefined or if the transaction is not to be signed an empty array");
+            return _Utils.default.throwError(4300, "wallet Signers must be undefined or if the transaction is not to be signed an empty array");
           }
         }
         return {

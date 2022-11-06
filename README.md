@@ -67,6 +67,11 @@ const  response = await  window.ethereum.request({
 ```
 ### Available RPC Methods
 
+---
+## Account functions
+These functions handle getting infomation about a users account, assets, balance, and history
+---
+
 #### displayBalance
 Displays the users current balance in a metamask flask popup
 
@@ -104,6 +109,7 @@ let address = await window.ethereum.request({
 	}]
 })
 ```
+
 #### transfer
 transfers a number of algos to a specified address
 ```javascript
@@ -144,6 +150,23 @@ await window.ethereum.request({
 	}]
 })
 ```
+### getAssets
+returns a list of the current accounts assets
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'getAssets',
+		params:{
+			testnet: false
+		}
+	}]
+})
+```
+***
+## Arc Complience Functions
+these functions are used ARC complient ways to sign arbitray transactions
+***
 
 ### signTxns
 sign an array of [WalletTransaction](https://arc.algorand.foundation/ARCs/arc-0001) objects
@@ -188,19 +211,7 @@ await window.ethereum.request({
 })
 ```
 
-### signData
-takes a Uint8Array and signs it with your privateKey and returs the signature
-```javascript
-await window.ethereum.request({
-	method: 'wallet_invokeSnap',
-	params: ['npm:algorand', {
-		method: 'signData'
-		params:{
-			data: new Uint8Array()
-		}
-	}]
-})
-```
+
 ***
 ## Asset Functions
 the functions are used to interact with algorand assets

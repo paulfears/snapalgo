@@ -17,8 +17,6 @@ export default class Utils {
     }
 
     static async notify(message){
-        console.log("here");
-        console.log(message);
         try{
             await wallet.request({
                 method: 'snap_notify',
