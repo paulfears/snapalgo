@@ -32792,9 +32792,11 @@
                   output[addr].type = String(this.accounts[addr].type);
                   output[addr].name = String(this.accounts[addr].name);
                   output[addr].addr = String(addr);
+                  console.log(this.accounts[addr]);
+                  console.log(this.accounts[addr].swaps);
                   output[addr].swaps = JSON.parse(JSON.stringify(this.accounts[addr].swaps));
                 } else {
-                  output[addr] = this.accounts[addr];
+                  output[addr] = JSON.parse(JSON.stringify(this.accounts[addr]));
                 }
               }
               console.log(output);

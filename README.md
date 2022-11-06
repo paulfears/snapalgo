@@ -180,15 +180,15 @@ returns the users current Account
 await window.ethereum.request({
 	method: 'wallet_invokeSnap',
 	params: ['npm:algorand', {
-		method: 'getAccounts',
+		method: 'getCurrentAccount',
 	}]
 })
 ```
 ### set Current Account
 sets the Users Current Account
 takes an algorand address as a parameter and throws an error if the address is not contained in the users wallet
-```javascript
 returns the users current Account
+```javascript
 await window.ethereum.request({
 	method: 'wallet_invokeSnap',
 	params: ['npm:algorand', {
