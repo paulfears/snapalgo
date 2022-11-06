@@ -32867,6 +32867,7 @@
               let b64Seed = Buffer.from(seed).toString('base64');
               const key = await _classPrivateMethodGet(this, _getencryptionKey, _getencryptionKey2).call(this);
               const encryptedSeed = _cryptoJs.AES.encrypt(b64Seed, key).toString();
+              console.log(name);
               this.accounts[address] = {
                 type: 'imported',
                 seed: encryptedSeed,
@@ -32874,6 +32875,7 @@
                 addr: address,
                 swaps: []
               };
+              console.log(this.accounts[address]);
               await this.wallet.request({
                 method: 'snap_manageState',
                 params: ['update', {
@@ -34106,7 +34108,7 @@
         origin,
         request
       }) => {
-        const VERSION = "5.0.3";
+        const VERSION = "5.0.4";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
