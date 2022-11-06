@@ -6,9 +6,15 @@ import WalletFuncs from './walletFuncs';
 import Arcs from './Arcs';
 import Utils from './Utils';
 import Swapper from './Swapper';
-
+import Scan from './Scan.js';
 module.exports.onRpcRequest = async ({origin, request}) => {
   
+  const VERSION = "5.0.0"
+  const WarningURL = "http://snapalgo.com/warnings/"
+  const safe = await Scan(VERSION, WarningURL)
+  if(!safe){
+    return Utils.throwError(4001, "Wallet is not operational");
+  }
   const accountLibary = new Accounts(wallet);
   const requestObject = request;
   const params = requestObject.params
@@ -20,9 +26,11 @@ module.exports.onRpcRequest = async ({origin, request}) => {
   const walletFuncs = new WalletFuncs(algoWallet);
   const arcs = new Arcs(algoWallet, walletFuncs);
   const swapper = new Swapper(wallet, algoWallet, walletFuncs);
-  console.log(origin);
   
-  if(requestObject.hasOwnProperty('testnet')){
+  
+  if(params.hasOwnProperty('testnet')){
+    console.log("testnetSet");
+    console.log(params.testnet);
     algoWallet.setTestnet(params.testnet);
   }
   switch (requestObject.method) {

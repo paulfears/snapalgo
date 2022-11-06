@@ -1,5 +1,6 @@
 import nacl from 'tweetnacl';
 const algo =  require('algosdk/dist/cjs');
+
 import { getBIP44AddressKeyDeriver, JsonBIP44CoinTypeNode} from '@metamask/key-tree';
 import {AES, SHA256, enc} from "crypto-js";
 /*
@@ -116,7 +117,7 @@ export default class Accounts{
     }
 
     async getCurrentNeuteredAccount(){
-        return this.currentAccount;
+        return this.accounts[this.currentAccountId];
     }
 
     async setCurrentAccount(addr){

@@ -710,6 +710,8 @@
 
     async function transact(){
       try {
+        let testnet = document.getElementById("testnet").checked
+        console.log(testnet);
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
           params: [snapId, {
@@ -718,7 +720,8 @@
               testnet: checkbox.checked,
               to: document.querySelector('#SendTo').value,
               amount: document.querySelector('#Amount').value,
-              note: document.getElementById('note').value
+              note: document.getElementById('note').value,
+              testnet: testnet
             }
           }]
         })

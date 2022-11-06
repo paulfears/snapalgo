@@ -53,7 +53,7 @@ export default class HTTPClient{
           requestHeaders = {}
         }
         if(!data){
-          let data = {}
+          data = {}
         }
         if(query){
           query = querystring.stringify(query);

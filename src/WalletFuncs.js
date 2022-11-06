@@ -7,6 +7,8 @@ export default class WalletFuncs{
     //takes an instance of algowallet on construction
     constructor(algoWallet){
         this.wallet = algoWallet;
+        
+        this.networkStr = this.wallet.testnet?" (Testnet)":" (Mainnet)"
     }
 
     #signAndPost(txn, algod){
@@ -101,7 +103,10 @@ export default class WalletFuncs{
     
     async transfer(receiver, amount, note){
         //user confirmation
-        const confirm = await Utils.sendConfirmation("confirm Spend", `send ${Number(amount)/1000000} ALGO to ${receiver}?`);
+        this.networkStr = this.wallet.testnet?" (Testnet)":" (Mainnet)"
+        const confirm = await Utils.sendConfirmation(
+            "confirm Spend"+this.networkStr, 
+            `send ${Number(amount)/1000000} ALGO to ${receiver}?`);
         if(!confirm){
             return Utils.throwError(4001, "user rejected Transaction");
         }
@@ -149,8 +154,10 @@ export default class WalletFuncs{
     }
     
     async AssetOptIn(assetIndex){
-        
-        const confirm = await Utils.sendConfirmation("confirm OptIn", "opt in to asset "+assetIndex+"?");
+        this.networkStr = this.wallet.testnet?" (Testnet)":" (Mainnet)"
+        const confirm = await Utils.sendConfirmation(
+            "confirm OptIn"+this.networkStr, 
+            "opt in to asset "+assetIndex+"?");
         if(!confirm){
             return Utils.throwError(4001, "user rejected Transaction");
         }
@@ -179,7 +186,8 @@ export default class WalletFuncs{
     }
 
     async assetOptOut(assetIndex){
-        const confirm = await Utils.sendConfirmation("confirm OptOut", "opt out of asset "+assetIndex+"?\n you will lose all of this asset");
+        this.networkStr = this.wallet.testnet?" (Testnet)":" (Mainnet)"
+        const confirm = await Utils.sendConfirmation("confirm OptOut"+this.networkStr, "opt out of asset "+assetIndex+"?\n you will lose all of this asset");
         if(!confirm){
             Utils.throwError(4001, "user rejected Transaction");
         }
@@ -211,7 +219,8 @@ export default class WalletFuncs{
     }
     
     async TransferAsset(assetIndex, receiver, amount){
-        const confirm = await Utils.sendConfirmation("confirm Transfer", "send "+amount+"? of : "+assetIndex+" to "+receiver+"?");
+        this.networkStr = this.wallet.testnet?" (Testnet)":" (Mainnet)"
+        const confirm = await Utils.sendConfirmation("confirm Transfer"+this.networkStr, "send "+amount+"? of : "+assetIndex+" to "+receiver+"?");
         if(!confirm){
             return Utils.throwError(4001, "user rejected Transaction");
         }
@@ -241,7 +250,8 @@ export default class WalletFuncs{
     }
 
     async AppOptIn(appIndex){
-        const confirm = await Utils.sendConfirmation("confirm OptIn", "opt in to app "+appIndex+"?");
+        this.networkStr = this.wallet.testnet?" (Testnet)":" (Mainnet)"
+        const confirm = await Utils.sendConfirmation("confirm OptIn"+this.networkStr, "opt in to app "+appIndex+"?");
         if(!confirm){
             return Utils.throwError(4001, "user rejected Transaction");
         }
@@ -274,7 +284,7 @@ export default class WalletFuncs{
     
 
     async signLogicSig(logicSigAccount){
-        let confirm = await Utils.sendConfirmation("sign logic sig?", "Are you sure", "Signing a logic signature gives a smart contract the ability to sign transactions on your behalf. This can result in the loss of funds");
+        let confirm = await Utils.sendConfirmation("sign logic sig?", "Are you sure", "Signing a logic signature gives a smart contract the ability to sign transactions on your behalf even on the mainnet. This can result in the loss of funds");
         if(!confirm){
             Utils.throwError(4001, "user rejected Request");
         }

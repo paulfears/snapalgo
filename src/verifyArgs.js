@@ -1,8 +1,5 @@
   import Utils from "./Utils"
   export default function verifyArgs(walletTransaction, first){
-    let error = false
-    let errorCode = 0
-    let errorMsd = ""
     let sign = true
     let message = ""
     let groupMessage = ""

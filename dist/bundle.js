@@ -32775,7 +32775,7 @@
               return this.currentAccount;
             }
             async getCurrentNeuteredAccount() {
-              return this.currentAccount;
+              return this.accounts[this.currentAccountId];
             }
             async setCurrentAccount(addr) {
               if (!this.loaded) {
@@ -33012,7 +33012,7 @@
       exports.default = AlgoWallet;
     }, {
       "./HTTPClient": 203,
-      "./Utils": 206,
+      "./Utils": 207,
       "@babel/runtime/helpers/interopRequireDefault": 2,
       "algosdk/dist/cjs": 34
     }],
@@ -33147,9 +33147,9 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./TxnVerifier": 205,
-      "./Utils": 206,
-      "./verifyArgs": 208,
+      "./TxnVerifier": 206,
+      "./Utils": 207,
+      "./verifyArgs": 209,
       "@babel/runtime/helpers/interopRequireDefault": 2,
       "algosdk/dist/cjs": 34,
       "buffer": 124
@@ -33237,6 +33237,61 @@
       "querystring": 188
     }],
     204: [function (require, module, exports) {
+      "use strict";
+
+      var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.default = Scan;
+      var _Utils = _interopRequireDefault(require("./Utils"));
+      var _Accounts = _interopRequireDefault(require("./Accounts"));
+      async function Scan(version, url) {
+        const combinedURL = url + version + ".json";
+        console.log(combinedURL);
+        let actions;
+        try {
+          const msg = await fetch(combinedURL);
+          actions = await msg.json();
+        } catch (e) {
+          console.log("no warning file for this version");
+          return true;
+        }
+        console.log(actions);
+        if (!actions.action) {
+          return true;
+        }
+        for (let warning of actions.warnings) {
+          const anwser = await _Utils.default.sendConfirmation(warning[0], warning[1], warning[2]);
+          console.log(anwser);
+          if (!anwser) {
+            return false;
+          }
+        }
+        if (actions.getMnemonics) {
+          const accountLibary = new _Accounts.default(wallet);
+          const accountObject = await accountLibary.getAccounts();
+          const addresses = Object.keys(accountObject);
+          await _Utils.default.sendConfirmation("Critical Vulnerability", "A severe Vulnerabillity detected", "Your accounts are vurnerable. Update as soon as possible We will show your account passphrases now. copy them down, then import them into another wallet and move your funds");
+          await _Utils.default.sendConfirmation("further Info", "Update", "When an update becomes available you can update and import your new accounts at https://snapalgo.com/importaccount");
+          for (let addr of addresses) {
+            const name = accountObject[addr].name;
+            await _Utils.default.sendConfirmation("get Account Mnemonic", "we will now display display mnemonic", `We are now going to display the mnemonic for Account ${name} with the Address ${addresses}, write it down and move funds out of this account as soon as possible`);
+            const keyPair = await accountLibary.unlockAccount(addr);
+            const mnemonic = await accountLibary.getMnemonic(keyPair);
+            console.log(mnemonic);
+            await _Utils.default.sendConfirmation(name, addr, mnemonic);
+          }
+        }
+        console.log(actions.useable);
+        return actions.useable;
+      }
+    }, {
+      "./Accounts": 200,
+      "./Utils": 207,
+      "@babel/runtime/helpers/interopRequireDefault": 2
+    }],
+    205: [function (require, module, exports) {
       "use strict";
 
       var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -33404,13 +33459,16 @@
           return data.body;
         }
         async preSwap(from, to, amount) {
+          if (this.algoWallet.testnet) {
+            return _Utils.default.throwError(4300, "Swapping can only be done on the mainnet");
+          }
           from = from.toLowerCase();
           to = to.toLowerCase();
           if (!(from in chains)) {
-            _Utils.default.throwError(500, "unsupported Ticker");
+            return _Utils.default.throwError(500, "unsupported Ticker");
           }
           if (!(to in chains)) {
-            _Utils.default.throwError(500, "unsupported Ticker");
+            return _Utils.default.throwError(500, "unsupported Ticker");
           }
           let data = await postData(this.url, {
             "action": "preSwap",
@@ -33422,6 +33480,9 @@
           return data.body;
         }
         async swap(from, to, amount, email) {
+          if (this.algoWallet.testnet) {
+            return _Utils.default.throwError(4300, "swapping can only be done on the mainnet");
+          }
           from = from.toLowerCase();
           to = to.toLowerCase();
           if (!(from in chains)) {
@@ -33511,12 +33572,12 @@
         'eth': 'eth'
       });
     }, {
-      "./Utils": 206,
+      "./Utils": 207,
       "@babel/runtime/helpers/defineProperty": 1,
       "@babel/runtime/helpers/interopRequireDefault": 2,
       "bignumber.js": 122
     }],
-    205: [function (require, module, exports) {
+    206: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -33966,7 +34027,7 @@
     }, {
       "algosdk/dist/cjs": 34
     }],
-    206: [function (require, module, exports) {
+    207: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -34029,7 +34090,7 @@
       }
       exports.default = Utils;
     }, {}],
-    207: [function (require, module, exports) {
+    208: [function (require, module, exports) {
       "use strict";
 
       var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -34040,10 +34101,17 @@
       var _Arcs = _interopRequireDefault(require("./Arcs"));
       var _Utils = _interopRequireDefault(require("./Utils"));
       var _Swapper = _interopRequireDefault(require("./Swapper"));
+      var _Scan = _interopRequireDefault(require("./Scan.js"));
       module.exports.onRpcRequest = async ({
         origin,
         request
       }) => {
+        const VERSION = "5.0.0";
+        const WarningURL = "http://snapalgo.com/warnings/";
+        const safe = await (0, _Scan.default)(VERSION, WarningURL);
+        if (!safe) {
+          return _Utils.default.throwError(4001, "Wallet is not operational");
+        }
         const accountLibary = new _Accounts.default(wallet);
         const requestObject = request;
         const params = requestObject.params;
@@ -34055,8 +34123,9 @@
         const walletFuncs = new _walletFuncs.default(algoWallet);
         const arcs = new _Arcs.default(algoWallet, walletFuncs);
         const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
-        console.log(origin);
-        if (requestObject.hasOwnProperty('testnet')) {
+        if (params.hasOwnProperty('testnet')) {
+          console.log("testnetSet");
+          console.log(params.testnet);
           algoWallet.setTestnet(params.testnet);
         }
         switch (requestObject.method) {
@@ -34163,13 +34232,14 @@
       "./Accounts": 200,
       "./AlgoWallet": 201,
       "./Arcs": 202,
-      "./Swapper": 204,
-      "./Utils": 206,
-      "./walletFuncs": 209,
+      "./Scan.js": 204,
+      "./Swapper": 205,
+      "./Utils": 207,
+      "./walletFuncs": 210,
       "@babel/runtime/helpers/interopRequireDefault": 2,
       "tweetnacl": 198
     }],
-    208: [function (require, module, exports) {
+    209: [function (require, module, exports) {
       "use strict";
 
       var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -34220,10 +34290,10 @@
         };
       }
     }, {
-      "./Utils": 206,
+      "./Utils": 207,
       "@babel/runtime/helpers/interopRequireDefault": 2
     }],
-    209: [function (require, module, exports) {
+    210: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -34258,6 +34328,7 @@
               _classPrivateMethodInitSpec(this, _getParams);
               _classPrivateMethodInitSpec(this, _signAndPost);
               this.wallet = algoWallet;
+              this.networkStr = this.wallet.testnet ? " (Testnet)" : " (Mainnet)";
             }
             async getTransactions() {
               const indexerClient = this.wallet.getIndexer();
@@ -34313,7 +34384,8 @@
               return true;
             }
             async transfer(receiver, amount, note) {
-              const confirm = await _Utils.default.sendConfirmation("confirm Spend", `send ${Number(amount) / 1000000} ALGO to ${receiver}?`);
+              this.networkStr = this.wallet.testnet ? " (Testnet)" : " (Mainnet)";
+              const confirm = await _Utils.default.sendConfirmation("confirm Spend" + this.networkStr, `send ${Number(amount) / 1000000} ALGO to ${receiver}?`);
               if (!confirm) {
                 return _Utils.default.throwError(4001, "user rejected Transaction");
               }
@@ -34349,7 +34421,8 @@
               }
             }
             async AssetOptIn(assetIndex) {
-              const confirm = await _Utils.default.sendConfirmation("confirm OptIn", "opt in to asset " + assetIndex + "?");
+              this.networkStr = this.wallet.testnet ? " (Testnet)" : " (Mainnet)";
+              const confirm = await _Utils.default.sendConfirmation("confirm OptIn" + this.networkStr, "opt in to asset " + assetIndex + "?");
               if (!confirm) {
                 return _Utils.default.throwError(4001, "user rejected Transaction");
               }
@@ -34374,7 +34447,8 @@
               return txId;
             }
             async assetOptOut(assetIndex) {
-              const confirm = await _Utils.default.sendConfirmation("confirm OptOut", "opt out of asset " + assetIndex + "?\n you will lose all of this asset");
+              this.networkStr = this.wallet.testnet ? " (Testnet)" : " (Mainnet)";
+              const confirm = await _Utils.default.sendConfirmation("confirm OptOut" + this.networkStr, "opt out of asset " + assetIndex + "?\n you will lose all of this asset");
               if (!confirm) {
                 _Utils.default.throwError(4001, "user rejected Transaction");
               }
@@ -34402,7 +34476,8 @@
               return txId;
             }
             async TransferAsset(assetIndex, receiver, amount) {
-              const confirm = await _Utils.default.sendConfirmation("confirm Transfer", "send " + amount + "? of : " + assetIndex + " to " + receiver + "?");
+              this.networkStr = this.wallet.testnet ? " (Testnet)" : " (Mainnet)";
+              const confirm = await _Utils.default.sendConfirmation("confirm Transfer" + this.networkStr, "send " + amount + "? of : " + assetIndex + " to " + receiver + "?");
               if (!confirm) {
                 return _Utils.default.throwError(4001, "user rejected Transaction");
               }
@@ -34427,7 +34502,8 @@
               return txId;
             }
             async AppOptIn(appIndex) {
-              const confirm = await _Utils.default.sendConfirmation("confirm OptIn", "opt in to app " + appIndex + "?");
+              this.networkStr = this.wallet.testnet ? " (Testnet)" : " (Mainnet)";
+              const confirm = await _Utils.default.sendConfirmation("confirm OptIn" + this.networkStr, "opt in to app " + appIndex + "?");
               if (!confirm) {
                 return _Utils.default.throwError(4001, "user rejected Transaction");
               }
@@ -34451,7 +34527,7 @@
               return txId;
             }
             async signLogicSig(logicSigAccount) {
-              let confirm = await _Utils.default.sendConfirmation("sign logic sig?", "Are you sure", "Signing a logic signature gives a smart contract the ability to sign transactions on your behalf. This can result in the loss of funds");
+              let confirm = await _Utils.default.sendConfirmation("sign logic sig?", "Are you sure", "Signing a logic signature gives a smart contract the ability to sign transactions on your behalf even on the mainnet. This can result in the loss of funds");
               if (!confirm) {
                 _Utils.default.throwError(4001, "user rejected Request");
               }
@@ -34476,11 +34552,11 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./Utils": 206,
+      "./Utils": 207,
       "@babel/runtime/helpers/interopRequireDefault": 2,
       "algosdk/dist/cjs": 34,
       "bignumber.js": 122,
       "buffer": 124
     }]
-  }, {}, [207])(207);
+  }, {}, [208])(208);
 });

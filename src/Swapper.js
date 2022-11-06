@@ -174,13 +174,16 @@ export default class Swapper{
       
 
     async preSwap(from, to, amount){
+      if(this.algoWallet.testnet){
+        return Utils.throwError(4300, "Swapping can only be done on the mainnet");
+      }
         from = from.toLowerCase();
         to = to.toLowerCase();
         if(!(from in chains)){
-            Utils.throwError(500, "unsupported Ticker");
+            return Utils.throwError(500, "unsupported Ticker");
         }
         if(!(to in chains)){
-            Utils.throwError(500, "unsupported Ticker");
+            return Utils.throwError(500, "unsupported Ticker");
         }
         let data = await postData(this.url, {
             "action":"preSwap",
@@ -193,6 +196,9 @@ export default class Swapper{
     }
 
     async swap(from, to, amount, email){
+      if(this.algoWallet.testnet){
+        return Utils.throwError(4300, "swapping can only be done on the mainnet");
+      }
       from = from.toLowerCase();
       to = to.toLowerCase();
       if(!(from in chains)){

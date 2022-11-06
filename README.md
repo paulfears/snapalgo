@@ -45,6 +45,12 @@ async  function  connect () {
 
 ### Calling RPC Methods
 Below is an example call to the snap that transacts 1000 microalgos to an entered public address. Again this can be run with 0 dependency other than metamask flask
+---
+All methods can be called with the param:
+testnet: (bool)
+if the method does not depend on the testnet it is ignored
+if the method can be used with testnet, testnet is then used instead
+---
 ```javascript
 const address = prompt("Please enter your name");
 const  response = await  window.ethereum.request({
