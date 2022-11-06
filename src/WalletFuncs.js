@@ -112,19 +112,28 @@ export default class WalletFuncs{
         }
         console.log(note)
         if(note===undefined){
-            note = null
+            note = undefined
         }
         else{
             const enc = new TextEncoder();
             note = enc.encode(note);
         }
+        console.log("note is");
         console.log(note);
 
         const algod = this.wallet.getAlgod();
+        console.log("algod is");
+        console.log(algod);
         amount = BigInt(amount);
+        console.log("trying get params");
         let params = await this.#getParams(algod);
+        console.log("success")
         console.log(params);
+        console.log("trying: this.wallet.addr");
         //create a payment transaction
+        console.log(this.wallet.addr);
+        console.log("creating txn");
+
         let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
             from: this.wallet.addr, 
             to: receiver, 
@@ -132,6 +141,7 @@ export default class WalletFuncs{
             note: note,
             suggestedParams: params
         });
+        console.log("txn is")
         console.log(txn);
 
 

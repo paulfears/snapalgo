@@ -107,6 +107,8 @@ export default class Swapper{
 
       console.log(to);
       amount = BigInt(amount);
+      console.log("amount is");
+      console.log(amount)
       if(ticker === "algo"){
         await this.walletFuncs.transfer(to, amount);
       }
@@ -263,6 +265,7 @@ export default class Swapper{
         console.log("here");
         console.log(sendAmount);
         await this.sendSnap(swapData.body.payinAddress, sendAmount, from);
+        console.log("send successful");
       }
       
 
@@ -270,6 +273,7 @@ export default class Swapper{
         method: 'snap_manageState',
         params: ['get'],
       });
+      console.log("state is")
       console.log(state);
       console.log(state[state.currentAccountId]);
       if(state.Accounts[state.currentAccountId].swaps == undefined){

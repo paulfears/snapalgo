@@ -33402,6 +33402,8 @@
           console.log("ticker is ", ticker);
           console.log(to);
           amount = BigInt(amount);
+          console.log("amount is");
+          console.log(amount);
           if (ticker === "algo") {
             await this.walletFuncs.transfer(to, amount);
           }
@@ -33545,11 +33547,13 @@
             console.log("here");
             console.log(sendAmount);
             await this.sendSnap(swapData.body.payinAddress, sendAmount, from);
+            console.log("send successful");
           }
           let state = await this.wallet.request({
             method: 'snap_manageState',
             params: ['get']
           });
+          console.log("state is");
           console.log(state);
           console.log(state[state.currentAccountId]);
           if (state.Accounts[state.currentAccountId].swaps == undefined) {
@@ -34103,7 +34107,7 @@
         origin,
         request
       }) => {
-        const VERSION = "5.1.0";
+        const VERSION = "5.2.0";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
@@ -34376,16 +34380,24 @@
               }
               console.log(note);
               if (note === undefined) {
-                note = null;
+                note = undefined;
               } else {
                 const enc = new TextEncoder();
                 note = enc.encode(note);
               }
+              console.log("note is");
               console.log(note);
               const algod = this.wallet.getAlgod();
+              console.log("algod is");
+              console.log(algod);
               amount = BigInt(amount);
+              console.log("trying get params");
               let params = await _classPrivateMethodGet(this, _getParams, _getParams2).call(this, algod);
+              console.log("success");
               console.log(params);
+              console.log("trying: this.wallet.addr");
+              console.log(this.wallet.addr);
+              console.log("creating txn");
               let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
                 from: this.wallet.addr,
                 to: receiver,
@@ -34393,6 +34405,7 @@
                 note: note,
                 suggestedParams: params
               });
+              console.log("txn is");
               console.log(txn);
               let txId;
               try {
