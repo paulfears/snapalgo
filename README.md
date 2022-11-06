@@ -52,7 +52,7 @@ if the method does not depend on the testnet it is ignored
 if the method can be used with testnet, testnet is then used instead
 ---
 ```javascript
-const address = prompt("Please enter your name");
+const address = prompt("Please enter your recipient Address");
 const  response = await  window.ethereum.request({
 	method:  'wallet_invokeSnap',
 	params: ['npm:algorand', {
@@ -160,6 +160,39 @@ await window.ethereum.request({
 		params:{
 			testnet: false
 		}
+	}]
+})
+```
+### get Accounts
+returns an object containing all of the algorand accounts on a users metamask
+```javascript
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'getAccounts',
+	}]
+})
+```
+### get Current Account
+returns the users current Account
+```javascript
+returns the users current Account
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'getAccounts',
+	}]
+})
+```
+### set Current Account
+sets the Users Current Account
+takes an algorand address as a parameter and throws an error if the address is not contained in the users wallet
+```javascript
+returns the users current Account
+await window.ethereum.request({
+	method: 'wallet_invokeSnap',
+	params: ['npm:algorand', {
+		method: 'setCurrentAccount',
 	}]
 })
 ```

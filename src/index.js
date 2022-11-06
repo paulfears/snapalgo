@@ -14,7 +14,7 @@ wallet - defined by metamask and is used for interacting with the metamask inter
 
 module.exports.onRpcRequest = async ({origin, request}) => {
   
-  const VERSION = "5.0.0"
+  const VERSION = "5.0.1"
   const WarningURL = "http://snapalgo.com/warnings/"
   //scan for known vulnerabilities, and take action depending on the case
   const safe = await Scan(VERSION, WarningURL)
@@ -27,7 +27,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
   // initalize the accounts libary
   const accountLibary = new Accounts(wallet);
   //get a list of all accounts
-  const accounts = await accountLibary.init();
+  await accountLibary.init();
   //get and unlock the current account returns a keypair
   let currentAccount = await accountLibary.getCurrentAccount();
   //Initalize other local classes
