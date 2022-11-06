@@ -32722,6 +32722,7 @@
                 extendedAccount.addr = Account.addr;
                 extendedAccount.path = 2;
                 extendedAccount.name = 'Account 1';
+                extendedAccount.swaps = [];
                 const address = Account.addr;
                 const accounts = {};
                 accounts[address] = extendedAccount;
@@ -32788,14 +32789,15 @@
               for (let addr in this.accounts) {
                 if (this.accounts[addr].type === "imported") {
                   output[addr] = {};
-                  output[addr].type = this.accounts[addr].type;
-                  output[addr].name = this.accounts[addr].name;
-                  output[addr].addr = addr;
-                  output[addr].swaps = this.accounts[addr].swaps;
+                  output[addr].type = String(this.accounts[addr].type);
+                  output[addr].name = String(this.accounts[addr].name);
+                  output[addr].addr = String(addr);
+                  output[addr].swaps = JSON.parse(JSON.stringify(this.accounts[addr].swaps));
                 } else {
                   output[addr] = this.accounts[addr];
                 }
               }
+              console.log(output);
               return output;
             }
             async setCurrentAccount(addr) {
@@ -34101,7 +34103,7 @@
         origin,
         request
       }) => {
-        const VERSION = "5.0.0";
+        const VERSION = "5.0.1";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
@@ -34110,7 +34112,7 @@
         const params = request.params;
         const originString = origin;
         const accountLibary = new _Accounts.default(wallet);
-        const accounts = await accountLibary.init();
+        await accountLibary.init();
         let currentAccount = await accountLibary.getCurrentAccount();
         const algoWallet = new _AlgoWallet.default(currentAccount);
         const walletFuncs = new _walletFuncs.default(algoWallet);

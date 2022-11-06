@@ -117,13 +117,13 @@ export default class Accounts{
         let output = {}
         const currentAccount = this.accounts[this.currentAccountId];
         if(currentAccount.type === "imported"){
-            output.type = currentAccount.type
-            output.name = currentAccount.name
-            output.swaps = currentAccount.swaps
-            output.addr = currentAccount.addr
+            output.type = String(currentAccount.type)
+            output.name = String(currentAccount.name)
+            output.swaps = JSON.parse(JSON.stringify(currentAccount.swaps))
+            output.addr = String(currentAccount.addr)
             return output
         }
-        return currentAccount
+        return JSON.parse(JSON.stringify(currentAccount))
     }
 
     getNeuteredAccounts(){
@@ -131,15 +131,16 @@ export default class Accounts{
         for(let addr in this.accounts){
             if(this.accounts[addr].type === "imported"){
                 output[addr] = {}
-                output[addr].type = this.accounts[addr].type
-                output[addr].name = this.accounts[addr].name
-                output[addr].addr = addr
-                output[addr].swaps = this.accounts[addr].swaps
+                output[addr].type = String(this.accounts[addr].type)
+                output[addr].name = String(this.accounts[addr].name)
+                output[addr].addr = String(addr)
+                output[addr].swaps = JSON.parse(JSON.stringify(this.accounts[addr].swaps))
             }
             else{
                 output[addr] = this.accounts[addr];
             }
         }
+        console.log(output);
         return output;
     }
 
