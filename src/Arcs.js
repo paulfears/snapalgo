@@ -113,17 +113,15 @@ export default class Arcs{
             await Utils.sendConfirmation("Invalid Transaction", "Invalid Transaction", result.message);
             Utils.throwError(4300, result.message);
         }
-        console.log("txId is: ");
-        console.log(txId);
-        algosdk.waitForConfirmation(algod, txId, 4)
-        .then((result)=>{
+        try{
+            await algosdk.waitForConfirmation(algod, txId, 4)
             console.log(result);
             Utils.notify("transaction was successful ", result['confirmed-round']);
-        })
-        .catch((err)=>{
+        }
+        catch(e){
             console.log(err);
             Utils.notify("transaction submission failed");
-        })
+        }
         return txId;
     }
 

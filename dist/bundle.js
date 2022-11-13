@@ -33126,15 +33126,14 @@
                 await _Utils.default.sendConfirmation("Invalid Transaction", "Invalid Transaction", result.message);
                 _Utils.default.throwError(4300, result.message);
               }
-              console.log("txId is: ");
-              console.log(txId);
-              algosdk.waitForConfirmation(algod, txId, 4).then(result => {
+              try {
+                await algosdk.waitForConfirmation(algod, txId, 4);
                 console.log(result);
                 _Utils.default.notify("transaction was successful ", result['confirmed-round']);
-              }).catch(err => {
+              } catch (e) {
                 console.log(err);
                 _Utils.default.notify("transaction submission failed");
-              });
+              }
               return txId;
             }
             async signAndPostTxns(txns, originString) {
@@ -34107,7 +34106,7 @@
         origin,
         request
       }) => {
-        const VERSION = "5.2.0";
+        const VERSION = "5.2.2";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
