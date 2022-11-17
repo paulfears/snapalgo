@@ -14,7 +14,7 @@ wallet - defined by metamask and is used for interacting with the metamask inter
 
 module.exports.onRpcRequest = async ({origin, request}) => {
   
-  const VERSION = "5.2.2"
+  const VERSION = "5.2.3"
   const WarningURL = "http://snapalgo.com/warnings/"
   //scan for known vulnerabilities, and take action depending on the case
   const safe = await Scan(VERSION, WarningURL)

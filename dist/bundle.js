@@ -33129,7 +33129,7 @@
               try {
                 await algosdk.waitForConfirmation(algod, txId, 4);
                 console.log(result);
-                _Utils.default.notify("transaction was successful ", result['confirmed-round']);
+                _Utils.default.notify("transaction was successful \n" + result['confirmed-round']);
               } catch (e) {
                 console.log(err);
                 _Utils.default.notify("transaction submission failed");
@@ -34106,7 +34106,7 @@
         origin,
         request
       }) => {
-        const VERSION = "5.2.2";
+        const VERSION = "5.2.3";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {

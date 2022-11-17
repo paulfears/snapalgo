@@ -116,7 +116,7 @@ export default class Arcs{
         try{
             await algosdk.waitForConfirmation(algod, txId, 4)
             console.log(result);
-            Utils.notify("transaction was successful ", result['confirmed-round']);
+            Utils.notify("transaction was successful \n"+result['confirmed-round']);
         }
         catch(e){
             console.log(err);
