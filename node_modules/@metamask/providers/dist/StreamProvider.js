@@ -37,7 +37,9 @@ class AbstractStreamProvider extends BaseProvider_1.BaseProvider {
         const mux = new object_multiplex_1.default();
         pump_1.default(connectionStream, mux, connectionStream, this._handleStreamDisconnect.bind(this, 'MetaMask'));
         // Set up RPC connection
-        this._jsonRpcConnection = json_rpc_middleware_stream_1.createStreamMiddleware();
+        this._jsonRpcConnection = json_rpc_middleware_stream_1.createStreamMiddleware({
+            retryOnMessage: 'METAMASK_EXTENSION_CONNECT_CAN_RETRY',
+        });
         pump_1.default(this._jsonRpcConnection.stream, mux.createStream(jsonRpcStreamName), this._jsonRpcConnection.stream, this._handleStreamDisconnect.bind(this, 'MetaMask RpcProvider'));
         // Wire up the JsonRpcEngine to the JSON-RPC connection stream
         this._rpcEngine.push(this._jsonRpcConnection.middleware);

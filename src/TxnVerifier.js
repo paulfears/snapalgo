@@ -13,7 +13,8 @@ export default class TxnVerifer{
     {   
       valid:true,
       error:[],
-      warnings:[]
+      warnings:[],
+      info:[],
     };
 
     const Required = ["type", "from", "fee", "firstRound", "lastRound", "genesisHash"];
@@ -133,9 +134,16 @@ export default class TxnVerifer{
         } else {
           this.throw(4300, 'to and amount fields are required in Payment Transaction');
         }
-        if(txn.hasOwnProperty('closeRemainderTo') && !this.checkAddress(txn.closeRemainderTo)){
-          this.throw(4300, 'closeRemainderTo must be a valid CloseRemainderTo address');
+        if(txn.hasOwnProperty('closeRemainderTo')){
+          if( !this.checkAddress(txn.closeRemainderTo)){
+            this.throw(4300, 'closeRemainderTo must be a valid CloseRemainderTo address');
+          }
+          else{
+            this.errorCheck.warnings.push("this transaction will send all algo to "+txn.closeRemainderTo);
+          }
         }
+        this.errorCheck.info.push(`type:Payment\namount:${txn.amount}\nreceiver:${txn.to}`)
+        
       }
       else if(txn.type === "keyreg"){
         this.throw(4200, 'this wallet does not support a Key Registration Txn');

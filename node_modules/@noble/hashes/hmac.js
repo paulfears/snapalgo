@@ -12,13 +12,14 @@ class HMAC extends utils_js_1.Hash {
         _assert_js_1.default.hash(hash);
         const key = (0, utils_js_1.toBytes)(_key);
         this.iHash = hash.create();
-        if (!(this.iHash instanceof utils_js_1.Hash))
+        if (typeof this.iHash.update !== 'function')
             throw new TypeError('Expected instance of class which extends utils.Hash');
-        const blockLen = (this.blockLen = this.iHash.blockLen);
+        this.blockLen = this.iHash.blockLen;
         this.outputLen = this.iHash.outputLen;
+        const blockLen = this.blockLen;
         const pad = new Uint8Array(blockLen);
         // blockLen can be bigger than outputLen
-        pad.set(key.length > this.iHash.blockLen ? hash.create().update(key).digest() : key);
+        pad.set(key.length > blockLen ? hash.create().update(key).digest() : key);
         for (let i = 0; i < pad.length; i++)
             pad[i] ^= 0x36;
         this.iHash.update(pad);
