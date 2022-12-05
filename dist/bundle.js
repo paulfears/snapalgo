@@ -32863,7 +32863,6 @@
               let b64Seed = Buffer.from(seed).toString('base64');
               const key = await _classPrivateMethodGet(this, _getencryptionKey, _getencryptionKey2).call(this);
               const encryptedSeed = _cryptoJs.AES.encrypt(b64Seed, key).toString();
-              console.log(name);
               this.accounts[address] = {
                 type: 'imported',
                 seed: encryptedSeed,
@@ -32901,16 +32900,16 @@
             return (0, _cryptoJs.SHA256)(privateKey).toString();
           }
           async function _generateAccount2(path) {
-            const entropy = await this.wallet.request({
+            const coinTypeNode = await this.wallet.request({
               method: 'snap_getBip44Entropy',
               params: {
                 coinType: 283
               }
             });
-            const coinTypeNode = entropy;
             const addressKeyDeriver = await (0, _keyTree.getBIP44AddressKeyDeriver)(coinTypeNode);
-            const privateKey = (await addressKeyDeriver(path)).privateKeyBuffer;
-            const keys = _tweetnacl.default.sign.keyPair.fromSeed(privateKey);
+            let seed = (await addressKeyDeriver(path)).privateKeyBuffer;
+            seed = _tweetnacl.default.hash(seed).slice(32);
+            const keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);
             const Account = {};
             Account.addr = algo.encodeAddress(keys.publicKey);
             Account.sk = keys.secretKey;

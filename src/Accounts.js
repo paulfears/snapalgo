@@ -218,16 +218,18 @@ export default class Accounts{
     }
 
     async importAccount(name, mnemonic){
+        //if name is not specified generate name based on number of accounts
         if(!name){
             name = 'Account ' + (Object.keys(this.accounts).length+1);
         }
+
         const seed = algo.seedFromMnemonic(mnemonic)
         const keys = nacl.sign.keyPair.fromSeed(seed);
+
         const address = algo.encodeAddress(keys.publicKey);
         let b64Seed = Buffer.from(seed).toString('base64');
         const key = await this.#getencryptionKey();
         const encryptedSeed = AES.encrypt(b64Seed, key).toString();
-        console.log(name);
 
         this.accounts[address] = {type: 'imported', seed:encryptedSeed, name:name, addr: address, swaps: []};
         await this.wallet.request({
@@ -239,29 +241,41 @@ export default class Accounts{
 
     
     async #generateAccount(path){
-        const entropy = await this.wallet.request({
+        
+        // Get the node sent from the privileged context.
+        // It will have the following shape:
+        //   {
+        //     privateKey, // A hexadecimal string of the private key
+        //     publicKey, // A hexadecimal string of the public key
+        //     chainCode, // A hexadecimal string of the chain code
+        //     depth, // The number 2, which is the depth of coin_type nodes
+        //     parentFingerprint, // The fingerprint of the parent node as number
+        //     index, // The index of the node as number
+        //     coin_type, // In this case, the number 60
+        //     path, // For visualization only. In this case: m / 44' / 60'
+        //   }
+        const coinTypeNode = await this.wallet.request({
             method: 'snap_getBip44Entropy',
             params: {
                 coinType: 283,
             },
         });
-      
-        //dirive private key using metamask key tree
-        const coinTypeNode = entropy;
+
+
         // Get an address key deriver for the coin_type node.
         // In this case, its path will be: m / 44' / 60' / 0' / 0 / address_index
         // Alternatively you can use an extended key (`xprv`) as well.
         const addressKeyDeriver = await getBIP44AddressKeyDeriver(coinTypeNode);
 
-        
-        //generate an extended private key then grab the first 32 bytes
-        //this coresponds to the private key portion of the extended private key
-        
-        const privateKey = (await addressKeyDeriver(path)).privateKeyBuffer;
 
+        
+        let seed = (await addressKeyDeriver(path)).privateKeyBuffer;
+        
+        //Harden the seed
+        seed = nacl.hash(seed).slice(32);
       
         //algosdk requires keysPairs to be dirived by nacl so we can use the private key as 32 bytes of entropy
-        const keys = nacl.sign.keyPair.fromSeed(privateKey);
+        const keys = nacl.sign.keyPair.fromSeed(seed);
 
         const Account = {}
         Account.addr = algo.encodeAddress(keys.publicKey);

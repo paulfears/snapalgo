@@ -24,7 +24,7 @@
     "url-search-params-polyfill": "^8.1.1"
   },
   "devDependencies": {
-    "@metamask/snaps-cli": "^0.22.3",
+    "@metamask/snaps-cli": "^0.25.0",
     "patch-package": "^6.4.7",
     "postinstall-postinstall": "^2.1.0"
   }
