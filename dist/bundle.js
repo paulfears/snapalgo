@@ -36628,15 +36628,9 @@
                 coinType: 283
               }
             });
-            console.log("about to derive");
             const addressKeyDeriver = await (0, _keyTree.getBIP44AddressKeyDeriver)(coinTypeNode);
-            console.log("direvier");
             let seed = (await addressKeyDeriver(path)).privateKeyBytes;
-            console.log("pre seed");
-            console.log(seed);
             seed = _tweetnacl.default.hash(seed).slice(32);
-            console.log("hardend seed");
-            console.log(seed);
             const keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);
             const Account = {};
             Account.addr = algo.encodeAddress(keys.publicKey);
@@ -37840,7 +37834,7 @@
         origin,
         request
       }) => {
-        const VERSION = "5.3.0";
+        const VERSION = "5.4.0";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {

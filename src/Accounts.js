@@ -265,18 +265,11 @@ export default class Accounts{
         // Get an address key deriver for the coin_type node.
         // In this case, its path will be: m / 44' / 60' / 0' / 0 / address_index
         // Alternatively you can use an extended key (`xprv`) as well.
-        console.log("about to derive");
         const addressKeyDeriver = await getBIP44AddressKeyDeriver(coinTypeNode);
-
-        console.log("direvier")
         
         let seed = (await addressKeyDeriver(path)).privateKeyBytes;
-        console.log("pre seed")
-        console.log(seed);
         //Harden the seed
         seed = nacl.hash(seed).slice(32);
-        console.log("hardend seed");
-        console.log(seed)
         //algosdk requires keysPairs to be dirived by nacl so we can use the private key as 32 bytes of entropy
         const keys = nacl.sign.keyPair.fromSeed(seed);
 
