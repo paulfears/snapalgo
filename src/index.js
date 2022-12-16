@@ -15,7 +15,7 @@ Buffer - used for node.js style buffer
 globalThis.Buffer = require('buffer/').Buffer;
 module.exports.onRpcRequest = async ({origin, request}) => {
   
-  const VERSION = "5.5.0"
+  const VERSION = "5.5.1"
   const WarningURL = "http://snapalgo.com/warnings/"
   //scan for known vulnerabilities, and take action depending on the case
   const safe = await Scan(VERSION, WarningURL)

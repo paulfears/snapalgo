@@ -166,7 +166,7 @@ export default class TxnVerifer{
           if(!this.checkInt({value:txn.assetTotal,min:1})){
             this.throw(4300, 'assetTotal must be a uint64 between 1 and 18446744073709551615');
           }
-          this.errorCheck.info.push(`type:Asset Create\nasset id:${txn.assetIndex}\nasset total:${txn.assetTotal}\nasset decimals:${txn.assetDecimals}\nasset frozen:${txn.assetDefaultFrozen}\nfee:${txn.fee}`)
+          this.errorCheck.info.push(`type:Asset Create\nasset total:${txn.assetTotal}\nasset decimals:${txn.assetDecimals}\nasset frozen:${txn.assetDefaultFrozen}\nfee:${txn.fee}`)
         } else {
           this.throw(4300, 'required fields need to be filled for Asset Config, Create, or Destroy txn');
         }
