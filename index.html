@@ -317,41 +317,62 @@
     }
 
     async function signTransaction(){
-      console.log("here")
       let client = await algorand.getAlgorandV2Client();
       const algodClient = new algosdk.Algodv2(client);
       let params = await algodClient.getTransactionParams().do();
       const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
-      const sender = '37G4YMHO2N4MBRUN4NMUIZEOO5A44UMKRF26O3WIN7WRUTDPT6Z2NU46RE';
+      const sender = 'RQM3BAZ4WENFTGYW2MR5UR2BOGIR7KVM2HUYMPM47JCCL2W5XHN5LGW4EY';
       let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
         from: sender, 
         to: receiver, 
-        amount: 10000000,  
+        amount: 10000,  
         suggestedParams: params
       });
-
-
       
+      const encodedTxn = await algorand.encodeTxn(txn);
       
-
-      let txn2 = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-        from: sender, 
-        to: receiver, 
-        amount: 25000000, 
-        suggestedParams: params
-      });
-      console.log('here yup yes poop')
-      const out = await window.algorand.EZsignAndPost(txn);
-      console.log(out);
-      /*
-      await ethereum.request({
+      let txns = [{txn: encodedTxn, message: "this transaction is a test of sign transaction"}]
+      const signed = await ethereum.request({
         method: 'wallet_invokeSnap',
         params: [snapId, {
-          method: 'postTxns',
-          stxns: out
+          method: 'signTxns',
+          params:{
+            txns: encodedTxn,
+            testnet: checkbox.checked
+          }
         }]
       })
-      */
+      console.log(signed);
+    }
+
+    async function signAndPostTransaction(){
+      let client = await algorand.getAlgorandV2Client();
+      const algodClient = new algosdk.Algodv2(client);
+      let params = await algodClient.getTransactionParams().do();
+      const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
+      const sender = 'RQM3BAZ4WENFTGYW2MR5UR2BOGIR7KVM2HUYMPM47JCCL2W5XHN5LGW4EY';
+      let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+        from: sender, 
+        to: receiver, 
+        amount: 10000,  
+        suggestedParams: params
+      });
+      
+      const encodedTxn = await algorand.encodeTxn(txn);
+
+      let txns = [{txn: encodedTxn, message: "this transaction is a test of sign and post transaction"}]
+      const out = await ethereum.request({
+        method: 'wallet_invokeSnap',
+        params: [snapId, {
+          method: 'signAndPostTxns',
+          params:{
+            txns: txns,
+            testnet: checkbox.checked
+          }
+        }]
+      })
+      console.log(out);
+
     }
 
     async function optInTest(){
@@ -405,34 +426,6 @@
           }
         }]        
       })
-    }
-
-    async function signAndPostTransaction(){
-      let client = await algorand.getAlgorandV2Client();
-      const algodClient = new algosdk.Algodv2(client);
-      let params = await algodClient.getTransactionParams().do();
-      const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
-      const sender = 'FH44W5YXJHBA5WGOAGXML2QARU4TP7E4J5KVPNKRV5JTN23QD75G5RSQHA';
-      let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
-        from: sender, 
-        to: receiver, 
-        amount: 10000,  
-        suggestedParams: params
-      });
-      
-      const encodedTxn = await algorand.encodeTxn(txn);
-      let txns = [{txn: encodedTxn, message: "this transaction is a test of sign and post transaction"}]
-      const out = await ethereum.request({
-        method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'signAndPostTxns',
-          params:{
-            txns: txns
-          }
-        }]
-      })
-      console.log(out);
-
     }
 
     async function signTxns(){

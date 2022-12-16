@@ -1,7 +1,7 @@
 
 import Accounts from './Accounts';
 import AlgoWallet from './AlgoWallet';
-import WalletFuncs from './walletFuncs';
+import WalletFuncs from './WalletFuncs';
 import Arcs from './Arcs';
 import Utils from './Utils';
 import Swapper from './Swapper';
