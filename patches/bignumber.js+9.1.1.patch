@@ -1,8 +1,8 @@
 diff --git a/node_modules/bignumber.js/bignumber.js b/node_modules/bignumber.js/bignumber.js
-index 9042a3c..7bea7a0 100644
+index a420e66..d69978d 100644
 --- a/node_modules/bignumber.js/bignumber.js
 +++ b/node_modules/bignumber.js/bignumber.js
-@@ -2426,7 +2426,7 @@
+@@ -2443,7 +2443,7 @@
            if (coeffToString(t.c).slice(0, s) === (n = coeffToString(r.c)).slice(0, s)) {
  
              // The exponent of r may here be one less than the final result exponent,

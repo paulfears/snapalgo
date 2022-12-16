@@ -61,6 +61,7 @@ export default class Arcs{
             let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
             const verifiedObj = Txn_Verifer.verifyTxn(decoded_txn, await this.walletFuncs.getSpendable());
             console.log(verifiedObj);
+            console.log(verifiedObj.error);
             if(txn.message){
                 const msgConfirmation = await Utils.sendConfirmation("Untrusted Message", originString+" says:", txn.message)
                 if(!msgConfirmation){
@@ -73,10 +74,15 @@ export default class Arcs{
                 }
             }
             if(verifiedObj.valid === true){
-                
                 for(let warning of verifiedObj.warnings){
                     let confirmWarning = await Utils.sendConfirmation("warning", "txn Warning", warning);
                     if(!confirmWarning){
+                        Utils.throwError(4001, "user rejected Request");
+                    }
+                }
+                for(let info of verifiedObj.info){
+                    let confirmInfo = await Utils.sendConfirmation("info", "txn Info", info);
+                    if(!confirmInfo){
                         Utils.throwError(4001, "user rejected Request");
                     }
                 }

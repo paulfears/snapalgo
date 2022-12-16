@@ -30,7 +30,7 @@ export default class TxnVerifer{
             this.throw(4300,'fee must be a uint64 between 1000 and 18446744073709551615');
           }
           if(BigInt(txn[fee]) > BigInt(balance)){
-            this.throw(4100, 'transaction Fee is greator than spendable funds')
+            this.throw(4100, 'transaction Fee is greater than spendable funds')
           }
           else{
             if(txn[fee] > 1000000){
@@ -142,7 +142,8 @@ export default class TxnVerifer{
             this.errorCheck.warnings.push("this transaction will send all algo to "+txn.closeRemainderTo);
           }
         }
-        this.errorCheck.info.push(`type:Payment\namount:${txn.amount}\nreceiver:${txn.to}`)
+
+        this.errorCheck.info.push(`type:Payment\namount:${txn.amount}\nreceiver:${algosdk.encodeAddress(txn.to.publicKey)}\nfee:${txn.fee}`)
         
       }
       else if(txn.type === "keyreg"){
@@ -153,6 +154,7 @@ export default class TxnVerifer{
           if(!this.checkInt({value:txn.assetIndex})){
             this.throw(4300, 'assetIndex must be a uint64 between 0 and 18446744073709551615');
           }
+          this.errorCheck.info.push(`type:Asset Config\nasset id:${txn.assetIndex}\nfee:${txn.fee}`)
         }
         else if(txn.hasOwnProperty('assetDecimals') && txn.hasOwnProperty('assetDefaultFrozen') && txn.hasOwnProperty('assetTotal')){
           if(!this.checkInt({value:txn.assetDecimals,max:19})){
@@ -164,6 +166,7 @@ export default class TxnVerifer{
           if(!this.checkInt({value:txn.assetTotal,min:1})){
             this.throw(4300, 'assetTotal must be a uint64 between 1 and 18446744073709551615');
           }
+          this.errorCheck.info.push(`type:Asset Create\nasset id:${txn.assetIndex}\nasset total:${txn.assetTotal}\nasset decimals:${txn.assetDecimals}\nasset frozen:${txn.assetDefaultFrozen}\nfee:${txn.fee}`)
         } else {
           this.throw(4300, 'required fields need to be filled for Asset Config, Create, or Destroy txn');
         }
@@ -212,6 +215,8 @@ export default class TxnVerifer{
         if(txn.hasOwnProperty('assetRevocationTarget') && !this.checkAddress(txn.assetRevocationTarget)){
           this.throw(4300, 'assetRevocationTarget must be a valid address');
         }
+
+        this.errorCheck.info.push(`type:Asset Transfer\nasset id:${txn.assetIndex}\namount:${txn.amount}\nreceiver:${algosdk.encodeAddress(txn.to.publicKey)}\nfee:${txn.fee}`)
       }
       else if(txn.type === "afrz"){
         if(txn.hasOwnProperty('assetIndex') && txn.hasOwnProperty('freezeAccount')){
@@ -227,23 +232,29 @@ export default class TxnVerifer{
         } else {
           this.throw(4300, 'assetIndex and freezeAccount are required in Asset Freeze Txn');
         }
+
+        this.errorCheck.info.push(`type:Asset Freeze\nasset id:${txn.assetIndex}\nfee:${txn.fee}`)
       }
       else if(txn.type === "appl"){
         //appl create
         if(txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram') && txn.hasOwnProperty('appGlobalByteSlices') && txn.hasOwnProperty('appGlobalInts') && txn.hasOwnProperty('appLocalByteSlices') && txn.hasOwnProperty('appLocalInts')){
           console.log('appl create');
+          this.errorCheck.info.push(`type:Application Create\nfee:${txn.fee}`)
         }
         //appl call
         else if(txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appOnComplete')){
           console.log('appl call');
+          this.errorCheck.info.push(`type:Application Call\napp id:${txn.appIndex}\nfee:${txn.fee}`)
         }
         //appl update
         else if(txn.hasOwnProperty('appIndex') && txn.hasOwnProperty('appApprovalProgram') && txn.hasOwnProperty('appClearProgram')){
-            console.log('appl update');
+          console.log('appl update');
+          this.errorCheck.info.push(`type:Application Update\napp id:${txn.appIndex}\nfee:${txn.fee}`)
         }
         //appl clearState, closeOut, delete, noOp, optIn
         else if(txn.hasOwnProperty('appIndex')){
           console.log('appl clearState, closeOut, delete, noOp, or optIn txn');
+          this.errorCheck.info.push(`type:Application Transaction\napp id:${txn.appIndex}\nfee:${txn.fee}`)
         } else{
           this.throw(4300, 'all required fields need to be filled depending on the target ApplicationTxn');
         }
