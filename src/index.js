@@ -15,8 +15,7 @@ Buffer - used for node.js style buffer
 */
 globalThis.Buffer = require('buffer/').Buffer;
 module.exports.onRpcRequest = async ({origin, request}) => {
-  console.log("here")
-  const VERSION = "6.0.0"
+  const VERSION = "6.0.1"
   const WarningURL = "http://snapalgo.com/warnings/"
   //scan for known vulnerabilities, and take action depending on the case
   const safe = await Scan(VERSION, WarningURL)
@@ -124,7 +123,8 @@ module.exports.onRpcRequest = async ({origin, request}) => {
         let confirm = await snap.request({
           method: "snap_dialog",
           params:{
-            type:"Confirmaton",
+            
+            type:"Confirmation",
             content: panel([
               heading("Display Address?"),
               divider(),
