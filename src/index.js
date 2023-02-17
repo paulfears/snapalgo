@@ -6,6 +6,7 @@ import Arcs from './Arcs';
 import Utils from './Utils';
 import Swapper from './Swapper';
 import Scan from './Scan.js';
+import { copyable, divider, heading, panel} from '@metamask/snaps-ui';
 
 /*
 Gloabals:
@@ -14,8 +15,8 @@ Buffer - used for node.js style buffer
 */
 globalThis.Buffer = require('buffer/').Buffer;
 module.exports.onRpcRequest = async ({origin, request}) => {
-  
-  const VERSION = "5.5.1"
+  console.log("here")
+  const VERSION = "6.0.0"
   const WarningURL = "http://snapalgo.com/warnings/"
   //scan for known vulnerabilities, and take action depending on the case
   const safe = await Scan(VERSION, WarningURL)
@@ -26,7 +27,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
   const params = request.params
   const originString = origin;
   // initalize the accounts libary
-  const accountLibary = new Accounts(wallet);
+  const accountLibary = new Accounts(snap);
   //get a list of all accounts
   await accountLibary.init();
   //get and unlock the current account returns a keypair
@@ -35,7 +36,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
   const algoWallet = new AlgoWallet(currentAccount); //keeps track of wallet infomation
   const walletFuncs = new WalletFuncs(algoWallet); //provides wallet functions and side effects
   const arcs = new Arcs(algoWallet, walletFuncs); //defines functions for arc complience
-  const swapper = new Swapper(wallet, algoWallet, walletFuncs); //defines the functions that interact with change now
+  const swapper = new Swapper(snap, ethereum, algoWallet, walletFuncs); //defines the functions that interact with change now
   
   //checks if the testnet parameter is provided and if it is sets the request to perform on the testnet
   if(params && params.hasOwnProperty('testnet')){
@@ -111,16 +112,27 @@ module.exports.onRpcRequest = async ({origin, request}) => {
     
     //display balance in metamask window
     case 'displayBalance': 
-      return await Utils.sendConfirmation(
-        "your balance is",
+      const algoBalance = (await walletFuncs.getBalance())/1000000
+      return await Utils.balanceDisplay(
         algoWallet.getAddress(),
-        (await walletFuncs.getBalance()).toString()+" Algos"
+        algoBalance.toFixed(3).toString()
       );
     
     //securly reveal the users address can only be done from snapalgo.com
     case 'secureReceive':
       if(originString === "https://snapalgo.com"){
-        let confirm = await Utils.sendConfirmation("Do you want to display your address?", currentAccount.addr);
+        let confirm = await snap.request({
+          method: "snap_dialog",
+          params:{
+            type:"Confirmaton",
+            content: panel([
+              heading("Display Address?"),
+              divider(),
+              copyable(currentAccount.addr),
+            ])
+            
+          }
+        })
         if(confirm){
           return currentAccount.addr;
         }
@@ -192,27 +204,33 @@ module.exports.onRpcRequest = async ({origin, request}) => {
 
     //this function performs a swap
     case 'swap':
-      return await swapper.swap(params.from, params.to, params.amount, params.email);
+      return await Utils.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted")
+      //return await swapper.swap(params.from, params.to, params.amount, params.email);
     
     //gets the minium swap amount between a currency pair
     case 'getMin':
-      return await swapper.getMin(params.from, params.to);
+      return await Utils.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted")
+      //return await swapper.getMin(params.from, params.to);
     
     //gets infomation about the swap before swapping
     case 'preSwap':
-        return await swapper.preSwap(params.from, params.to, params.amount);
+      return await Utils.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted")
+      //return await swapper.preSwap(params.from, params.to, params.amount);
     
     //returns the current accounts swap history
     case 'swapHistory':
+      return await Utils.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted")
+      /*
       let history = await swapper.getSwapHistory()
       if(history === undefined){
         history = [];
       }
       return history;
-    
+      */
     //get the status of a changenow swap by id
     case 'getSwapStatus':
-      return await swapper.getStatus(params.id);
+      return await Utils.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted")
+      //return await swapper.getStatus(params.id);
       
 
     default:

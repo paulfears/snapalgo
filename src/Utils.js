@@ -4,6 +4,7 @@ Class for utility functions
 
 wallet is a global in the metamask context
 */
+import { panel, text, heading, divider, copyable } from '@metamask/snaps-ui';
 export default class Utils {
     
     static throwError(code, msg){
@@ -18,29 +19,26 @@ export default class Utils {
 
     static async notify(message){
         try{
-            await wallet.request({
+            await snap.request({
                 method: 'snap_notify',
-                params: [
-                    {
-                        type: 'inApp',
-                        message: message,
-                    },
-                ],
+                params: {
+                  type: 'inApp',
+                  message: message,
+                },
             });
             
-            const result = await wallet.request({
+            const result = await snap.request({
                 method: 'snap_notify',
-                params: [
-                {
-                    type: 'native',
-                    message: message,
+                params: {
+                  type: 'native',
+                  message: message,
                 },
-                ],
-            });
+              });
             console.log(result);
             return true;
         }
         catch(e){
+            console.log("error - ")
             console.log(e);
             await Utils.sendConfirmation("alert", "notifcation", message);
             return false;
@@ -50,31 +48,67 @@ export default class Utils {
     }
 
     static async sendConfirmation(prompt, description, textAreaContent){
-        
-        //turnicate strings that are too long
-        if(typeof prompt === 'string'){
-            prompt = prompt.substring(0,40);
+        if(!textAreaContent){
+            textAreaContent = ""
         }
-        if(typeof description === 'string'){
-            description = description.substring(0, 140);
-        }
-        if(typeof textAreaContent === 'string'){
-            textAreaContent = textAreaContent.substring(0, 1800);
-        }
-
-
-        const confirm = await wallet.request({
-            method: 'snap_confirm',
-            params:[
-                {
-                    prompt: prompt,
-                    description: description,
-                    textAreaContent: textAreaContent
-                }
-            ]
+        const confirm= await snap.request({
+        method: 'snap_dialog',
+        params: {
+            type: 'Confirmation',
+            content: panel([
+            heading(prompt),
+            divider(),
+            text(description),
+            divider(),
+            text(textAreaContent),
+            ]),
+        },
         });
         
         return confirm;
+    }
+
+    static async sendAlert(title, info){
+        const alert = await snap.request({
+            method: 'snap_dialog',
+            params:{
+                type: 'Alert',
+                content: panel([
+                    heading(title),
+                    divider(),
+                    text(info)
+                ])
+            }
+        })
+        return alert;
+    }
+
+    static async balanceDisplay(address, balance){
+        const alert = await snap.request({
+            method: 'snap_dialog',
+            params:{
+                type: 'Alert',
+                content: panel([
+                    heading("Account"),
+                    copyable(address),
+                    divider(),
+                    heading("Balance"),
+                    text(balance+" Algos")
+                ])
+            }
+        })
+        return alert;
+    }
+
+    static async displayPanel(panel, type="confirmation"){
+        const disp = await snap.request({
+            method: 'snap_dialog',
+            params:{
+                type: type,
+                content: panel
+            }
+        })
+        return disp
     }
 
     

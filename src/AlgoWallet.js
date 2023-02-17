@@ -16,6 +16,7 @@ export default class AlgoWallet{
         this.sk = this.Account.sk;
         this.addr = this.Account.addr;
         
+        
     }
     
 /*
@@ -38,6 +39,10 @@ export default class AlgoWallet{
 
     getAddress(){
         return this.Account.addr;
+    }
+
+    getName(){
+        return this.Account.name;
     }
 
     getSK(){

@@ -1,6 +1,6 @@
 {
   "name": "algorand",
-  "version": "5.5.1",
+  "version": "6.0.0",
   "description": "algorand on metamask",
   "main": "src/index.js",
   "scripts": {
@@ -16,6 +16,7 @@
   "dependencies": {
     "@babel/runtime": "^7.17.2",
     "@metamask/key-tree": "^6.0.0",
+    "@metamask/snaps-ui": "^0.29.0",
     "algosdk": "1.14.0",
     "async": "^3.2.4",
     "async.js": "^0.9.5",
@@ -28,7 +29,7 @@
     "url-search-params-polyfill": "^8.1.1"
   },
   "devDependencies": {
-    "@metamask/snaps-cli": "^0.25.0",
+    "@metamask/snaps-cli": "^0.28.0",
     "patch-package": "^6.4.7",
     "postinstall-postinstall": "^2.1.0"
   }

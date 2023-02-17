@@ -62,8 +62,9 @@ const chains = {
 
 export default class Swapper{
     static tickers =  {'algo':'algo', 'bsc':'bnbbsc', 'eth':'eth'}
-    constructor(wallet, algoWallet, walletFuncs){
-       this.wallet = wallet;
+    constructor(snap, ethereum, algoWallet, walletFuncs){
+       this.snap = snap;
+       this.ethereum = ethereum
        this.algoWallet = algoWallet;
        this.walletFuncs = walletFuncs
        this.url = "https://y6ha2w3noelczmwztfidtarc3q0lrrgi.lambda-url.us-east-2.on.aws/";
@@ -83,17 +84,17 @@ export default class Swapper{
       await this.switchChain(ticker);
       const amount = '0x'+BigInt(wei).toString(16);
       console.log("selectedAddress is");
-      if(this.wallet.selectedAddress === null){
-        await this.wallet.request({ method: 'eth_requestAccounts' });
+      if(this.ethereum.selectedAddress === null){
+        await this.ethereum.request({ method: 'eth_requestAccounts' });
       }
       const transactionParameters = {
         nonce: '0x00', // ignored by MetaMask
         to: to, // Required except during contract publications.
-        from: this.wallet.selectedAddress, // must match user's active address.
+        from: this.ethereum.selectedAddress, // must match user's active address.
         value: amount, // Only required to send ether to the recipient from the initiating external account.
         chainId: chains[ticker].data.chainId, // Used to prevent transaction reuse across blockchains. Auto-filled by MetaMask.
       };
-      const txHash = await this.wallet.request({
+      const txHash = await this.ethereum.request({
         method: 'eth_sendTransaction',
         params: [transactionParameters],
       });
@@ -116,7 +117,7 @@ export default class Swapper{
 
     async switchChain(symbol){
       try{
-        await this.wallet.request({
+        await this.ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: chains[symbol].data.chainId }],
         });
@@ -125,13 +126,13 @@ export default class Swapper{
       catch(e){
         if (error.code === 4902) {
           if(chains[symbol].type === "imported"){
-            await this.wallet.request({
+            await this.ethereum.request({
               method: 'wallet_addEthereumChain',
               params: [
                 chains[symbol].data
               ],
             });
-            await this.wallet.request({
+            await this.ethereum.request({
               method: 'wallet_switchEthereumChain',
               params: [{ chainId: chains[symbol].data.chainId }],
             });
@@ -158,9 +159,9 @@ export default class Swapper{
     }
 
     async getSwapHistory(){
-      const state = await this.wallet.request({
+      const state = await this.snap.request({
         method: 'snap_manageState',
-        params: ['get'],
+        params: {operation: 'get'},
       });
       return state.Accounts[state.currentAccountId].swaps;
     }
@@ -221,7 +222,7 @@ export default class Swapper{
         if(chains[to].type === "imported"){
           await this.switchChain(to);
         }
-        const ethAccounts = await this.wallet.request({ method: 'eth_requestAccounts' });
+        const ethAccounts = await this.ethereum.request({ method: 'eth_requestAccounts' });
         const ethAccount = ethAccounts[0];
         outputAddress = ethAccount
       }
@@ -269,9 +270,9 @@ export default class Swapper{
       }
       
 
-      let state = await this.wallet.request({
+      let state = await this.snap.request({
         method: 'snap_manageState',
-        params: ['get'],
+        params: {operation: 'get'},
       });
       console.log("state is")
       console.log(state);
@@ -283,9 +284,9 @@ export default class Swapper{
       else{
         state.Accounts[state.currentAccountId].swaps.unshift(swapData.body)
       }
-      await this.wallet.request({
+      await this.snap.request({
         method: 'snap_manageState',
-        params: ['update', state]
+        params: {operation:'update', newState:state}
       })
       return swapData.body;
     }

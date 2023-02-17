@@ -770,7 +770,7 @@
     }, {
       "./ed25519": 8,
       "./secp256k1": 10,
-      "@noble/secp256k1": 41
+      "@noble/secp256k1": 105
     }],
     8: [function (require, module, exports) {
       "use strict";
@@ -813,7 +813,7 @@
       exports.decompressPublicKey = decompressPublicKey;
     }, {
       "@metamask/utils": 23,
-      "@noble/ed25519": 29
+      "@noble/ed25519": 93
     }],
     9: [function (require, module, exports) {
       "use strict";
@@ -909,7 +909,7 @@
       exports.decompressPublicKey = decompressPublicKey;
     }, {
       "@metamask/utils": 23,
-      "@noble/secp256k1": 41
+      "@noble/secp256k1": 105
     }],
     11: [function (require, module, exports) {
       "use strict";
@@ -1176,9 +1176,9 @@
       "../curves": 9,
       "../utils": 17,
       "@metamask/utils": 23,
-      "@noble/hashes/hmac": 34,
-      "@noble/hashes/sha3": 38,
-      "@noble/hashes/sha512": 39
+      "@noble/hashes/hmac": 98,
+      "@noble/hashes/sha3": 102,
+      "@noble/hashes/sha512": 103
     }],
     13: [function (require, module, exports) {
       "use strict";
@@ -1224,9 +1224,9 @@
       "../SLIP10Node": 5,
       "../curves": 9,
       "../utils": 17,
-      "@noble/hashes/hmac": 34,
-      "@noble/hashes/sha512": 39,
-      "@scure/bip39": 43
+      "@noble/hashes/hmac": 98,
+      "@noble/hashes/sha512": 103,
+      "@scure/bip39": 107
     }],
     14: [function (require, module, exports) {
       "use strict";
@@ -1600,9 +1600,9 @@
     }, {
       "./constants": 6,
       "@metamask/utils": 23,
-      "@noble/hashes/ripemd160": 36,
-      "@noble/hashes/sha256": 37,
-      "@scure/base": 42
+      "@noble/hashes/ripemd160": 100,
+      "@noble/hashes/sha256": 101,
+      "@scure/base": 106
     }],
     18: [function (require, module, exports) {
       "use strict";
@@ -1665,7 +1665,7 @@
       }
       exports.assertExhaustive = assertExhaustive;
     }, {
-      "superstruct": 213
+      "superstruct": 29
     }],
     19: [function (require, module, exports) {
       (function () {
@@ -1847,7 +1847,7 @@
     }, {
       "./assert": 18,
       "./hex": 22,
-      "buffer": 135
+      "buffer": 199
     }],
     20: [function (require, module, exports) {
       "use strict";
@@ -1922,7 +1922,7 @@
       "./assert": 18,
       "./bytes": 19,
       "./hex": 22,
-      "superstruct": 213
+      "superstruct": 29
     }],
     21: [function (require, module, exports) {
       "use strict";
@@ -2061,7 +2061,7 @@
       exports.remove0x = remove0x;
     }, {
       "./assert": 18,
-      "superstruct": 213
+      "superstruct": 29
     }],
     23: [function (require, module, exports) {
       "use strict";
@@ -2301,7 +2301,7 @@
     }, {
       "./assert": 18,
       "./misc": 26,
-      "superstruct": 213
+      "superstruct": 29
     }],
     25: [function (require, module, exports) {
       "use strict";
@@ -2326,7 +2326,7 @@
       }
       exports.createModuleLogger = createModuleLogger;
     }, {
-      "debug": 175
+      "debug": 239
     }],
     26: [function (require, module, exports) {
       "use strict";
@@ -2469,6 +2469,3571 @@
       exports.timeSince = timeSince;
     }, {}],
     29: [function (require, module, exports) {
+      'use strict';
+
+      Object.defineProperty(exports, '__esModule', {
+        value: true
+      });
+      class StructError extends TypeError {
+        constructor(failure, failures) {
+          let cached;
+          const {
+            message,
+            ...rest
+          } = failure;
+          const {
+            path
+          } = failure;
+          const msg = path.length === 0 ? message : `At path: ${path.join('.')} -- ${message}`;
+          super(msg);
+          this.value = void 0;
+          this.key = void 0;
+          this.type = void 0;
+          this.refinement = void 0;
+          this.path = void 0;
+          this.branch = void 0;
+          this.failures = void 0;
+          Object.assign(this, rest);
+          this.name = this.constructor.name;
+          this.failures = () => {
+            return cached ?? (cached = [failure, ...failures()]);
+          };
+        }
+      }
+      function isIterable(x) {
+        return isObject(x) && typeof x[Symbol.iterator] === 'function';
+      }
+      function isObject(x) {
+        return typeof x === 'object' && x != null;
+      }
+      function isPlainObject(x) {
+        if (Object.prototype.toString.call(x) !== '[object Object]') {
+          return false;
+        }
+        const prototype = Object.getPrototypeOf(x);
+        return prototype === null || prototype === Object.prototype;
+      }
+      function print(value) {
+        if (typeof value === 'symbol') {
+          return value.toString();
+        }
+        return typeof value === 'string' ? JSON.stringify(value) : `${value}`;
+      }
+      function shiftIterator(input) {
+        const {
+          done,
+          value
+        } = input.next();
+        return done ? undefined : value;
+      }
+      function toFailure(result, context, struct, value) {
+        if (result === true) {
+          return;
+        } else if (result === false) {
+          result = {};
+        } else if (typeof result === 'string') {
+          result = {
+            message: result
+          };
+        }
+        const {
+          path,
+          branch
+        } = context;
+        const {
+          type
+        } = struct;
+        const {
+          refinement,
+          message = `Expected a value of type \`${type}\`${refinement ? ` with refinement \`${refinement}\`` : ''}, but received: \`${print(value)}\``
+        } = result;
+        return {
+          value,
+          type,
+          refinement,
+          key: path[path.length - 1],
+          path,
+          branch,
+          ...result,
+          message
+        };
+      }
+      function* toFailures(result, context, struct, value) {
+        if (!isIterable(result)) {
+          result = [result];
+        }
+        for (const r of result) {
+          const failure = toFailure(r, context, struct, value);
+          if (failure) {
+            yield failure;
+          }
+        }
+      }
+      function* run(value, struct, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        const {
+          path = [],
+          branch = [value],
+          coerce = false,
+          mask = false
+        } = options;
+        const ctx = {
+          path,
+          branch
+        };
+        if (coerce) {
+          value = struct.coercer(value, ctx);
+          if (mask && struct.type !== 'type' && isObject(struct.schema) && isObject(value) && !Array.isArray(value)) {
+            for (const key in value) {
+              if (struct.schema[key] === undefined) {
+                delete value[key];
+              }
+            }
+          }
+        }
+        let status = 'valid';
+        for (const failure of struct.validator(value, ctx)) {
+          status = 'not_valid';
+          yield [failure, undefined];
+        }
+        for (let [k, v, s] of struct.entries(value, ctx)) {
+          const ts = run(v, s, {
+            path: k === undefined ? path : [...path, k],
+            branch: k === undefined ? branch : [...branch, v],
+            coerce,
+            mask
+          });
+          for (const t of ts) {
+            if (t[0]) {
+              status = t[0].refinement != null ? 'not_refined' : 'not_valid';
+              yield [t[0], undefined];
+            } else if (coerce) {
+              v = t[1];
+              if (k === undefined) {
+                value = v;
+              } else if (value instanceof Map) {
+                value.set(k, v);
+              } else if (value instanceof Set) {
+                value.add(v);
+              } else if (isObject(value)) {
+                if (v !== undefined || k in value) value[k] = v;
+              }
+            }
+          }
+        }
+        if (status !== 'not_valid') {
+          for (const failure of struct.refiner(value, ctx)) {
+            status = 'not_refined';
+            yield [failure, undefined];
+          }
+        }
+        if (status === 'valid') {
+          yield [undefined, value];
+        }
+      }
+      class Struct {
+        constructor(props) {
+          this.TYPE = void 0;
+          this.type = void 0;
+          this.schema = void 0;
+          this.coercer = void 0;
+          this.validator = void 0;
+          this.refiner = void 0;
+          this.entries = void 0;
+          const {
+            type,
+            schema,
+            validator,
+            refiner,
+            coercer = value => value,
+            entries = function* () {}
+          } = props;
+          this.type = type;
+          this.schema = schema;
+          this.entries = entries;
+          this.coercer = coercer;
+          if (validator) {
+            this.validator = (value, context) => {
+              const result = validator(value, context);
+              return toFailures(result, context, this, value);
+            };
+          } else {
+            this.validator = () => [];
+          }
+          if (refiner) {
+            this.refiner = (value, context) => {
+              const result = refiner(value, context);
+              return toFailures(result, context, this, value);
+            };
+          } else {
+            this.refiner = () => [];
+          }
+        }
+        assert(value) {
+          return assert(value, this);
+        }
+        create(value) {
+          return create(value, this);
+        }
+        is(value) {
+          return is(value, this);
+        }
+        mask(value) {
+          return mask(value, this);
+        }
+        validate(value, options) {
+          if (options === void 0) {
+            options = {};
+          }
+          return validate(value, this, options);
+        }
+      }
+      function assert(value, struct) {
+        const result = validate(value, struct);
+        if (result[0]) {
+          throw result[0];
+        }
+      }
+      function create(value, struct) {
+        const result = validate(value, struct, {
+          coerce: true
+        });
+        if (result[0]) {
+          throw result[0];
+        } else {
+          return result[1];
+        }
+      }
+      function mask(value, struct) {
+        const result = validate(value, struct, {
+          coerce: true,
+          mask: true
+        });
+        if (result[0]) {
+          throw result[0];
+        } else {
+          return result[1];
+        }
+      }
+      function is(value, struct) {
+        const result = validate(value, struct);
+        return !result[0];
+      }
+      function validate(value, struct, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        const tuples = run(value, struct, options);
+        const tuple = shiftIterator(tuples);
+        if (tuple[0]) {
+          const error = new StructError(tuple[0], function* () {
+            for (const t of tuples) {
+              if (t[0]) {
+                yield t[0];
+              }
+            }
+          });
+          return [error, undefined];
+        } else {
+          const v = tuple[1];
+          return [undefined, v];
+        }
+      }
+      function assign() {
+        for (var _len = arguments.length, Structs = new Array(_len), _key = 0; _key < _len; _key++) {
+          Structs[_key] = arguments[_key];
+        }
+        const isType = Structs[0].type === 'type';
+        const schemas = Structs.map(s => s.schema);
+        const schema = Object.assign({}, ...schemas);
+        return isType ? type(schema) : object(schema);
+      }
+      function define(name, validator) {
+        return new Struct({
+          type: name,
+          schema: null,
+          validator
+        });
+      }
+      function deprecated(struct, log) {
+        return new Struct({
+          ...struct,
+          refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx),
+          validator(value, ctx) {
+            if (value === undefined) {
+              return true;
+            } else {
+              log(value, ctx);
+              return struct.validator(value, ctx);
+            }
+          }
+        });
+      }
+      function dynamic(fn) {
+        return new Struct({
+          type: 'dynamic',
+          schema: null,
+          *entries(value, ctx) {
+            const struct = fn(value, ctx);
+            yield* struct.entries(value, ctx);
+          },
+          validator(value, ctx) {
+            const struct = fn(value, ctx);
+            return struct.validator(value, ctx);
+          },
+          coercer(value, ctx) {
+            const struct = fn(value, ctx);
+            return struct.coercer(value, ctx);
+          },
+          refiner(value, ctx) {
+            const struct = fn(value, ctx);
+            return struct.refiner(value, ctx);
+          }
+        });
+      }
+      function lazy(fn) {
+        let struct;
+        return new Struct({
+          type: 'lazy',
+          schema: null,
+          *entries(value, ctx) {
+            struct ?? (struct = fn());
+            yield* struct.entries(value, ctx);
+          },
+          validator(value, ctx) {
+            struct ?? (struct = fn());
+            return struct.validator(value, ctx);
+          },
+          coercer(value, ctx) {
+            struct ?? (struct = fn());
+            return struct.coercer(value, ctx);
+          },
+          refiner(value, ctx) {
+            struct ?? (struct = fn());
+            return struct.refiner(value, ctx);
+          }
+        });
+      }
+      function omit(struct, keys) {
+        const {
+          schema
+        } = struct;
+        const subschema = {
+          ...schema
+        };
+        for (const key of keys) {
+          delete subschema[key];
+        }
+        switch (struct.type) {
+          case 'type':
+            return type(subschema);
+          default:
+            return object(subschema);
+        }
+      }
+      function partial(struct) {
+        const schema = struct instanceof Struct ? {
+          ...struct.schema
+        } : {
+          ...struct
+        };
+        for (const key in schema) {
+          schema[key] = optional(schema[key]);
+        }
+        return object(schema);
+      }
+      function pick(struct, keys) {
+        const {
+          schema
+        } = struct;
+        const subschema = {};
+        for (const key of keys) {
+          subschema[key] = schema[key];
+        }
+        return object(subschema);
+      }
+      function struct(name, validator) {
+        console.warn('superstruct@0.11 - The `struct` helper has been renamed to `define`.');
+        return define(name, validator);
+      }
+      function any() {
+        return define('any', () => true);
+      }
+      function array(Element) {
+        return new Struct({
+          type: 'array',
+          schema: Element,
+          *entries(value) {
+            if (Element && Array.isArray(value)) {
+              for (const [i, v] of value.entries()) {
+                yield [i, v, Element];
+              }
+            }
+          },
+          coercer(value) {
+            return Array.isArray(value) ? value.slice() : value;
+          },
+          validator(value) {
+            return Array.isArray(value) || `Expected an array value, but received: ${print(value)}`;
+          }
+        });
+      }
+      function bigint() {
+        return define('bigint', value => {
+          return typeof value === 'bigint';
+        });
+      }
+      function boolean() {
+        return define('boolean', value => {
+          return typeof value === 'boolean';
+        });
+      }
+      function date() {
+        return define('date', value => {
+          return value instanceof Date && !isNaN(value.getTime()) || `Expected a valid \`Date\` object, but received: ${print(value)}`;
+        });
+      }
+      function enums(values) {
+        const schema = {};
+        const description = values.map(v => print(v)).join();
+        for (const key of values) {
+          schema[key] = key;
+        }
+        return new Struct({
+          type: 'enums',
+          schema,
+          validator(value) {
+            return values.includes(value) || `Expected one of \`${description}\`, but received: ${print(value)}`;
+          }
+        });
+      }
+      function func() {
+        return define('func', value => {
+          return typeof value === 'function' || `Expected a function, but received: ${print(value)}`;
+        });
+      }
+      function instance(Class) {
+        return define('instance', value => {
+          return value instanceof Class || `Expected a \`${Class.name}\` instance, but received: ${print(value)}`;
+        });
+      }
+      function integer() {
+        return define('integer', value => {
+          return typeof value === 'number' && !isNaN(value) && Number.isInteger(value) || `Expected an integer, but received: ${print(value)}`;
+        });
+      }
+      function intersection(Structs) {
+        return new Struct({
+          type: 'intersection',
+          schema: null,
+          *entries(value, ctx) {
+            for (const S of Structs) {
+              yield* S.entries(value, ctx);
+            }
+          },
+          *validator(value, ctx) {
+            for (const S of Structs) {
+              yield* S.validator(value, ctx);
+            }
+          },
+          *refiner(value, ctx) {
+            for (const S of Structs) {
+              yield* S.refiner(value, ctx);
+            }
+          }
+        });
+      }
+      function literal(constant) {
+        const description = print(constant);
+        const t = typeof constant;
+        return new Struct({
+          type: 'literal',
+          schema: t === 'string' || t === 'number' || t === 'boolean' ? constant : null,
+          validator(value) {
+            return value === constant || `Expected the literal \`${description}\`, but received: ${print(value)}`;
+          }
+        });
+      }
+      function map(Key, Value) {
+        return new Struct({
+          type: 'map',
+          schema: null,
+          *entries(value) {
+            if (Key && Value && value instanceof Map) {
+              for (const [k, v] of value.entries()) {
+                yield [k, k, Key];
+                yield [k, v, Value];
+              }
+            }
+          },
+          coercer(value) {
+            return value instanceof Map ? new Map(value) : value;
+          },
+          validator(value) {
+            return value instanceof Map || `Expected a \`Map\` object, but received: ${print(value)}`;
+          }
+        });
+      }
+      function never() {
+        return define('never', () => false);
+      }
+      function nullable(struct) {
+        return new Struct({
+          ...struct,
+          validator: (value, ctx) => value === null || struct.validator(value, ctx),
+          refiner: (value, ctx) => value === null || struct.refiner(value, ctx)
+        });
+      }
+      function number() {
+        return define('number', value => {
+          return typeof value === 'number' && !isNaN(value) || `Expected a number, but received: ${print(value)}`;
+        });
+      }
+      function object(schema) {
+        const knowns = schema ? Object.keys(schema) : [];
+        const Never = never();
+        return new Struct({
+          type: 'object',
+          schema: schema ? schema : null,
+          *entries(value) {
+            if (schema && isObject(value)) {
+              const unknowns = new Set(Object.keys(value));
+              for (const key of knowns) {
+                unknowns.delete(key);
+                yield [key, value[key], schema[key]];
+              }
+              for (const key of unknowns) {
+                yield [key, value[key], Never];
+              }
+            }
+          },
+          validator(value) {
+            return isObject(value) || `Expected an object, but received: ${print(value)}`;
+          },
+          coercer(value) {
+            return isObject(value) ? {
+              ...value
+            } : value;
+          }
+        });
+      }
+      function optional(struct) {
+        return new Struct({
+          ...struct,
+          validator: (value, ctx) => value === undefined || struct.validator(value, ctx),
+          refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx)
+        });
+      }
+      function record(Key, Value) {
+        return new Struct({
+          type: 'record',
+          schema: null,
+          *entries(value) {
+            if (isObject(value)) {
+              for (const k in value) {
+                const v = value[k];
+                yield [k, k, Key];
+                yield [k, v, Value];
+              }
+            }
+          },
+          validator(value) {
+            return isObject(value) || `Expected an object, but received: ${print(value)}`;
+          }
+        });
+      }
+      function regexp() {
+        return define('regexp', value => {
+          return value instanceof RegExp;
+        });
+      }
+      function set(Element) {
+        return new Struct({
+          type: 'set',
+          schema: null,
+          *entries(value) {
+            if (Element && value instanceof Set) {
+              for (const v of value) {
+                yield [v, v, Element];
+              }
+            }
+          },
+          coercer(value) {
+            return value instanceof Set ? new Set(value) : value;
+          },
+          validator(value) {
+            return value instanceof Set || `Expected a \`Set\` object, but received: ${print(value)}`;
+          }
+        });
+      }
+      function string() {
+        return define('string', value => {
+          return typeof value === 'string' || `Expected a string, but received: ${print(value)}`;
+        });
+      }
+      function tuple(Structs) {
+        const Never = never();
+        return new Struct({
+          type: 'tuple',
+          schema: null,
+          *entries(value) {
+            if (Array.isArray(value)) {
+              const length = Math.max(Structs.length, value.length);
+              for (let i = 0; i < length; i++) {
+                yield [i, value[i], Structs[i] || Never];
+              }
+            }
+          },
+          validator(value) {
+            return Array.isArray(value) || `Expected an array, but received: ${print(value)}`;
+          }
+        });
+      }
+      function type(schema) {
+        const keys = Object.keys(schema);
+        return new Struct({
+          type: 'type',
+          schema,
+          *entries(value) {
+            if (isObject(value)) {
+              for (const k of keys) {
+                yield [k, value[k], schema[k]];
+              }
+            }
+          },
+          validator(value) {
+            return isObject(value) || `Expected an object, but received: ${print(value)}`;
+          }
+        });
+      }
+      function union(Structs) {
+        const description = Structs.map(s => s.type).join(' | ');
+        return new Struct({
+          type: 'union',
+          schema: null,
+          coercer(value, ctx) {
+            const firstMatch = Structs.find(s => {
+              const [e] = s.validate(value, {
+                coerce: true
+              });
+              return !e;
+            }) || unknown();
+            return firstMatch.coercer(value, ctx);
+          },
+          validator(value, ctx) {
+            const failures = [];
+            for (const S of Structs) {
+              const [...tuples] = run(value, S, ctx);
+              const [first] = tuples;
+              if (!first[0]) {
+                return [];
+              } else {
+                for (const [failure] of tuples) {
+                  if (failure) {
+                    failures.push(failure);
+                  }
+                }
+              }
+            }
+            return [`Expected the value to satisfy a union of \`${description}\`, but received: ${print(value)}`, ...failures];
+          }
+        });
+      }
+      function unknown() {
+        return define('unknown', () => true);
+      }
+      function coerce(struct, condition, coercer) {
+        return new Struct({
+          ...struct,
+          coercer: (value, ctx) => {
+            return is(value, condition) ? struct.coercer(coercer(value, ctx), ctx) : struct.coercer(value, ctx);
+          }
+        });
+      }
+      function defaulted(struct, fallback, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        return coerce(struct, unknown(), x => {
+          const f = typeof fallback === 'function' ? fallback() : fallback;
+          if (x === undefined) {
+            return f;
+          }
+          if (!options.strict && isPlainObject(x) && isPlainObject(f)) {
+            const ret = {
+              ...x
+            };
+            let changed = false;
+            for (const key in f) {
+              if (ret[key] === undefined) {
+                ret[key] = f[key];
+                changed = true;
+              }
+            }
+            if (changed) {
+              return ret;
+            }
+          }
+          return x;
+        });
+      }
+      function trimmed(struct) {
+        return coerce(struct, string(), x => x.trim());
+      }
+      function empty(struct) {
+        return refine(struct, 'empty', value => {
+          const size = getSize(value);
+          return size === 0 || `Expected an empty ${struct.type} but received one with a size of \`${size}\``;
+        });
+      }
+      function getSize(value) {
+        if (value instanceof Map || value instanceof Set) {
+          return value.size;
+        } else {
+          return value.length;
+        }
+      }
+      function max(struct, threshold, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        const {
+          exclusive
+        } = options;
+        return refine(struct, 'max', value => {
+          return exclusive ? value < threshold : value <= threshold || `Expected a ${struct.type} less than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
+        });
+      }
+      function min(struct, threshold, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        const {
+          exclusive
+        } = options;
+        return refine(struct, 'min', value => {
+          return exclusive ? value > threshold : value >= threshold || `Expected a ${struct.type} greater than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
+        });
+      }
+      function nonempty(struct) {
+        return refine(struct, 'nonempty', value => {
+          const size = getSize(value);
+          return size > 0 || `Expected a nonempty ${struct.type} but received an empty one`;
+        });
+      }
+      function pattern(struct, regexp) {
+        return refine(struct, 'pattern', value => {
+          return regexp.test(value) || `Expected a ${struct.type} matching \`/${regexp.source}/\` but received "${value}"`;
+        });
+      }
+      function size(struct, min, max) {
+        if (max === void 0) {
+          max = min;
+        }
+        const expected = `Expected a ${struct.type}`;
+        const of = min === max ? `of \`${min}\`` : `between \`${min}\` and \`${max}\``;
+        return refine(struct, 'size', value => {
+          if (typeof value === 'number' || value instanceof Date) {
+            return min <= value && value <= max || `${expected} ${of} but received \`${value}\``;
+          } else if (value instanceof Map || value instanceof Set) {
+            const {
+              size
+            } = value;
+            return min <= size && size <= max || `${expected} with a size ${of} but received one with a size of \`${size}\``;
+          } else {
+            const {
+              length
+            } = value;
+            return min <= length && length <= max || `${expected} with a length ${of} but received one with a length of \`${length}\``;
+          }
+        });
+      }
+      function refine(struct, name, refiner) {
+        return new Struct({
+          ...struct,
+          *refiner(value, ctx) {
+            yield* struct.refiner(value, ctx);
+            const result = refiner(value, ctx);
+            const failures = toFailures(result, ctx, struct, value);
+            for (const failure of failures) {
+              yield {
+                ...failure,
+                refinement: name
+              };
+            }
+          }
+        });
+      }
+      exports.Struct = Struct;
+      exports.StructError = StructError;
+      exports.any = any;
+      exports.array = array;
+      exports.assert = assert;
+      exports.assign = assign;
+      exports.bigint = bigint;
+      exports.boolean = boolean;
+      exports.coerce = coerce;
+      exports.create = create;
+      exports.date = date;
+      exports.defaulted = defaulted;
+      exports.define = define;
+      exports.deprecated = deprecated;
+      exports.dynamic = dynamic;
+      exports.empty = empty;
+      exports.enums = enums;
+      exports.func = func;
+      exports.instance = instance;
+      exports.integer = integer;
+      exports.intersection = intersection;
+      exports.is = is;
+      exports.lazy = lazy;
+      exports.literal = literal;
+      exports.map = map;
+      exports.mask = mask;
+      exports.max = max;
+      exports.min = min;
+      exports.never = never;
+      exports.nonempty = nonempty;
+      exports.nullable = nullable;
+      exports.number = number;
+      exports.object = object;
+      exports.omit = omit;
+      exports.optional = optional;
+      exports.partial = partial;
+      exports.pattern = pattern;
+      exports.pick = pick;
+      exports.record = record;
+      exports.refine = refine;
+      exports.regexp = regexp;
+      exports.set = set;
+      exports.size = size;
+      exports.string = string;
+      exports.struct = struct;
+      exports.trimmed = trimmed;
+      exports.tuple = tuple;
+      exports.type = type;
+      exports.union = union;
+      exports.unknown = unknown;
+      exports.validate = validate;
+    }, {}],
+    30: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.text = exports.spinner = exports.panel = exports.heading = exports.divider = exports.copyable = void 0;
+      const utils_1 = require("@metamask/utils");
+      const nodes_1 = require("./nodes");
+      function createBuilder(type, struct, keys = []) {
+        return (...args) => {
+          if (args.length === 1 && (0, utils_1.isPlainObject)(args[0])) {
+            const node = Object.assign(Object.assign({}, args[0]), {
+              type
+            });
+            (0, utils_1.assertStruct)(node, struct, `Invalid ${type} component`);
+            return node;
+          }
+          const node = keys.reduce((partialNode, key, index) => {
+            return Object.assign(Object.assign({}, partialNode), {
+              [key]: args[index]
+            });
+          }, {
+            type
+          });
+          (0, utils_1.assertStruct)(node, struct, `Invalid ${type} component`);
+          return node;
+        };
+      }
+      exports.copyable = createBuilder(nodes_1.NodeType.Copyable, nodes_1.CopyableStruct, ['value']);
+      exports.divider = createBuilder(nodes_1.NodeType.Divider, nodes_1.DividerStruct);
+      exports.heading = createBuilder(nodes_1.NodeType.Heading, nodes_1.HeadingStruct, ['value']);
+      exports.panel = createBuilder(nodes_1.NodeType.Panel, nodes_1.PanelStruct, ['children']);
+      exports.spinner = createBuilder(nodes_1.NodeType.Spinner, nodes_1.SpinnerStruct);
+      exports.text = createBuilder(nodes_1.NodeType.Text, nodes_1.TextStruct, ['value']);
+    }, {
+      "./nodes": 32,
+      "@metamask/utils": 41
+    }],
+    31: [function (require, module, exports) {
+      "use strict";
+
+      var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            }
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      } : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+      var __exportStar = this && this.__exportStar || function (m, exports) {
+        for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+      };
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      __exportStar(require("./builder"), exports);
+      __exportStar(require("./nodes"), exports);
+      __exportStar(require("./validation"), exports);
+    }, {
+      "./builder": 30,
+      "./nodes": 32,
+      "./validation": 33
+    }],
+    32: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ComponentStruct = exports.TextStruct = exports.SpinnerStruct = exports.PanelStruct = exports.HeadingStruct = exports.DividerStruct = exports.CopyableStruct = exports.NodeType = void 0;
+      const superstruct_1 = require("superstruct");
+      const NodeStruct = (0, superstruct_1.object)({
+        type: (0, superstruct_1.string)()
+      });
+      const ParentStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
+        children: (0, superstruct_1.array)((0, superstruct_1.lazy)(() => exports.ComponentStruct))
+      }));
+      const LiteralStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
+        value: (0, superstruct_1.unknown)()
+      }));
+      var NodeType;
+      (function (NodeType) {
+        NodeType["Copyable"] = "copyable";
+        NodeType["Divider"] = "divider";
+        NodeType["Heading"] = "heading";
+        NodeType["Panel"] = "panel";
+        NodeType["Spinner"] = "spinner";
+        NodeType["Text"] = "text";
+      })(NodeType = exports.NodeType || (exports.NodeType = {}));
+      exports.CopyableStruct = (0, superstruct_1.assign)(LiteralStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Copyable),
+        value: (0, superstruct_1.string)()
+      }));
+      exports.DividerStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Divider)
+      }));
+      exports.HeadingStruct = (0, superstruct_1.assign)(LiteralStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Heading),
+        value: (0, superstruct_1.string)()
+      }));
+      exports.PanelStruct = (0, superstruct_1.assign)(ParentStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Panel)
+      }));
+      exports.SpinnerStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Spinner)
+      }));
+      exports.TextStruct = (0, superstruct_1.assign)(LiteralStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Text),
+        value: (0, superstruct_1.string)()
+      }));
+      exports.ComponentStruct = (0, superstruct_1.union)([exports.CopyableStruct, exports.DividerStruct, exports.HeadingStruct, exports.PanelStruct, exports.SpinnerStruct, exports.TextStruct]);
+    }, {
+      "superstruct": 279
+    }],
+    33: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.assertIsComponent = exports.isComponent = void 0;
+      const utils_1 = require("@metamask/utils");
+      const superstruct_1 = require("superstruct");
+      const nodes_1 = require("./nodes");
+      function isComponent(value) {
+        return (0, superstruct_1.is)(value, nodes_1.ComponentStruct);
+      }
+      exports.isComponent = isComponent;
+      function assertIsComponent(value) {
+        (0, utils_1.assertStruct)(value, nodes_1.ComponentStruct, 'Invalid component');
+      }
+      exports.assertIsComponent = assertIsComponent;
+    }, {
+      "./nodes": 32,
+      "@metamask/utils": 41,
+      "superstruct": 279
+    }],
+    34: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.assertExhaustive = exports.assertStruct = exports.assert = exports.AssertionError = void 0;
+      const superstruct_1 = require("superstruct");
+      function isErrorWithMessage(error) {
+        return typeof error === 'object' && error !== null && 'message' in error;
+      }
+      function isConstructable(fn) {
+        var _a, _b;
+        return Boolean(typeof ((_b = (_a = fn === null || fn === void 0 ? void 0 : fn.prototype) === null || _a === void 0 ? void 0 : _a.constructor) === null || _b === void 0 ? void 0 : _b.name) === 'string');
+      }
+      function getErrorMessage(error) {
+        const message = isErrorWithMessage(error) ? error.message : String(error);
+        if (message.endsWith('.')) {
+          return message.slice(0, -1);
+        }
+        return message;
+      }
+      function getError(ErrorWrapper, message) {
+        if (isConstructable(ErrorWrapper)) {
+          return new ErrorWrapper({
+            message
+          });
+        }
+        return ErrorWrapper({
+          message
+        });
+      }
+      class AssertionError extends Error {
+        constructor(options) {
+          super(options.message);
+          this.code = 'ERR_ASSERTION';
+        }
+      }
+      exports.AssertionError = AssertionError;
+      function assert(value, message = 'Assertion failed.', ErrorWrapper = AssertionError) {
+        if (!value) {
+          if (message instanceof Error) {
+            throw message;
+          }
+          throw getError(ErrorWrapper, message);
+        }
+      }
+      exports.assert = assert;
+      function assertStruct(value, struct, errorPrefix = 'Assertion failed', ErrorWrapper = AssertionError) {
+        try {
+          (0, superstruct_1.assert)(value, struct);
+        } catch (error) {
+          throw getError(ErrorWrapper, `${errorPrefix}: ${getErrorMessage(error)}.`);
+        }
+      }
+      exports.assertStruct = assertStruct;
+      function assertExhaustive(_object) {
+        throw new Error('Invalid branch reached. Should be detected during compilation.');
+      }
+      exports.assertExhaustive = assertExhaustive;
+    }, {
+      "superstruct": 279
+    }],
+    35: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.base64 = void 0;
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      const base64 = (struct, options = {}) => {
+        var _a, _b;
+        const paddingRequired = (_a = options.paddingRequired) !== null && _a !== void 0 ? _a : false;
+        const characterSet = (_b = options.characterSet) !== null && _b !== void 0 ? _b : 'base64';
+        let letters;
+        if (characterSet === 'base64') {
+          letters = String.raw`[A-Za-z0-9+\/]`;
+        } else {
+          (0, assert_1.assert)(characterSet === 'base64url');
+          letters = String.raw`[-_A-Za-z0-9]`;
+        }
+        let re;
+        if (paddingRequired) {
+          re = new RegExp(`^(?:${letters}{4})*(?:${letters}{3}=|${letters}{2}==)?$`, 'u');
+        } else {
+          re = new RegExp(`^(?:${letters}{4})*(?:${letters}{2,3}|${letters}{3}=|${letters}{2}==)?$`, 'u');
+        }
+        return (0, superstruct_1.pattern)(struct, re);
+      };
+      exports.base64 = base64;
+    }, {
+      "./assert": 34,
+      "superstruct": 279
+    }],
+    36: [function (require, module, exports) {
+      (function () {
+        (function () {
+          "use strict";
+
+          Object.defineProperty(exports, "__esModule", {
+            value: true
+          });
+          exports.createDataView = exports.concatBytes = exports.valueToBytes = exports.stringToBytes = exports.numberToBytes = exports.signedBigIntToBytes = exports.bigIntToBytes = exports.hexToBytes = exports.bytesToString = exports.bytesToNumber = exports.bytesToSignedBigInt = exports.bytesToBigInt = exports.bytesToHex = exports.assertIsBytes = exports.isBytes = void 0;
+          const assert_1 = require("./assert");
+          const hex_1 = require("./hex");
+          const HEX_MINIMUM_NUMBER_CHARACTER = 48;
+          const HEX_MAXIMUM_NUMBER_CHARACTER = 58;
+          const HEX_CHARACTER_OFFSET = 87;
+          function getPrecomputedHexValuesBuilder() {
+            const lookupTable = [];
+            return () => {
+              if (lookupTable.length === 0) {
+                for (let i = 0; i < 256; i++) {
+                  lookupTable.push(i.toString(16).padStart(2, '0'));
+                }
+              }
+              return lookupTable;
+            };
+          }
+          const getPrecomputedHexValues = getPrecomputedHexValuesBuilder();
+          function isBytes(value) {
+            return value instanceof Uint8Array;
+          }
+          exports.isBytes = isBytes;
+          function assertIsBytes(value) {
+            (0, assert_1.assert)(isBytes(value), 'Value must be a Uint8Array.');
+          }
+          exports.assertIsBytes = assertIsBytes;
+          function bytesToHex(bytes) {
+            assertIsBytes(bytes);
+            if (bytes.length === 0) {
+              return '0x';
+            }
+            const lookupTable = getPrecomputedHexValues();
+            const hexadecimal = new Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) {
+              hexadecimal[i] = lookupTable[bytes[i]];
+            }
+            return (0, hex_1.add0x)(hexadecimal.join(''));
+          }
+          exports.bytesToHex = bytesToHex;
+          function bytesToBigInt(bytes) {
+            assertIsBytes(bytes);
+            const hexadecimal = bytesToHex(bytes);
+            return BigInt(hexadecimal);
+          }
+          exports.bytesToBigInt = bytesToBigInt;
+          function bytesToSignedBigInt(bytes) {
+            assertIsBytes(bytes);
+            let value = BigInt(0);
+            for (const byte of bytes) {
+              value = (value << BigInt(8)) + BigInt(byte);
+            }
+            return BigInt.asIntN(bytes.length * 8, value);
+          }
+          exports.bytesToSignedBigInt = bytesToSignedBigInt;
+          function bytesToNumber(bytes) {
+            assertIsBytes(bytes);
+            const bigint = bytesToBigInt(bytes);
+            (0, assert_1.assert)(bigint <= BigInt(Number.MAX_SAFE_INTEGER), 'Number is not a safe integer. Use `bytesToBigInt` instead.');
+            return Number(bigint);
+          }
+          exports.bytesToNumber = bytesToNumber;
+          function bytesToString(bytes) {
+            assertIsBytes(bytes);
+            return new TextDecoder().decode(bytes);
+          }
+          exports.bytesToString = bytesToString;
+          function hexToBytes(value) {
+            var _a;
+            if (((_a = value === null || value === void 0 ? void 0 : value.toLowerCase) === null || _a === void 0 ? void 0 : _a.call(value)) === '0x') {
+              return new Uint8Array();
+            }
+            (0, hex_1.assertIsHexString)(value);
+            const strippedValue = (0, hex_1.remove0x)(value).toLowerCase();
+            const normalizedValue = strippedValue.length % 2 === 0 ? strippedValue : `0${strippedValue}`;
+            const bytes = new Uint8Array(normalizedValue.length / 2);
+            for (let i = 0; i < bytes.length; i++) {
+              const c1 = normalizedValue.charCodeAt(i * 2);
+              const c2 = normalizedValue.charCodeAt(i * 2 + 1);
+              const n1 = c1 - (c1 < HEX_MAXIMUM_NUMBER_CHARACTER ? HEX_MINIMUM_NUMBER_CHARACTER : HEX_CHARACTER_OFFSET);
+              const n2 = c2 - (c2 < HEX_MAXIMUM_NUMBER_CHARACTER ? HEX_MINIMUM_NUMBER_CHARACTER : HEX_CHARACTER_OFFSET);
+              bytes[i] = n1 * 16 + n2;
+            }
+            return bytes;
+          }
+          exports.hexToBytes = hexToBytes;
+          function bigIntToBytes(value) {
+            (0, assert_1.assert)(typeof value === 'bigint', 'Value must be a bigint.');
+            (0, assert_1.assert)(value >= BigInt(0), 'Value must be a non-negative bigint.');
+            const hexadecimal = value.toString(16);
+            return hexToBytes(hexadecimal);
+          }
+          exports.bigIntToBytes = bigIntToBytes;
+          function bigIntFits(value, bytes) {
+            (0, assert_1.assert)(bytes > 0);
+            const mask = value >> BigInt(31);
+            return !((~value & mask) + (value & ~mask) >> BigInt(bytes * 8 + ~0));
+          }
+          function signedBigIntToBytes(value, byteLength) {
+            (0, assert_1.assert)(typeof value === 'bigint', 'Value must be a bigint.');
+            (0, assert_1.assert)(typeof byteLength === 'number', 'Byte length must be a number.');
+            (0, assert_1.assert)(byteLength > 0, 'Byte length must be greater than 0.');
+            (0, assert_1.assert)(bigIntFits(value, byteLength), 'Byte length is too small to represent the given value.');
+            let numberValue = value;
+            const bytes = new Uint8Array(byteLength);
+            for (let i = 0; i < bytes.length; i++) {
+              bytes[i] = Number(BigInt.asUintN(8, numberValue));
+              numberValue >>= BigInt(8);
+            }
+            return bytes.reverse();
+          }
+          exports.signedBigIntToBytes = signedBigIntToBytes;
+          function numberToBytes(value) {
+            (0, assert_1.assert)(typeof value === 'number', 'Value must be a number.');
+            (0, assert_1.assert)(value >= 0, 'Value must be a non-negative number.');
+            (0, assert_1.assert)(Number.isSafeInteger(value), 'Value is not a safe integer. Use `bigIntToBytes` instead.');
+            const hexadecimal = value.toString(16);
+            return hexToBytes(hexadecimal);
+          }
+          exports.numberToBytes = numberToBytes;
+          function stringToBytes(value) {
+            (0, assert_1.assert)(typeof value === 'string', 'Value must be a string.');
+            return new TextEncoder().encode(value);
+          }
+          exports.stringToBytes = stringToBytes;
+          function valueToBytes(value) {
+            if (typeof value === 'bigint') {
+              return bigIntToBytes(value);
+            }
+            if (typeof value === 'number') {
+              return numberToBytes(value);
+            }
+            if (typeof value === 'string') {
+              if (value.startsWith('0x')) {
+                return hexToBytes(value);
+              }
+              return stringToBytes(value);
+            }
+            if (isBytes(value)) {
+              return value;
+            }
+            throw new TypeError(`Unsupported value type: "${typeof value}".`);
+          }
+          exports.valueToBytes = valueToBytes;
+          function concatBytes(values) {
+            const normalizedValues = new Array(values.length);
+            let byteLength = 0;
+            for (let i = 0; i < values.length; i++) {
+              const value = valueToBytes(values[i]);
+              normalizedValues[i] = value;
+              byteLength += value.length;
+            }
+            const bytes = new Uint8Array(byteLength);
+            for (let i = 0, offset = 0; i < normalizedValues.length; i++) {
+              bytes.set(normalizedValues[i], offset);
+              offset += normalizedValues[i].length;
+            }
+            return bytes;
+          }
+          exports.concatBytes = concatBytes;
+          function createDataView(bytes) {
+            if (typeof Buffer !== 'undefined' && bytes instanceof Buffer) {
+              const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+              return new DataView(buffer);
+            }
+            return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+          }
+          exports.createDataView = createDataView;
+        }).call(this);
+      }).call(this, require("buffer").Buffer);
+    }, {
+      "./assert": 34,
+      "./hex": 40,
+      "buffer": 199
+    }],
+    37: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ChecksumStruct = void 0;
+      const superstruct_1 = require("superstruct");
+      const base64_1 = require("./base64");
+      exports.ChecksumStruct = (0, superstruct_1.size)((0, base64_1.base64)((0, superstruct_1.string)(), {
+        paddingRequired: true
+      }), 44, 44);
+    }, {
+      "./base64": 35,
+      "superstruct": 279
+    }],
+    38: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.createHex = exports.createBytes = exports.createBigInt = exports.createNumber = void 0;
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      const bytes_1 = require("./bytes");
+      const hex_1 = require("./hex");
+      const NumberLikeStruct = (0, superstruct_1.union)([(0, superstruct_1.number)(), (0, superstruct_1.bigint)(), (0, superstruct_1.string)(), hex_1.StrictHexStruct]);
+      const NumberCoercer = (0, superstruct_1.coerce)((0, superstruct_1.number)(), NumberLikeStruct, Number);
+      const BigIntCoercer = (0, superstruct_1.coerce)((0, superstruct_1.bigint)(), NumberLikeStruct, BigInt);
+      const BytesLikeStruct = (0, superstruct_1.union)([hex_1.StrictHexStruct, (0, superstruct_1.instance)(Uint8Array)]);
+      const BytesCoercer = (0, superstruct_1.coerce)((0, superstruct_1.instance)(Uint8Array), (0, superstruct_1.union)([hex_1.StrictHexStruct]), bytes_1.hexToBytes);
+      const HexCoercer = (0, superstruct_1.coerce)(hex_1.StrictHexStruct, (0, superstruct_1.instance)(Uint8Array), bytes_1.bytesToHex);
+      function createNumber(value) {
+        try {
+          const result = (0, superstruct_1.create)(value, NumberCoercer);
+          (0, assert_1.assert)(Number.isFinite(result), `Expected a number-like value, got "${value}".`);
+          return result;
+        } catch (error) {
+          if (error instanceof superstruct_1.StructError) {
+            throw new Error(`Expected a number-like value, got "${value}".`);
+          }
+          throw error;
+        }
+      }
+      exports.createNumber = createNumber;
+      function createBigInt(value) {
+        try {
+          return (0, superstruct_1.create)(value, BigIntCoercer);
+        } catch (error) {
+          if (error instanceof superstruct_1.StructError) {
+            throw new Error(`Expected a number-like value, got "${String(error.value)}".`);
+          }
+          throw error;
+        }
+      }
+      exports.createBigInt = createBigInt;
+      function createBytes(value) {
+        if (typeof value === 'string' && value.toLowerCase() === '0x') {
+          return new Uint8Array();
+        }
+        try {
+          return (0, superstruct_1.create)(value, BytesCoercer);
+        } catch (error) {
+          if (error instanceof superstruct_1.StructError) {
+            throw new Error(`Expected a bytes-like value, got "${String(error.value)}".`);
+          }
+          throw error;
+        }
+      }
+      exports.createBytes = createBytes;
+      function createHex(value) {
+        if (value instanceof Uint8Array && value.length === 0 || typeof value === 'string' && value.toLowerCase() === '0x') {
+          return '0x';
+        }
+        try {
+          return (0, superstruct_1.create)(value, HexCoercer);
+        } catch (error) {
+          if (error instanceof superstruct_1.StructError) {
+            throw new Error(`Expected a bytes-like value, got "${String(error.value)}".`);
+          }
+          throw error;
+        }
+      }
+      exports.createHex = createHex;
+    }, {
+      "./assert": 34,
+      "./bytes": 36,
+      "./hex": 40,
+      "superstruct": 279
+    }],
+    39: [function (require, module, exports) {
+      arguments[4][21][0].apply(exports, arguments);
+    }, {
+      "dup": 21
+    }],
+    40: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.remove0x = exports.add0x = exports.assertIsStrictHexString = exports.assertIsHexString = exports.isStrictHexString = exports.isHexString = exports.StrictHexStruct = exports.HexStruct = void 0;
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      exports.HexStruct = (0, superstruct_1.pattern)((0, superstruct_1.string)(), /^(?:0x)?[0-9a-f]+$/iu);
+      exports.StrictHexStruct = (0, superstruct_1.pattern)((0, superstruct_1.string)(), /^0x[0-9a-f]+$/iu);
+      function isHexString(value) {
+        return (0, superstruct_1.is)(value, exports.HexStruct);
+      }
+      exports.isHexString = isHexString;
+      function isStrictHexString(value) {
+        return (0, superstruct_1.is)(value, exports.StrictHexStruct);
+      }
+      exports.isStrictHexString = isStrictHexString;
+      function assertIsHexString(value) {
+        (0, assert_1.assert)(isHexString(value), 'Value must be a hexadecimal string.');
+      }
+      exports.assertIsHexString = assertIsHexString;
+      function assertIsStrictHexString(value) {
+        (0, assert_1.assert)(isStrictHexString(value), 'Value must be a hexadecimal string, starting with "0x".');
+      }
+      exports.assertIsStrictHexString = assertIsStrictHexString;
+      function add0x(hexadecimal) {
+        if (hexadecimal.startsWith('0x')) {
+          return hexadecimal;
+        }
+        if (hexadecimal.startsWith('0X')) {
+          return `0x${hexadecimal.substring(2)}`;
+        }
+        return `0x${hexadecimal}`;
+      }
+      exports.add0x = add0x;
+      function remove0x(hexadecimal) {
+        if (hexadecimal.startsWith('0x') || hexadecimal.startsWith('0X')) {
+          return hexadecimal.substring(2);
+        }
+        return hexadecimal;
+      }
+      exports.remove0x = remove0x;
+    }, {
+      "./assert": 34,
+      "superstruct": 279
+    }],
+    41: [function (require, module, exports) {
+      "use strict";
+
+      var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            }
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      } : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+      var __exportStar = this && this.__exportStar || function (m, exports) {
+        for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+      };
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      __exportStar(require("./assert"), exports);
+      __exportStar(require("./base64"), exports);
+      __exportStar(require("./bytes"), exports);
+      __exportStar(require("./checksum"), exports);
+      __exportStar(require("./coercers"), exports);
+      __exportStar(require("./collections"), exports);
+      __exportStar(require("./hex"), exports);
+      __exportStar(require("./json"), exports);
+      __exportStar(require("./logging"), exports);
+      __exportStar(require("./misc"), exports);
+      __exportStar(require("./number"), exports);
+      __exportStar(require("./opaque"), exports);
+      __exportStar(require("./time"), exports);
+      __exportStar(require("./versions"), exports);
+    }, {
+      "./assert": 34,
+      "./base64": 35,
+      "./bytes": 36,
+      "./checksum": 37,
+      "./coercers": 38,
+      "./collections": 39,
+      "./hex": 40,
+      "./json": 42,
+      "./logging": 43,
+      "./misc": 44,
+      "./number": 45,
+      "./opaque": 46,
+      "./time": 47,
+      "./versions": 48
+    }],
+    42: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.validateJsonAndGetSize = exports.getJsonRpcIdValidator = exports.assertIsJsonRpcError = exports.isJsonRpcError = exports.assertIsJsonRpcFailure = exports.isJsonRpcFailure = exports.assertIsJsonRpcSuccess = exports.isJsonRpcSuccess = exports.assertIsJsonRpcResponse = exports.isJsonRpcResponse = exports.assertIsPendingJsonRpcResponse = exports.isPendingJsonRpcResponse = exports.JsonRpcResponseStruct = exports.JsonRpcFailureStruct = exports.JsonRpcSuccessStruct = exports.PendingJsonRpcResponseStruct = exports.assertIsJsonRpcRequest = exports.isJsonRpcRequest = exports.assertIsJsonRpcNotification = exports.isJsonRpcNotification = exports.JsonRpcNotificationStruct = exports.JsonRpcRequestStruct = exports.JsonRpcParamsStruct = exports.JsonRpcErrorStruct = exports.JsonRpcIdStruct = exports.JsonRpcVersionStruct = exports.jsonrpc2 = exports.isValidJson = exports.JsonStruct = void 0;
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      const misc_1 = require("./misc");
+      exports.JsonStruct = (0, superstruct_1.define)('Json', value => {
+        const [isValid] = validateJsonAndGetSize(value, true);
+        if (!isValid) {
+          return 'Expected a valid JSON-serializable value';
+        }
+        return true;
+      });
+      function isValidJson(value) {
+        return (0, superstruct_1.is)(value, exports.JsonStruct);
+      }
+      exports.isValidJson = isValidJson;
+      exports.jsonrpc2 = '2.0';
+      exports.JsonRpcVersionStruct = (0, superstruct_1.literal)(exports.jsonrpc2);
+      exports.JsonRpcIdStruct = (0, superstruct_1.nullable)((0, superstruct_1.union)([(0, superstruct_1.number)(), (0, superstruct_1.string)()]));
+      exports.JsonRpcErrorStruct = (0, superstruct_1.object)({
+        code: (0, superstruct_1.integer)(),
+        message: (0, superstruct_1.string)(),
+        data: (0, superstruct_1.optional)(exports.JsonStruct),
+        stack: (0, superstruct_1.optional)((0, superstruct_1.string)())
+      });
+      exports.JsonRpcParamsStruct = (0, superstruct_1.optional)((0, superstruct_1.union)([(0, superstruct_1.record)((0, superstruct_1.string)(), exports.JsonStruct), (0, superstruct_1.array)(exports.JsonStruct)]));
+      exports.JsonRpcRequestStruct = (0, superstruct_1.object)({
+        id: exports.JsonRpcIdStruct,
+        jsonrpc: exports.JsonRpcVersionStruct,
+        method: (0, superstruct_1.string)(),
+        params: exports.JsonRpcParamsStruct
+      });
+      exports.JsonRpcNotificationStruct = (0, superstruct_1.omit)(exports.JsonRpcRequestStruct, ['id']);
+      function isJsonRpcNotification(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcNotificationStruct);
+      }
+      exports.isJsonRpcNotification = isJsonRpcNotification;
+      function assertIsJsonRpcNotification(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcNotificationStruct, 'Invalid JSON-RPC notification', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcNotification = assertIsJsonRpcNotification;
+      function isJsonRpcRequest(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcRequestStruct);
+      }
+      exports.isJsonRpcRequest = isJsonRpcRequest;
+      function assertIsJsonRpcRequest(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcRequestStruct, 'Invalid JSON-RPC request', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcRequest = assertIsJsonRpcRequest;
+      exports.PendingJsonRpcResponseStruct = (0, superstruct_1.object)({
+        id: exports.JsonRpcIdStruct,
+        jsonrpc: exports.JsonRpcVersionStruct,
+        result: (0, superstruct_1.optional)((0, superstruct_1.unknown)()),
+        error: (0, superstruct_1.optional)(exports.JsonRpcErrorStruct)
+      });
+      exports.JsonRpcSuccessStruct = (0, superstruct_1.object)({
+        id: exports.JsonRpcIdStruct,
+        jsonrpc: exports.JsonRpcVersionStruct,
+        result: exports.JsonStruct
+      });
+      exports.JsonRpcFailureStruct = (0, superstruct_1.object)({
+        id: exports.JsonRpcIdStruct,
+        jsonrpc: exports.JsonRpcVersionStruct,
+        error: exports.JsonRpcErrorStruct
+      });
+      exports.JsonRpcResponseStruct = (0, superstruct_1.union)([exports.JsonRpcSuccessStruct, exports.JsonRpcFailureStruct]);
+      function isPendingJsonRpcResponse(response) {
+        return (0, superstruct_1.is)(response, exports.PendingJsonRpcResponseStruct);
+      }
+      exports.isPendingJsonRpcResponse = isPendingJsonRpcResponse;
+      function assertIsPendingJsonRpcResponse(response, ErrorWrapper) {
+        (0, assert_1.assertStruct)(response, exports.PendingJsonRpcResponseStruct, 'Invalid pending JSON-RPC response', ErrorWrapper);
+      }
+      exports.assertIsPendingJsonRpcResponse = assertIsPendingJsonRpcResponse;
+      function isJsonRpcResponse(response) {
+        return (0, superstruct_1.is)(response, exports.JsonRpcResponseStruct);
+      }
+      exports.isJsonRpcResponse = isJsonRpcResponse;
+      function assertIsJsonRpcResponse(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcResponseStruct, 'Invalid JSON-RPC response', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcResponse = assertIsJsonRpcResponse;
+      function isJsonRpcSuccess(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcSuccessStruct);
+      }
+      exports.isJsonRpcSuccess = isJsonRpcSuccess;
+      function assertIsJsonRpcSuccess(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcSuccessStruct, 'Invalid JSON-RPC success response', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcSuccess = assertIsJsonRpcSuccess;
+      function isJsonRpcFailure(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcFailureStruct);
+      }
+      exports.isJsonRpcFailure = isJsonRpcFailure;
+      function assertIsJsonRpcFailure(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcFailureStruct, 'Invalid JSON-RPC failure response', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcFailure = assertIsJsonRpcFailure;
+      function isJsonRpcError(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcErrorStruct);
+      }
+      exports.isJsonRpcError = isJsonRpcError;
+      function assertIsJsonRpcError(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcErrorStruct, 'Invalid JSON-RPC error', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcError = assertIsJsonRpcError;
+      function getJsonRpcIdValidator(options) {
+        const {
+          permitEmptyString,
+          permitFractions,
+          permitNull
+        } = Object.assign({
+          permitEmptyString: true,
+          permitFractions: false,
+          permitNull: true
+        }, options);
+        const isValidJsonRpcId = id => {
+          return Boolean(typeof id === 'number' && (permitFractions || Number.isInteger(id)) || typeof id === 'string' && (permitEmptyString || id.length > 0) || permitNull && id === null);
+        };
+        return isValidJsonRpcId;
+      }
+      exports.getJsonRpcIdValidator = getJsonRpcIdValidator;
+      function validateJsonAndGetSize(jsObject, skipSizingProcess = false) {
+        const seenObjects = new Set();
+        function getJsonSerializableInfo(value, skipSizing) {
+          if (value === undefined) {
+            return [false, 0];
+          } else if (value === null) {
+            return [true, skipSizing ? 0 : misc_1.JsonSize.Null];
+          }
+          const typeOfValue = typeof value;
+          try {
+            if (typeOfValue === 'function') {
+              return [false, 0];
+            } else if (typeOfValue === 'string' || value instanceof String) {
+              return [true, skipSizing ? 0 : (0, misc_1.calculateStringSize)(value) + misc_1.JsonSize.Quote * 2];
+            } else if (typeOfValue === 'boolean' || value instanceof Boolean) {
+              if (skipSizing) {
+                return [true, 0];
+              }
+              return [true, value == true ? misc_1.JsonSize.True : misc_1.JsonSize.False];
+            } else if (typeOfValue === 'number' || value instanceof Number) {
+              if (skipSizing) {
+                return [true, 0];
+              }
+              return [true, (0, misc_1.calculateNumberSize)(value)];
+            } else if (value instanceof Date) {
+              if (skipSizing) {
+                return [true, 0];
+              }
+              return [true, isNaN(value.getDate()) ? misc_1.JsonSize.Null : misc_1.JsonSize.Date + misc_1.JsonSize.Quote * 2];
+            }
+          } catch (_) {
+            return [false, 0];
+          }
+          if (!(0, misc_1.isPlainObject)(value) && !Array.isArray(value)) {
+            return [false, 0];
+          }
+          if (seenObjects.has(value)) {
+            return [false, 0];
+          }
+          seenObjects.add(value);
+          try {
+            return [true, Object.entries(value).reduce((sum, [key, nestedValue], idx, arr) => {
+              let [valid, size] = getJsonSerializableInfo(nestedValue, skipSizing);
+              if (!valid) {
+                throw new Error('JSON validation did not pass. Validation process stopped.');
+              }
+              seenObjects.delete(value);
+              if (skipSizing) {
+                return 0;
+              }
+              const keySize = Array.isArray(value) ? 0 : key.length + misc_1.JsonSize.Comma + misc_1.JsonSize.Colon * 2;
+              const separator = idx < arr.length - 1 ? misc_1.JsonSize.Comma : 0;
+              return sum + keySize + size + separator;
+            }, skipSizing ? 0 : misc_1.JsonSize.Wrapper * 2)];
+          } catch (_) {
+            return [false, 0];
+          }
+        }
+        return getJsonSerializableInfo(jsObject, skipSizingProcess);
+      }
+      exports.validateJsonAndGetSize = validateJsonAndGetSize;
+    }, {
+      "./assert": 34,
+      "./misc": 44,
+      "superstruct": 279
+    }],
+    43: [function (require, module, exports) {
+      arguments[4][25][0].apply(exports, arguments);
+    }, {
+      "debug": 239,
+      "dup": 25
+    }],
+    44: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.calculateNumberSize = exports.calculateStringSize = exports.isASCII = exports.isPlainObject = exports.ESCAPE_CHARACTERS_REGEXP = exports.JsonSize = exports.hasProperty = exports.isObject = exports.isNullOrUndefined = exports.isNonEmptyArray = void 0;
+      function isNonEmptyArray(value) {
+        return Array.isArray(value) && value.length > 0;
+      }
+      exports.isNonEmptyArray = isNonEmptyArray;
+      function isNullOrUndefined(value) {
+        return value === null || value === undefined;
+      }
+      exports.isNullOrUndefined = isNullOrUndefined;
+      function isObject(value) {
+        return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+      }
+      exports.isObject = isObject;
+      const hasProperty = (objectToCheck, name) => Object.hasOwnProperty.call(objectToCheck, name);
+      exports.hasProperty = hasProperty;
+      var JsonSize;
+      (function (JsonSize) {
+        JsonSize[JsonSize["Null"] = 4] = "Null";
+        JsonSize[JsonSize["Comma"] = 1] = "Comma";
+        JsonSize[JsonSize["Wrapper"] = 1] = "Wrapper";
+        JsonSize[JsonSize["True"] = 4] = "True";
+        JsonSize[JsonSize["False"] = 5] = "False";
+        JsonSize[JsonSize["Quote"] = 1] = "Quote";
+        JsonSize[JsonSize["Colon"] = 1] = "Colon";
+        JsonSize[JsonSize["Date"] = 24] = "Date";
+      })(JsonSize = exports.JsonSize || (exports.JsonSize = {}));
+      exports.ESCAPE_CHARACTERS_REGEXP = /"|\\|\n|\r|\t/gu;
+      function isPlainObject(value) {
+        if (typeof value !== 'object' || value === null) {
+          return false;
+        }
+        try {
+          let proto = value;
+          while (Object.getPrototypeOf(proto) !== null) {
+            proto = Object.getPrototypeOf(proto);
+          }
+          return Object.getPrototypeOf(value) === proto;
+        } catch (_) {
+          return false;
+        }
+      }
+      exports.isPlainObject = isPlainObject;
+      function isASCII(character) {
+        return character.charCodeAt(0) <= 127;
+      }
+      exports.isASCII = isASCII;
+      function calculateStringSize(value) {
+        var _a;
+        const size = value.split('').reduce((total, character) => {
+          if (isASCII(character)) {
+            return total + 1;
+          }
+          return total + 2;
+        }, 0);
+        return size + ((_a = value.match(exports.ESCAPE_CHARACTERS_REGEXP)) !== null && _a !== void 0 ? _a : []).length;
+      }
+      exports.calculateStringSize = calculateStringSize;
+      function calculateNumberSize(value) {
+        return value.toString().length;
+      }
+      exports.calculateNumberSize = calculateNumberSize;
+    }, {}],
+    45: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.hexToBigInt = exports.hexToNumber = exports.bigIntToHex = exports.numberToHex = void 0;
+      const assert_1 = require("./assert");
+      const hex_1 = require("./hex");
+      const numberToHex = value => {
+        (0, assert_1.assert)(typeof value === 'number', 'Value must be a number.');
+        (0, assert_1.assert)(value >= 0, 'Value must be a non-negative number.');
+        (0, assert_1.assert)(Number.isSafeInteger(value), 'Value is not a safe integer. Use `bigIntToHex` instead.');
+        return (0, hex_1.add0x)(value.toString(16));
+      };
+      exports.numberToHex = numberToHex;
+      const bigIntToHex = value => {
+        (0, assert_1.assert)(typeof value === 'bigint', 'Value must be a bigint.');
+        (0, assert_1.assert)(value >= 0, 'Value must be a non-negative bigint.');
+        return (0, hex_1.add0x)(value.toString(16));
+      };
+      exports.bigIntToHex = bigIntToHex;
+      const hexToNumber = value => {
+        (0, hex_1.assertIsHexString)(value);
+        const numberValue = parseInt(value, 16);
+        (0, assert_1.assert)(Number.isSafeInteger(numberValue), 'Value is not a safe integer. Use `hexToBigInt` instead.');
+        return numberValue;
+      };
+      exports.hexToNumber = hexToNumber;
+      const hexToBigInt = value => {
+        (0, hex_1.assertIsHexString)(value);
+        return BigInt((0, hex_1.add0x)(value));
+      };
+      exports.hexToBigInt = hexToBigInt;
+    }, {
+      "./assert": 34,
+      "./hex": 40
+    }],
+    46: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+    }, {}],
+    47: [function (require, module, exports) {
+      arguments[4][28][0].apply(exports, arguments);
+    }, {
+      "dup": 28
+    }],
+    48: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.satisfiesVersionRange = exports.gtRange = exports.gtVersion = exports.assertIsSemVerRange = exports.assertIsSemVerVersion = exports.isValidSemVerRange = exports.isValidSemVerVersion = exports.VersionRangeStruct = exports.VersionStruct = void 0;
+      const semver_1 = require("semver");
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      exports.VersionStruct = (0, superstruct_1.refine)((0, superstruct_1.string)(), 'Version', value => {
+        if ((0, semver_1.valid)(value) === null) {
+          return `Expected SemVer version, got "${value}"`;
+        }
+        return true;
+      });
+      exports.VersionRangeStruct = (0, superstruct_1.refine)((0, superstruct_1.string)(), 'Version range', value => {
+        if ((0, semver_1.validRange)(value) === null) {
+          return `Expected SemVer range, got "${value}"`;
+        }
+        return true;
+      });
+      function isValidSemVerVersion(version) {
+        return (0, superstruct_1.is)(version, exports.VersionStruct);
+      }
+      exports.isValidSemVerVersion = isValidSemVerVersion;
+      function isValidSemVerRange(versionRange) {
+        return (0, superstruct_1.is)(versionRange, exports.VersionRangeStruct);
+      }
+      exports.isValidSemVerRange = isValidSemVerRange;
+      function assertIsSemVerVersion(version) {
+        (0, assert_1.assertStruct)(version, exports.VersionStruct);
+      }
+      exports.assertIsSemVerVersion = assertIsSemVerVersion;
+      function assertIsSemVerRange(range) {
+        (0, assert_1.assertStruct)(range, exports.VersionRangeStruct);
+      }
+      exports.assertIsSemVerRange = assertIsSemVerRange;
+      function gtVersion(version1, version2) {
+        return (0, semver_1.gt)(version1, version2);
+      }
+      exports.gtVersion = gtVersion;
+      function gtRange(version, range) {
+        return (0, semver_1.gtr)(version, range);
+      }
+      exports.gtRange = gtRange;
+      function satisfiesVersionRange(version, versionRange) {
+        return (0, semver_1.satisfies)(version, versionRange, {
+          includePrerelease: true
+        });
+      }
+      exports.satisfiesVersionRange = satisfiesVersionRange;
+    }, {
+      "./assert": 34,
+      "semver": 76,
+      "superstruct": 279
+    }],
+    49: [function (require, module, exports) {
+      const ANY = Symbol('SemVer ANY');
+      class Comparator {
+        static get ANY() {
+          return ANY;
+        }
+        constructor(comp, options) {
+          options = parseOptions(options);
+          if (comp instanceof Comparator) {
+            if (comp.loose === !!options.loose) {
+              return comp;
+            } else {
+              comp = comp.value;
+            }
+          }
+          debug('comparator', comp, options);
+          this.options = options;
+          this.loose = !!options.loose;
+          this.parse(comp);
+          if (this.semver === ANY) {
+            this.value = '';
+          } else {
+            this.value = this.operator + this.semver.version;
+          }
+          debug('comp', this);
+        }
+        parse(comp) {
+          const r = this.options.loose ? re[t.COMPARATORLOOSE] : re[t.COMPARATOR];
+          const m = comp.match(r);
+          if (!m) {
+            throw new TypeError(`Invalid comparator: ${comp}`);
+          }
+          this.operator = m[1] !== undefined ? m[1] : '';
+          if (this.operator === '=') {
+            this.operator = '';
+          }
+          if (!m[2]) {
+            this.semver = ANY;
+          } else {
+            this.semver = new SemVer(m[2], this.options.loose);
+          }
+        }
+        toString() {
+          return this.value;
+        }
+        test(version) {
+          debug('Comparator.test', version, this.options.loose);
+          if (this.semver === ANY || version === ANY) {
+            return true;
+          }
+          if (typeof version === 'string') {
+            try {
+              version = new SemVer(version, this.options);
+            } catch (er) {
+              return false;
+            }
+          }
+          return cmp(version, this.operator, this.semver, this.options);
+        }
+        intersects(comp, options) {
+          if (!(comp instanceof Comparator)) {
+            throw new TypeError('a Comparator is required');
+          }
+          if (!options || typeof options !== 'object') {
+            options = {
+              loose: !!options,
+              includePrerelease: false
+            };
+          }
+          if (this.operator === '') {
+            if (this.value === '') {
+              return true;
+            }
+            return new Range(comp.value, options).test(this.value);
+          } else if (comp.operator === '') {
+            if (comp.value === '') {
+              return true;
+            }
+            return new Range(this.value, options).test(comp.semver);
+          }
+          const sameDirectionIncreasing = (this.operator === '>=' || this.operator === '>') && (comp.operator === '>=' || comp.operator === '>');
+          const sameDirectionDecreasing = (this.operator === '<=' || this.operator === '<') && (comp.operator === '<=' || comp.operator === '<');
+          const sameSemVer = this.semver.version === comp.semver.version;
+          const differentDirectionsInclusive = (this.operator === '>=' || this.operator === '<=') && (comp.operator === '>=' || comp.operator === '<=');
+          const oppositeDirectionsLessThan = cmp(this.semver, '<', comp.semver, options) && (this.operator === '>=' || this.operator === '>') && (comp.operator === '<=' || comp.operator === '<');
+          const oppositeDirectionsGreaterThan = cmp(this.semver, '>', comp.semver, options) && (this.operator === '<=' || this.operator === '<') && (comp.operator === '>=' || comp.operator === '>');
+          return sameDirectionIncreasing || sameDirectionDecreasing || sameSemVer && differentDirectionsInclusive || oppositeDirectionsLessThan || oppositeDirectionsGreaterThan;
+        }
+      }
+      module.exports = Comparator;
+      const parseOptions = require('../internal/parse-options');
+      const {
+        re,
+        t
+      } = require('../internal/re');
+      const cmp = require('../functions/cmp');
+      const debug = require('../internal/debug');
+      const SemVer = require('./semver');
+      const Range = require('./range');
+    }, {
+      "../functions/cmp": 53,
+      "../internal/debug": 78,
+      "../internal/parse-options": 80,
+      "../internal/re": 81,
+      "./range": 50,
+      "./semver": 51
+    }],
+    50: [function (require, module, exports) {
+      class Range {
+        constructor(range, options) {
+          options = parseOptions(options);
+          if (range instanceof Range) {
+            if (range.loose === !!options.loose && range.includePrerelease === !!options.includePrerelease) {
+              return range;
+            } else {
+              return new Range(range.raw, options);
+            }
+          }
+          if (range instanceof Comparator) {
+            this.raw = range.value;
+            this.set = [[range]];
+            this.format();
+            return this;
+          }
+          this.options = options;
+          this.loose = !!options.loose;
+          this.includePrerelease = !!options.includePrerelease;
+          this.raw = range;
+          this.set = range.split('||').map(r => this.parseRange(r.trim())).filter(c => c.length);
+          if (!this.set.length) {
+            throw new TypeError(`Invalid SemVer Range: ${range}`);
+          }
+          if (this.set.length > 1) {
+            const first = this.set[0];
+            this.set = this.set.filter(c => !isNullSet(c[0]));
+            if (this.set.length === 0) {
+              this.set = [first];
+            } else if (this.set.length > 1) {
+              for (const c of this.set) {
+                if (c.length === 1 && isAny(c[0])) {
+                  this.set = [c];
+                  break;
+                }
+              }
+            }
+          }
+          this.format();
+        }
+        format() {
+          this.range = this.set.map(comps => {
+            return comps.join(' ').trim();
+          }).join('||').trim();
+          return this.range;
+        }
+        toString() {
+          return this.range;
+        }
+        parseRange(range) {
+          range = range.trim();
+          const memoOpts = Object.keys(this.options).join(',');
+          const memoKey = `parseRange:${memoOpts}:${range}`;
+          const cached = cache.get(memoKey);
+          if (cached) {
+            return cached;
+          }
+          const loose = this.options.loose;
+          const hr = loose ? re[t.HYPHENRANGELOOSE] : re[t.HYPHENRANGE];
+          range = range.replace(hr, hyphenReplace(this.options.includePrerelease));
+          debug('hyphen replace', range);
+          range = range.replace(re[t.COMPARATORTRIM], comparatorTrimReplace);
+          debug('comparator trim', range);
+          range = range.replace(re[t.TILDETRIM], tildeTrimReplace);
+          range = range.replace(re[t.CARETTRIM], caretTrimReplace);
+          range = range.split(/\s+/).join(' ');
+          let rangeList = range.split(' ').map(comp => parseComparator(comp, this.options)).join(' ').split(/\s+/).map(comp => replaceGTE0(comp, this.options));
+          if (loose) {
+            rangeList = rangeList.filter(comp => {
+              debug('loose invalid filter', comp, this.options);
+              return !!comp.match(re[t.COMPARATORLOOSE]);
+            });
+          }
+          debug('range list', rangeList);
+          const rangeMap = new Map();
+          const comparators = rangeList.map(comp => new Comparator(comp, this.options));
+          for (const comp of comparators) {
+            if (isNullSet(comp)) {
+              return [comp];
+            }
+            rangeMap.set(comp.value, comp);
+          }
+          if (rangeMap.size > 1 && rangeMap.has('')) {
+            rangeMap.delete('');
+          }
+          const result = [...rangeMap.values()];
+          cache.set(memoKey, result);
+          return result;
+        }
+        intersects(range, options) {
+          if (!(range instanceof Range)) {
+            throw new TypeError('a Range is required');
+          }
+          return this.set.some(thisComparators => {
+            return isSatisfiable(thisComparators, options) && range.set.some(rangeComparators => {
+              return isSatisfiable(rangeComparators, options) && thisComparators.every(thisComparator => {
+                return rangeComparators.every(rangeComparator => {
+                  return thisComparator.intersects(rangeComparator, options);
+                });
+              });
+            });
+          });
+        }
+        test(version) {
+          if (!version) {
+            return false;
+          }
+          if (typeof version === 'string') {
+            try {
+              version = new SemVer(version, this.options);
+            } catch (er) {
+              return false;
+            }
+          }
+          for (let i = 0; i < this.set.length; i++) {
+            if (testSet(this.set[i], version, this.options)) {
+              return true;
+            }
+          }
+          return false;
+        }
+      }
+      module.exports = Range;
+      const LRU = require('lru-cache');
+      const cache = new LRU({
+        max: 1000
+      });
+      const parseOptions = require('../internal/parse-options');
+      const Comparator = require('./comparator');
+      const debug = require('../internal/debug');
+      const SemVer = require('./semver');
+      const {
+        re,
+        t,
+        comparatorTrimReplace,
+        tildeTrimReplace,
+        caretTrimReplace
+      } = require('../internal/re');
+      const isNullSet = c => c.value === '<0.0.0-0';
+      const isAny = c => c.value === '';
+      const isSatisfiable = (comparators, options) => {
+        let result = true;
+        const remainingComparators = comparators.slice();
+        let testComparator = remainingComparators.pop();
+        while (result && remainingComparators.length) {
+          result = remainingComparators.every(otherComparator => {
+            return testComparator.intersects(otherComparator, options);
+          });
+          testComparator = remainingComparators.pop();
+        }
+        return result;
+      };
+      const parseComparator = (comp, options) => {
+        debug('comp', comp, options);
+        comp = replaceCarets(comp, options);
+        debug('caret', comp);
+        comp = replaceTildes(comp, options);
+        debug('tildes', comp);
+        comp = replaceXRanges(comp, options);
+        debug('xrange', comp);
+        comp = replaceStars(comp, options);
+        debug('stars', comp);
+        return comp;
+      };
+      const isX = id => !id || id.toLowerCase() === 'x' || id === '*';
+      const replaceTildes = (comp, options) => comp.trim().split(/\s+/).map(c => {
+        return replaceTilde(c, options);
+      }).join(' ');
+      const replaceTilde = (comp, options) => {
+        const r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
+        return comp.replace(r, (_, M, m, p, pr) => {
+          debug('tilde', comp, _, M, m, p, pr);
+          let ret;
+          if (isX(M)) {
+            ret = '';
+          } else if (isX(m)) {
+            ret = `>=${M}.0.0 <${+M + 1}.0.0-0`;
+          } else if (isX(p)) {
+            ret = `>=${M}.${m}.0 <${M}.${+m + 1}.0-0`;
+          } else if (pr) {
+            debug('replaceTilde pr', pr);
+            ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
+          } else {
+            ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
+          }
+          debug('tilde return', ret);
+          return ret;
+        });
+      };
+      const replaceCarets = (comp, options) => comp.trim().split(/\s+/).map(c => {
+        return replaceCaret(c, options);
+      }).join(' ');
+      const replaceCaret = (comp, options) => {
+        debug('caret', comp, options);
+        const r = options.loose ? re[t.CARETLOOSE] : re[t.CARET];
+        const z = options.includePrerelease ? '-0' : '';
+        return comp.replace(r, (_, M, m, p, pr) => {
+          debug('caret', comp, _, M, m, p, pr);
+          let ret;
+          if (isX(M)) {
+            ret = '';
+          } else if (isX(m)) {
+            ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
+          } else if (isX(p)) {
+            if (M === '0') {
+              ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
+            } else {
+              ret = `>=${M}.${m}.0${z} <${+M + 1}.0.0-0`;
+            }
+          } else if (pr) {
+            debug('replaceCaret pr', pr);
+            if (M === '0') {
+              if (m === '0') {
+                ret = `>=${M}.${m}.${p}-${pr} <${M}.${m}.${+p + 1}-0`;
+              } else {
+                ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
+              }
+            } else {
+              ret = `>=${M}.${m}.${p}-${pr} <${+M + 1}.0.0-0`;
+            }
+          } else {
+            debug('no pr');
+            if (M === '0') {
+              if (m === '0') {
+                ret = `>=${M}.${m}.${p}${z} <${M}.${m}.${+p + 1}-0`;
+              } else {
+                ret = `>=${M}.${m}.${p}${z} <${M}.${+m + 1}.0-0`;
+              }
+            } else {
+              ret = `>=${M}.${m}.${p} <${+M + 1}.0.0-0`;
+            }
+          }
+          debug('caret return', ret);
+          return ret;
+        });
+      };
+      const replaceXRanges = (comp, options) => {
+        debug('replaceXRanges', comp, options);
+        return comp.split(/\s+/).map(c => {
+          return replaceXRange(c, options);
+        }).join(' ');
+      };
+      const replaceXRange = (comp, options) => {
+        comp = comp.trim();
+        const r = options.loose ? re[t.XRANGELOOSE] : re[t.XRANGE];
+        return comp.replace(r, (ret, gtlt, M, m, p, pr) => {
+          debug('xRange', comp, ret, gtlt, M, m, p, pr);
+          const xM = isX(M);
+          const xm = xM || isX(m);
+          const xp = xm || isX(p);
+          const anyX = xp;
+          if (gtlt === '=' && anyX) {
+            gtlt = '';
+          }
+          pr = options.includePrerelease ? '-0' : '';
+          if (xM) {
+            if (gtlt === '>' || gtlt === '<') {
+              ret = '<0.0.0-0';
+            } else {
+              ret = '*';
+            }
+          } else if (gtlt && anyX) {
+            if (xm) {
+              m = 0;
+            }
+            p = 0;
+            if (gtlt === '>') {
+              gtlt = '>=';
+              if (xm) {
+                M = +M + 1;
+                m = 0;
+                p = 0;
+              } else {
+                m = +m + 1;
+                p = 0;
+              }
+            } else if (gtlt === '<=') {
+              gtlt = '<';
+              if (xm) {
+                M = +M + 1;
+              } else {
+                m = +m + 1;
+              }
+            }
+            if (gtlt === '<') {
+              pr = '-0';
+            }
+            ret = `${gtlt + M}.${m}.${p}${pr}`;
+          } else if (xm) {
+            ret = `>=${M}.0.0${pr} <${+M + 1}.0.0-0`;
+          } else if (xp) {
+            ret = `>=${M}.${m}.0${pr} <${M}.${+m + 1}.0-0`;
+          }
+          debug('xRange return', ret);
+          return ret;
+        });
+      };
+      const replaceStars = (comp, options) => {
+        debug('replaceStars', comp, options);
+        return comp.trim().replace(re[t.STAR], '');
+      };
+      const replaceGTE0 = (comp, options) => {
+        debug('replaceGTE0', comp, options);
+        return comp.trim().replace(re[options.includePrerelease ? t.GTE0PRE : t.GTE0], '');
+      };
+      const hyphenReplace = incPr => ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr, tb) => {
+        if (isX(fM)) {
+          from = '';
+        } else if (isX(fm)) {
+          from = `>=${fM}.0.0${incPr ? '-0' : ''}`;
+        } else if (isX(fp)) {
+          from = `>=${fM}.${fm}.0${incPr ? '-0' : ''}`;
+        } else if (fpr) {
+          from = `>=${from}`;
+        } else {
+          from = `>=${from}${incPr ? '-0' : ''}`;
+        }
+        if (isX(tM)) {
+          to = '';
+        } else if (isX(tm)) {
+          to = `<${+tM + 1}.0.0-0`;
+        } else if (isX(tp)) {
+          to = `<${tM}.${+tm + 1}.0-0`;
+        } else if (tpr) {
+          to = `<=${tM}.${tm}.${tp}-${tpr}`;
+        } else if (incPr) {
+          to = `<${tM}.${tm}.${+tp + 1}-0`;
+        } else {
+          to = `<=${to}`;
+        }
+        return `${from} ${to}`.trim();
+      };
+      const testSet = (set, version, options) => {
+        for (let i = 0; i < set.length; i++) {
+          if (!set[i].test(version)) {
+            return false;
+          }
+        }
+        if (version.prerelease.length && !options.includePrerelease) {
+          for (let i = 0; i < set.length; i++) {
+            debug(set[i].semver);
+            if (set[i].semver === Comparator.ANY) {
+              continue;
+            }
+            if (set[i].semver.prerelease.length > 0) {
+              const allowed = set[i].semver;
+              if (allowed.major === version.major && allowed.minor === version.minor && allowed.patch === version.patch) {
+                return true;
+              }
+            }
+          }
+          return false;
+        }
+        return true;
+      };
+    }, {
+      "../internal/debug": 78,
+      "../internal/parse-options": 80,
+      "../internal/re": 81,
+      "./comparator": 49,
+      "./semver": 51,
+      "lru-cache": 257
+    }],
+    51: [function (require, module, exports) {
+      const debug = require('../internal/debug');
+      const {
+        MAX_LENGTH,
+        MAX_SAFE_INTEGER
+      } = require('../internal/constants');
+      const {
+        re,
+        t
+      } = require('../internal/re');
+      const parseOptions = require('../internal/parse-options');
+      const {
+        compareIdentifiers
+      } = require('../internal/identifiers');
+      class SemVer {
+        constructor(version, options) {
+          options = parseOptions(options);
+          if (version instanceof SemVer) {
+            if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) {
+              return version;
+            } else {
+              version = version.version;
+            }
+          } else if (typeof version !== 'string') {
+            throw new TypeError(`Invalid Version: ${version}`);
+          }
+          if (version.length > MAX_LENGTH) {
+            throw new TypeError(`version is longer than ${MAX_LENGTH} characters`);
+          }
+          debug('SemVer', version, options);
+          this.options = options;
+          this.loose = !!options.loose;
+          this.includePrerelease = !!options.includePrerelease;
+          const m = version.trim().match(options.loose ? re[t.LOOSE] : re[t.FULL]);
+          if (!m) {
+            throw new TypeError(`Invalid Version: ${version}`);
+          }
+          this.raw = version;
+          this.major = +m[1];
+          this.minor = +m[2];
+          this.patch = +m[3];
+          if (this.major > MAX_SAFE_INTEGER || this.major < 0) {
+            throw new TypeError('Invalid major version');
+          }
+          if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) {
+            throw new TypeError('Invalid minor version');
+          }
+          if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) {
+            throw new TypeError('Invalid patch version');
+          }
+          if (!m[4]) {
+            this.prerelease = [];
+          } else {
+            this.prerelease = m[4].split('.').map(id => {
+              if (/^[0-9]+$/.test(id)) {
+                const num = +id;
+                if (num >= 0 && num < MAX_SAFE_INTEGER) {
+                  return num;
+                }
+              }
+              return id;
+            });
+          }
+          this.build = m[5] ? m[5].split('.') : [];
+          this.format();
+        }
+        format() {
+          this.version = `${this.major}.${this.minor}.${this.patch}`;
+          if (this.prerelease.length) {
+            this.version += `-${this.prerelease.join('.')}`;
+          }
+          return this.version;
+        }
+        toString() {
+          return this.version;
+        }
+        compare(other) {
+          debug('SemVer.compare', this.version, this.options, other);
+          if (!(other instanceof SemVer)) {
+            if (typeof other === 'string' && other === this.version) {
+              return 0;
+            }
+            other = new SemVer(other, this.options);
+          }
+          if (other.version === this.version) {
+            return 0;
+          }
+          return this.compareMain(other) || this.comparePre(other);
+        }
+        compareMain(other) {
+          if (!(other instanceof SemVer)) {
+            other = new SemVer(other, this.options);
+          }
+          return compareIdentifiers(this.major, other.major) || compareIdentifiers(this.minor, other.minor) || compareIdentifiers(this.patch, other.patch);
+        }
+        comparePre(other) {
+          if (!(other instanceof SemVer)) {
+            other = new SemVer(other, this.options);
+          }
+          if (this.prerelease.length && !other.prerelease.length) {
+            return -1;
+          } else if (!this.prerelease.length && other.prerelease.length) {
+            return 1;
+          } else if (!this.prerelease.length && !other.prerelease.length) {
+            return 0;
+          }
+          let i = 0;
+          do {
+            const a = this.prerelease[i];
+            const b = other.prerelease[i];
+            debug('prerelease compare', i, a, b);
+            if (a === undefined && b === undefined) {
+              return 0;
+            } else if (b === undefined) {
+              return 1;
+            } else if (a === undefined) {
+              return -1;
+            } else if (a === b) {
+              continue;
+            } else {
+              return compareIdentifiers(a, b);
+            }
+          } while (++i);
+        }
+        compareBuild(other) {
+          if (!(other instanceof SemVer)) {
+            other = new SemVer(other, this.options);
+          }
+          let i = 0;
+          do {
+            const a = this.build[i];
+            const b = other.build[i];
+            debug('prerelease compare', i, a, b);
+            if (a === undefined && b === undefined) {
+              return 0;
+            } else if (b === undefined) {
+              return 1;
+            } else if (a === undefined) {
+              return -1;
+            } else if (a === b) {
+              continue;
+            } else {
+              return compareIdentifiers(a, b);
+            }
+          } while (++i);
+        }
+        inc(release, identifier) {
+          switch (release) {
+            case 'premajor':
+              this.prerelease.length = 0;
+              this.patch = 0;
+              this.minor = 0;
+              this.major++;
+              this.inc('pre', identifier);
+              break;
+            case 'preminor':
+              this.prerelease.length = 0;
+              this.patch = 0;
+              this.minor++;
+              this.inc('pre', identifier);
+              break;
+            case 'prepatch':
+              this.prerelease.length = 0;
+              this.inc('patch', identifier);
+              this.inc('pre', identifier);
+              break;
+            case 'prerelease':
+              if (this.prerelease.length === 0) {
+                this.inc('patch', identifier);
+              }
+              this.inc('pre', identifier);
+              break;
+            case 'major':
+              if (this.minor !== 0 || this.patch !== 0 || this.prerelease.length === 0) {
+                this.major++;
+              }
+              this.minor = 0;
+              this.patch = 0;
+              this.prerelease = [];
+              break;
+            case 'minor':
+              if (this.patch !== 0 || this.prerelease.length === 0) {
+                this.minor++;
+              }
+              this.patch = 0;
+              this.prerelease = [];
+              break;
+            case 'patch':
+              if (this.prerelease.length === 0) {
+                this.patch++;
+              }
+              this.prerelease = [];
+              break;
+            case 'pre':
+              if (this.prerelease.length === 0) {
+                this.prerelease = [0];
+              } else {
+                let i = this.prerelease.length;
+                while (--i >= 0) {
+                  if (typeof this.prerelease[i] === 'number') {
+                    this.prerelease[i]++;
+                    i = -2;
+                  }
+                }
+                if (i === -1) {
+                  this.prerelease.push(0);
+                }
+              }
+              if (identifier) {
+                if (compareIdentifiers(this.prerelease[0], identifier) === 0) {
+                  if (isNaN(this.prerelease[1])) {
+                    this.prerelease = [identifier, 0];
+                  }
+                } else {
+                  this.prerelease = [identifier, 0];
+                }
+              }
+              break;
+            default:
+              throw new Error(`invalid increment argument: ${release}`);
+          }
+          this.format();
+          this.raw = this.version;
+          return this;
+        }
+      }
+      module.exports = SemVer;
+    }, {
+      "../internal/constants": 77,
+      "../internal/debug": 78,
+      "../internal/identifiers": 79,
+      "../internal/parse-options": 80,
+      "../internal/re": 81
+    }],
+    52: [function (require, module, exports) {
+      const parse = require('./parse');
+      const clean = (version, options) => {
+        const s = parse(version.trim().replace(/^[=v]+/, ''), options);
+        return s ? s.version : null;
+      };
+      module.exports = clean;
+    }, {
+      "./parse": 68
+    }],
+    53: [function (require, module, exports) {
+      const eq = require('./eq');
+      const neq = require('./neq');
+      const gt = require('./gt');
+      const gte = require('./gte');
+      const lt = require('./lt');
+      const lte = require('./lte');
+      const cmp = (a, op, b, loose) => {
+        switch (op) {
+          case '===':
+            if (typeof a === 'object') {
+              a = a.version;
+            }
+            if (typeof b === 'object') {
+              b = b.version;
+            }
+            return a === b;
+          case '!==':
+            if (typeof a === 'object') {
+              a = a.version;
+            }
+            if (typeof b === 'object') {
+              b = b.version;
+            }
+            return a !== b;
+          case '':
+          case '=':
+          case '==':
+            return eq(a, b, loose);
+          case '!=':
+            return neq(a, b, loose);
+          case '>':
+            return gt(a, b, loose);
+          case '>=':
+            return gte(a, b, loose);
+          case '<':
+            return lt(a, b, loose);
+          case '<=':
+            return lte(a, b, loose);
+          default:
+            throw new TypeError(`Invalid operator: ${op}`);
+        }
+      };
+      module.exports = cmp;
+    }, {
+      "./eq": 59,
+      "./gt": 60,
+      "./gte": 61,
+      "./lt": 63,
+      "./lte": 64,
+      "./neq": 67
+    }],
+    54: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const parse = require('./parse');
+      const {
+        re,
+        t
+      } = require('../internal/re');
+      const coerce = (version, options) => {
+        if (version instanceof SemVer) {
+          return version;
+        }
+        if (typeof version === 'number') {
+          version = String(version);
+        }
+        if (typeof version !== 'string') {
+          return null;
+        }
+        options = options || {};
+        let match = null;
+        if (!options.rtl) {
+          match = version.match(re[t.COERCE]);
+        } else {
+          let next;
+          while ((next = re[t.COERCERTL].exec(version)) && (!match || match.index + match[0].length !== version.length)) {
+            if (!match || next.index + next[0].length !== match.index + match[0].length) {
+              match = next;
+            }
+            re[t.COERCERTL].lastIndex = next.index + next[1].length + next[2].length;
+          }
+          re[t.COERCERTL].lastIndex = -1;
+        }
+        if (match === null) {
+          return null;
+        }
+        return parse(`${match[2]}.${match[3] || '0'}.${match[4] || '0'}`, options);
+      };
+      module.exports = coerce;
+    }, {
+      "../classes/semver": 51,
+      "../internal/re": 81,
+      "./parse": 68
+    }],
+    55: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const compareBuild = (a, b, loose) => {
+        const versionA = new SemVer(a, loose);
+        const versionB = new SemVer(b, loose);
+        return versionA.compare(versionB) || versionA.compareBuild(versionB);
+      };
+      module.exports = compareBuild;
+    }, {
+      "../classes/semver": 51
+    }],
+    56: [function (require, module, exports) {
+      const compare = require('./compare');
+      const compareLoose = (a, b) => compare(a, b, true);
+      module.exports = compareLoose;
+    }, {
+      "./compare": 57
+    }],
+    57: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const compare = (a, b, loose) => new SemVer(a, loose).compare(new SemVer(b, loose));
+      module.exports = compare;
+    }, {
+      "../classes/semver": 51
+    }],
+    58: [function (require, module, exports) {
+      const parse = require('./parse');
+      const eq = require('./eq');
+      const diff = (version1, version2) => {
+        if (eq(version1, version2)) {
+          return null;
+        } else {
+          const v1 = parse(version1);
+          const v2 = parse(version2);
+          const hasPre = v1.prerelease.length || v2.prerelease.length;
+          const prefix = hasPre ? 'pre' : '';
+          const defaultResult = hasPre ? 'prerelease' : '';
+          for (const key in v1) {
+            if (key === 'major' || key === 'minor' || key === 'patch') {
+              if (v1[key] !== v2[key]) {
+                return prefix + key;
+              }
+            }
+          }
+          return defaultResult;
+        }
+      };
+      module.exports = diff;
+    }, {
+      "./eq": 59,
+      "./parse": 68
+    }],
+    59: [function (require, module, exports) {
+      const compare = require('./compare');
+      const eq = (a, b, loose) => compare(a, b, loose) === 0;
+      module.exports = eq;
+    }, {
+      "./compare": 57
+    }],
+    60: [function (require, module, exports) {
+      const compare = require('./compare');
+      const gt = (a, b, loose) => compare(a, b, loose) > 0;
+      module.exports = gt;
+    }, {
+      "./compare": 57
+    }],
+    61: [function (require, module, exports) {
+      const compare = require('./compare');
+      const gte = (a, b, loose) => compare(a, b, loose) >= 0;
+      module.exports = gte;
+    }, {
+      "./compare": 57
+    }],
+    62: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const inc = (version, release, options, identifier) => {
+        if (typeof options === 'string') {
+          identifier = options;
+          options = undefined;
+        }
+        try {
+          return new SemVer(version instanceof SemVer ? version.version : version, options).inc(release, identifier).version;
+        } catch (er) {
+          return null;
+        }
+      };
+      module.exports = inc;
+    }, {
+      "../classes/semver": 51
+    }],
+    63: [function (require, module, exports) {
+      const compare = require('./compare');
+      const lt = (a, b, loose) => compare(a, b, loose) < 0;
+      module.exports = lt;
+    }, {
+      "./compare": 57
+    }],
+    64: [function (require, module, exports) {
+      const compare = require('./compare');
+      const lte = (a, b, loose) => compare(a, b, loose) <= 0;
+      module.exports = lte;
+    }, {
+      "./compare": 57
+    }],
+    65: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const major = (a, loose) => new SemVer(a, loose).major;
+      module.exports = major;
+    }, {
+      "../classes/semver": 51
+    }],
+    66: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const minor = (a, loose) => new SemVer(a, loose).minor;
+      module.exports = minor;
+    }, {
+      "../classes/semver": 51
+    }],
+    67: [function (require, module, exports) {
+      const compare = require('./compare');
+      const neq = (a, b, loose) => compare(a, b, loose) !== 0;
+      module.exports = neq;
+    }, {
+      "./compare": 57
+    }],
+    68: [function (require, module, exports) {
+      const {
+        MAX_LENGTH
+      } = require('../internal/constants');
+      const {
+        re,
+        t
+      } = require('../internal/re');
+      const SemVer = require('../classes/semver');
+      const parseOptions = require('../internal/parse-options');
+      const parse = (version, options) => {
+        options = parseOptions(options);
+        if (version instanceof SemVer) {
+          return version;
+        }
+        if (typeof version !== 'string') {
+          return null;
+        }
+        if (version.length > MAX_LENGTH) {
+          return null;
+        }
+        const r = options.loose ? re[t.LOOSE] : re[t.FULL];
+        if (!r.test(version)) {
+          return null;
+        }
+        try {
+          return new SemVer(version, options);
+        } catch (er) {
+          return null;
+        }
+      };
+      module.exports = parse;
+    }, {
+      "../classes/semver": 51,
+      "../internal/constants": 77,
+      "../internal/parse-options": 80,
+      "../internal/re": 81
+    }],
+    69: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const patch = (a, loose) => new SemVer(a, loose).patch;
+      module.exports = patch;
+    }, {
+      "../classes/semver": 51
+    }],
+    70: [function (require, module, exports) {
+      const parse = require('./parse');
+      const prerelease = (version, options) => {
+        const parsed = parse(version, options);
+        return parsed && parsed.prerelease.length ? parsed.prerelease : null;
+      };
+      module.exports = prerelease;
+    }, {
+      "./parse": 68
+    }],
+    71: [function (require, module, exports) {
+      const compare = require('./compare');
+      const rcompare = (a, b, loose) => compare(b, a, loose);
+      module.exports = rcompare;
+    }, {
+      "./compare": 57
+    }],
+    72: [function (require, module, exports) {
+      const compareBuild = require('./compare-build');
+      const rsort = (list, loose) => list.sort((a, b) => compareBuild(b, a, loose));
+      module.exports = rsort;
+    }, {
+      "./compare-build": 55
+    }],
+    73: [function (require, module, exports) {
+      const Range = require('../classes/range');
+      const satisfies = (version, range, options) => {
+        try {
+          range = new Range(range, options);
+        } catch (er) {
+          return false;
+        }
+        return range.test(version);
+      };
+      module.exports = satisfies;
+    }, {
+      "../classes/range": 50
+    }],
+    74: [function (require, module, exports) {
+      const compareBuild = require('./compare-build');
+      const sort = (list, loose) => list.sort((a, b) => compareBuild(a, b, loose));
+      module.exports = sort;
+    }, {
+      "./compare-build": 55
+    }],
+    75: [function (require, module, exports) {
+      const parse = require('./parse');
+      const valid = (version, options) => {
+        const v = parse(version, options);
+        return v ? v.version : null;
+      };
+      module.exports = valid;
+    }, {
+      "./parse": 68
+    }],
+    76: [function (require, module, exports) {
+      const internalRe = require('./internal/re');
+      const constants = require('./internal/constants');
+      const SemVer = require('./classes/semver');
+      const identifiers = require('./internal/identifiers');
+      const parse = require('./functions/parse');
+      const valid = require('./functions/valid');
+      const clean = require('./functions/clean');
+      const inc = require('./functions/inc');
+      const diff = require('./functions/diff');
+      const major = require('./functions/major');
+      const minor = require('./functions/minor');
+      const patch = require('./functions/patch');
+      const prerelease = require('./functions/prerelease');
+      const compare = require('./functions/compare');
+      const rcompare = require('./functions/rcompare');
+      const compareLoose = require('./functions/compare-loose');
+      const compareBuild = require('./functions/compare-build');
+      const sort = require('./functions/sort');
+      const rsort = require('./functions/rsort');
+      const gt = require('./functions/gt');
+      const lt = require('./functions/lt');
+      const eq = require('./functions/eq');
+      const neq = require('./functions/neq');
+      const gte = require('./functions/gte');
+      const lte = require('./functions/lte');
+      const cmp = require('./functions/cmp');
+      const coerce = require('./functions/coerce');
+      const Comparator = require('./classes/comparator');
+      const Range = require('./classes/range');
+      const satisfies = require('./functions/satisfies');
+      const toComparators = require('./ranges/to-comparators');
+      const maxSatisfying = require('./ranges/max-satisfying');
+      const minSatisfying = require('./ranges/min-satisfying');
+      const minVersion = require('./ranges/min-version');
+      const validRange = require('./ranges/valid');
+      const outside = require('./ranges/outside');
+      const gtr = require('./ranges/gtr');
+      const ltr = require('./ranges/ltr');
+      const intersects = require('./ranges/intersects');
+      const simplifyRange = require('./ranges/simplify');
+      const subset = require('./ranges/subset');
+      module.exports = {
+        parse,
+        valid,
+        clean,
+        inc,
+        diff,
+        major,
+        minor,
+        patch,
+        prerelease,
+        compare,
+        rcompare,
+        compareLoose,
+        compareBuild,
+        sort,
+        rsort,
+        gt,
+        lt,
+        eq,
+        neq,
+        gte,
+        lte,
+        cmp,
+        coerce,
+        Comparator,
+        Range,
+        satisfies,
+        toComparators,
+        maxSatisfying,
+        minSatisfying,
+        minVersion,
+        validRange,
+        outside,
+        gtr,
+        ltr,
+        intersects,
+        simplifyRange,
+        subset,
+        SemVer,
+        re: internalRe.re,
+        src: internalRe.src,
+        tokens: internalRe.t,
+        SEMVER_SPEC_VERSION: constants.SEMVER_SPEC_VERSION,
+        compareIdentifiers: identifiers.compareIdentifiers,
+        rcompareIdentifiers: identifiers.rcompareIdentifiers
+      };
+    }, {
+      "./classes/comparator": 49,
+      "./classes/range": 50,
+      "./classes/semver": 51,
+      "./functions/clean": 52,
+      "./functions/cmp": 53,
+      "./functions/coerce": 54,
+      "./functions/compare": 57,
+      "./functions/compare-build": 55,
+      "./functions/compare-loose": 56,
+      "./functions/diff": 58,
+      "./functions/eq": 59,
+      "./functions/gt": 60,
+      "./functions/gte": 61,
+      "./functions/inc": 62,
+      "./functions/lt": 63,
+      "./functions/lte": 64,
+      "./functions/major": 65,
+      "./functions/minor": 66,
+      "./functions/neq": 67,
+      "./functions/parse": 68,
+      "./functions/patch": 69,
+      "./functions/prerelease": 70,
+      "./functions/rcompare": 71,
+      "./functions/rsort": 72,
+      "./functions/satisfies": 73,
+      "./functions/sort": 74,
+      "./functions/valid": 75,
+      "./internal/constants": 77,
+      "./internal/identifiers": 79,
+      "./internal/re": 81,
+      "./ranges/gtr": 82,
+      "./ranges/intersects": 83,
+      "./ranges/ltr": 84,
+      "./ranges/max-satisfying": 85,
+      "./ranges/min-satisfying": 86,
+      "./ranges/min-version": 87,
+      "./ranges/outside": 88,
+      "./ranges/simplify": 89,
+      "./ranges/subset": 90,
+      "./ranges/to-comparators": 91,
+      "./ranges/valid": 92
+    }],
+    77: [function (require, module, exports) {
+      const SEMVER_SPEC_VERSION = '2.0.0';
+      const MAX_LENGTH = 256;
+      const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
+      const MAX_SAFE_COMPONENT_LENGTH = 16;
+      module.exports = {
+        SEMVER_SPEC_VERSION,
+        MAX_LENGTH,
+        MAX_SAFE_INTEGER,
+        MAX_SAFE_COMPONENT_LENGTH
+      };
+    }, {}],
+    78: [function (require, module, exports) {
+      (function (process) {
+        (function () {
+          const debug = typeof process === 'object' && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error('SEMVER', ...args) : () => {};
+          module.exports = debug;
+        }).call(this);
+      }).call(this, require('_process'));
+    }, {
+      "_process": 261
+    }],
+    79: [function (require, module, exports) {
+      const numeric = /^[0-9]+$/;
+      const compareIdentifiers = (a, b) => {
+        const anum = numeric.test(a);
+        const bnum = numeric.test(b);
+        if (anum && bnum) {
+          a = +a;
+          b = +b;
+        }
+        return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
+      };
+      const rcompareIdentifiers = (a, b) => compareIdentifiers(b, a);
+      module.exports = {
+        compareIdentifiers,
+        rcompareIdentifiers
+      };
+    }, {}],
+    80: [function (require, module, exports) {
+      const opts = ['includePrerelease', 'loose', 'rtl'];
+      const parseOptions = options => !options ? {} : typeof options !== 'object' ? {
+        loose: true
+      } : opts.filter(k => options[k]).reduce((o, k) => {
+        o[k] = true;
+        return o;
+      }, {});
+      module.exports = parseOptions;
+    }, {}],
+    81: [function (require, module, exports) {
+      const {
+        MAX_SAFE_COMPONENT_LENGTH
+      } = require('./constants');
+      const debug = require('./debug');
+      exports = module.exports = {};
+      const re = exports.re = [];
+      const src = exports.src = [];
+      const t = exports.t = {};
+      let R = 0;
+      const createToken = (name, value, isGlobal) => {
+        const index = R++;
+        debug(name, index, value);
+        t[name] = index;
+        src[index] = value;
+        re[index] = new RegExp(value, isGlobal ? 'g' : undefined);
+      };
+      createToken('NUMERICIDENTIFIER', '0|[1-9]\\d*');
+      createToken('NUMERICIDENTIFIERLOOSE', '[0-9]+');
+      createToken('NONNUMERICIDENTIFIER', '\\d*[a-zA-Z-][a-zA-Z0-9-]*');
+      createToken('MAINVERSION', `(${src[t.NUMERICIDENTIFIER]})\\.` + `(${src[t.NUMERICIDENTIFIER]})\\.` + `(${src[t.NUMERICIDENTIFIER]})`);
+      createToken('MAINVERSIONLOOSE', `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.` + `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.` + `(${src[t.NUMERICIDENTIFIERLOOSE]})`);
+      createToken('PRERELEASEIDENTIFIER', `(?:${src[t.NUMERICIDENTIFIER]}|${src[t.NONNUMERICIDENTIFIER]})`);
+      createToken('PRERELEASEIDENTIFIERLOOSE', `(?:${src[t.NUMERICIDENTIFIERLOOSE]}|${src[t.NONNUMERICIDENTIFIER]})`);
+      createToken('PRERELEASE', `(?:-(${src[t.PRERELEASEIDENTIFIER]}(?:\\.${src[t.PRERELEASEIDENTIFIER]})*))`);
+      createToken('PRERELEASELOOSE', `(?:-?(${src[t.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t.PRERELEASEIDENTIFIERLOOSE]})*))`);
+      createToken('BUILDIDENTIFIER', '[0-9A-Za-z-]+');
+      createToken('BUILD', `(?:\\+(${src[t.BUILDIDENTIFIER]}(?:\\.${src[t.BUILDIDENTIFIER]})*))`);
+      createToken('FULLPLAIN', `v?${src[t.MAINVERSION]}${src[t.PRERELEASE]}?${src[t.BUILD]}?`);
+      createToken('FULL', `^${src[t.FULLPLAIN]}$`);
+      createToken('LOOSEPLAIN', `[v=\\s]*${src[t.MAINVERSIONLOOSE]}${src[t.PRERELEASELOOSE]}?${src[t.BUILD]}?`);
+      createToken('LOOSE', `^${src[t.LOOSEPLAIN]}$`);
+      createToken('GTLT', '((?:<|>)?=?)');
+      createToken('XRANGEIDENTIFIERLOOSE', `${src[t.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
+      createToken('XRANGEIDENTIFIER', `${src[t.NUMERICIDENTIFIER]}|x|X|\\*`);
+      createToken('XRANGEPLAIN', `[v=\\s]*(${src[t.XRANGEIDENTIFIER]})` + `(?:\\.(${src[t.XRANGEIDENTIFIER]})` + `(?:\\.(${src[t.XRANGEIDENTIFIER]})` + `(?:${src[t.PRERELEASE]})?${src[t.BUILD]}?` + `)?)?`);
+      createToken('XRANGEPLAINLOOSE', `[v=\\s]*(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:${src[t.PRERELEASELOOSE]})?${src[t.BUILD]}?` + `)?)?`);
+      createToken('XRANGE', `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAIN]}$`);
+      createToken('XRANGELOOSE', `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAINLOOSE]}$`);
+      createToken('COERCE', `${'(^|[^\\d])' + '(\\d{1,'}${MAX_SAFE_COMPONENT_LENGTH}})` + `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` + `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` + `(?:$|[^\\d])`);
+      createToken('COERCERTL', src[t.COERCE], true);
+      createToken('LONETILDE', '(?:~>?)');
+      createToken('TILDETRIM', `(\\s*)${src[t.LONETILDE]}\\s+`, true);
+      exports.tildeTrimReplace = '$1~';
+      createToken('TILDE', `^${src[t.LONETILDE]}${src[t.XRANGEPLAIN]}$`);
+      createToken('TILDELOOSE', `^${src[t.LONETILDE]}${src[t.XRANGEPLAINLOOSE]}$`);
+      createToken('LONECARET', '(?:\\^)');
+      createToken('CARETTRIM', `(\\s*)${src[t.LONECARET]}\\s+`, true);
+      exports.caretTrimReplace = '$1^';
+      createToken('CARET', `^${src[t.LONECARET]}${src[t.XRANGEPLAIN]}$`);
+      createToken('CARETLOOSE', `^${src[t.LONECARET]}${src[t.XRANGEPLAINLOOSE]}$`);
+      createToken('COMPARATORLOOSE', `^${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]})$|^$`);
+      createToken('COMPARATOR', `^${src[t.GTLT]}\\s*(${src[t.FULLPLAIN]})$|^$`);
+      createToken('COMPARATORTRIM', `(\\s*)${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]}|${src[t.XRANGEPLAIN]})`, true);
+      exports.comparatorTrimReplace = '$1$2$3';
+      createToken('HYPHENRANGE', `^\\s*(${src[t.XRANGEPLAIN]})` + `\\s+-\\s+` + `(${src[t.XRANGEPLAIN]})` + `\\s*$`);
+      createToken('HYPHENRANGELOOSE', `^\\s*(${src[t.XRANGEPLAINLOOSE]})` + `\\s+-\\s+` + `(${src[t.XRANGEPLAINLOOSE]})` + `\\s*$`);
+      createToken('STAR', '(<|>)?=?\\s*\\*');
+      createToken('GTE0', '^\\s*>=\\s*0\\.0\\.0\\s*$');
+      createToken('GTE0PRE', '^\\s*>=\\s*0\\.0\\.0-0\\s*$');
+    }, {
+      "./constants": 77,
+      "./debug": 78
+    }],
+    82: [function (require, module, exports) {
+      const outside = require('./outside');
+      const gtr = (version, range, options) => outside(version, range, '>', options);
+      module.exports = gtr;
+    }, {
+      "./outside": 88
+    }],
+    83: [function (require, module, exports) {
+      const Range = require('../classes/range');
+      const intersects = (r1, r2, options) => {
+        r1 = new Range(r1, options);
+        r2 = new Range(r2, options);
+        return r1.intersects(r2);
+      };
+      module.exports = intersects;
+    }, {
+      "../classes/range": 50
+    }],
+    84: [function (require, module, exports) {
+      const outside = require('./outside');
+      const ltr = (version, range, options) => outside(version, range, '<', options);
+      module.exports = ltr;
+    }, {
+      "./outside": 88
+    }],
+    85: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const Range = require('../classes/range');
+      const maxSatisfying = (versions, range, options) => {
+        let max = null;
+        let maxSV = null;
+        let rangeObj = null;
+        try {
+          rangeObj = new Range(range, options);
+        } catch (er) {
+          return null;
+        }
+        versions.forEach(v => {
+          if (rangeObj.test(v)) {
+            if (!max || maxSV.compare(v) === -1) {
+              max = v;
+              maxSV = new SemVer(max, options);
+            }
+          }
+        });
+        return max;
+      };
+      module.exports = maxSatisfying;
+    }, {
+      "../classes/range": 50,
+      "../classes/semver": 51
+    }],
+    86: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const Range = require('../classes/range');
+      const minSatisfying = (versions, range, options) => {
+        let min = null;
+        let minSV = null;
+        let rangeObj = null;
+        try {
+          rangeObj = new Range(range, options);
+        } catch (er) {
+          return null;
+        }
+        versions.forEach(v => {
+          if (rangeObj.test(v)) {
+            if (!min || minSV.compare(v) === 1) {
+              min = v;
+              minSV = new SemVer(min, options);
+            }
+          }
+        });
+        return min;
+      };
+      module.exports = minSatisfying;
+    }, {
+      "../classes/range": 50,
+      "../classes/semver": 51
+    }],
+    87: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const Range = require('../classes/range');
+      const gt = require('../functions/gt');
+      const minVersion = (range, loose) => {
+        range = new Range(range, loose);
+        let minver = new SemVer('0.0.0');
+        if (range.test(minver)) {
+          return minver;
+        }
+        minver = new SemVer('0.0.0-0');
+        if (range.test(minver)) {
+          return minver;
+        }
+        minver = null;
+        for (let i = 0; i < range.set.length; ++i) {
+          const comparators = range.set[i];
+          let setMin = null;
+          comparators.forEach(comparator => {
+            const compver = new SemVer(comparator.semver.version);
+            switch (comparator.operator) {
+              case '>':
+                if (compver.prerelease.length === 0) {
+                  compver.patch++;
+                } else {
+                  compver.prerelease.push(0);
+                }
+                compver.raw = compver.format();
+              case '':
+              case '>=':
+                if (!setMin || gt(compver, setMin)) {
+                  setMin = compver;
+                }
+                break;
+              case '<':
+              case '<=':
+                break;
+              default:
+                throw new Error(`Unexpected operation: ${comparator.operator}`);
+            }
+          });
+          if (setMin && (!minver || gt(minver, setMin))) {
+            minver = setMin;
+          }
+        }
+        if (minver && range.test(minver)) {
+          return minver;
+        }
+        return null;
+      };
+      module.exports = minVersion;
+    }, {
+      "../classes/range": 50,
+      "../classes/semver": 51,
+      "../functions/gt": 60
+    }],
+    88: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const Comparator = require('../classes/comparator');
+      const {
+        ANY
+      } = Comparator;
+      const Range = require('../classes/range');
+      const satisfies = require('../functions/satisfies');
+      const gt = require('../functions/gt');
+      const lt = require('../functions/lt');
+      const lte = require('../functions/lte');
+      const gte = require('../functions/gte');
+      const outside = (version, range, hilo, options) => {
+        version = new SemVer(version, options);
+        range = new Range(range, options);
+        let gtfn, ltefn, ltfn, comp, ecomp;
+        switch (hilo) {
+          case '>':
+            gtfn = gt;
+            ltefn = lte;
+            ltfn = lt;
+            comp = '>';
+            ecomp = '>=';
+            break;
+          case '<':
+            gtfn = lt;
+            ltefn = gte;
+            ltfn = gt;
+            comp = '<';
+            ecomp = '<=';
+            break;
+          default:
+            throw new TypeError('Must provide a hilo val of "<" or ">"');
+        }
+        if (satisfies(version, range, options)) {
+          return false;
+        }
+        for (let i = 0; i < range.set.length; ++i) {
+          const comparators = range.set[i];
+          let high = null;
+          let low = null;
+          comparators.forEach(comparator => {
+            if (comparator.semver === ANY) {
+              comparator = new Comparator('>=0.0.0');
+            }
+            high = high || comparator;
+            low = low || comparator;
+            if (gtfn(comparator.semver, high.semver, options)) {
+              high = comparator;
+            } else if (ltfn(comparator.semver, low.semver, options)) {
+              low = comparator;
+            }
+          });
+          if (high.operator === comp || high.operator === ecomp) {
+            return false;
+          }
+          if ((!low.operator || low.operator === comp) && ltefn(version, low.semver)) {
+            return false;
+          } else if (low.operator === ecomp && ltfn(version, low.semver)) {
+            return false;
+          }
+        }
+        return true;
+      };
+      module.exports = outside;
+    }, {
+      "../classes/comparator": 49,
+      "../classes/range": 50,
+      "../classes/semver": 51,
+      "../functions/gt": 60,
+      "../functions/gte": 61,
+      "../functions/lt": 63,
+      "../functions/lte": 64,
+      "../functions/satisfies": 73
+    }],
+    89: [function (require, module, exports) {
+      const satisfies = require('../functions/satisfies.js');
+      const compare = require('../functions/compare.js');
+      module.exports = (versions, range, options) => {
+        const set = [];
+        let first = null;
+        let prev = null;
+        const v = versions.sort((a, b) => compare(a, b, options));
+        for (const version of v) {
+          const included = satisfies(version, range, options);
+          if (included) {
+            prev = version;
+            if (!first) {
+              first = version;
+            }
+          } else {
+            if (prev) {
+              set.push([first, prev]);
+            }
+            prev = null;
+            first = null;
+          }
+        }
+        if (first) {
+          set.push([first, null]);
+        }
+        const ranges = [];
+        for (const [min, max] of set) {
+          if (min === max) {
+            ranges.push(min);
+          } else if (!max && min === v[0]) {
+            ranges.push('*');
+          } else if (!max) {
+            ranges.push(`>=${min}`);
+          } else if (min === v[0]) {
+            ranges.push(`<=${max}`);
+          } else {
+            ranges.push(`${min} - ${max}`);
+          }
+        }
+        const simplified = ranges.join(' || ');
+        const original = typeof range.raw === 'string' ? range.raw : String(range);
+        return simplified.length < original.length ? simplified : range;
+      };
+    }, {
+      "../functions/compare.js": 57,
+      "../functions/satisfies.js": 73
+    }],
+    90: [function (require, module, exports) {
+      const Range = require('../classes/range.js');
+      const Comparator = require('../classes/comparator.js');
+      const {
+        ANY
+      } = Comparator;
+      const satisfies = require('../functions/satisfies.js');
+      const compare = require('../functions/compare.js');
+      const subset = (sub, dom, options = {}) => {
+        if (sub === dom) {
+          return true;
+        }
+        sub = new Range(sub, options);
+        dom = new Range(dom, options);
+        let sawNonNull = false;
+        OUTER: for (const simpleSub of sub.set) {
+          for (const simpleDom of dom.set) {
+            const isSub = simpleSubset(simpleSub, simpleDom, options);
+            sawNonNull = sawNonNull || isSub !== null;
+            if (isSub) {
+              continue OUTER;
+            }
+          }
+          if (sawNonNull) {
+            return false;
+          }
+        }
+        return true;
+      };
+      const simpleSubset = (sub, dom, options) => {
+        if (sub === dom) {
+          return true;
+        }
+        if (sub.length === 1 && sub[0].semver === ANY) {
+          if (dom.length === 1 && dom[0].semver === ANY) {
+            return true;
+          } else if (options.includePrerelease) {
+            sub = [new Comparator('>=0.0.0-0')];
+          } else {
+            sub = [new Comparator('>=0.0.0')];
+          }
+        }
+        if (dom.length === 1 && dom[0].semver === ANY) {
+          if (options.includePrerelease) {
+            return true;
+          } else {
+            dom = [new Comparator('>=0.0.0')];
+          }
+        }
+        const eqSet = new Set();
+        let gt, lt;
+        for (const c of sub) {
+          if (c.operator === '>' || c.operator === '>=') {
+            gt = higherGT(gt, c, options);
+          } else if (c.operator === '<' || c.operator === '<=') {
+            lt = lowerLT(lt, c, options);
+          } else {
+            eqSet.add(c.semver);
+          }
+        }
+        if (eqSet.size > 1) {
+          return null;
+        }
+        let gtltComp;
+        if (gt && lt) {
+          gtltComp = compare(gt.semver, lt.semver, options);
+          if (gtltComp > 0) {
+            return null;
+          } else if (gtltComp === 0 && (gt.operator !== '>=' || lt.operator !== '<=')) {
+            return null;
+          }
+        }
+        for (const eq of eqSet) {
+          if (gt && !satisfies(eq, String(gt), options)) {
+            return null;
+          }
+          if (lt && !satisfies(eq, String(lt), options)) {
+            return null;
+          }
+          for (const c of dom) {
+            if (!satisfies(eq, String(c), options)) {
+              return false;
+            }
+          }
+          return true;
+        }
+        let higher, lower;
+        let hasDomLT, hasDomGT;
+        let needDomLTPre = lt && !options.includePrerelease && lt.semver.prerelease.length ? lt.semver : false;
+        let needDomGTPre = gt && !options.includePrerelease && gt.semver.prerelease.length ? gt.semver : false;
+        if (needDomLTPre && needDomLTPre.prerelease.length === 1 && lt.operator === '<' && needDomLTPre.prerelease[0] === 0) {
+          needDomLTPre = false;
+        }
+        for (const c of dom) {
+          hasDomGT = hasDomGT || c.operator === '>' || c.operator === '>=';
+          hasDomLT = hasDomLT || c.operator === '<' || c.operator === '<=';
+          if (gt) {
+            if (needDomGTPre) {
+              if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomGTPre.major && c.semver.minor === needDomGTPre.minor && c.semver.patch === needDomGTPre.patch) {
+                needDomGTPre = false;
+              }
+            }
+            if (c.operator === '>' || c.operator === '>=') {
+              higher = higherGT(gt, c, options);
+              if (higher === c && higher !== gt) {
+                return false;
+              }
+            } else if (gt.operator === '>=' && !satisfies(gt.semver, String(c), options)) {
+              return false;
+            }
+          }
+          if (lt) {
+            if (needDomLTPre) {
+              if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomLTPre.major && c.semver.minor === needDomLTPre.minor && c.semver.patch === needDomLTPre.patch) {
+                needDomLTPre = false;
+              }
+            }
+            if (c.operator === '<' || c.operator === '<=') {
+              lower = lowerLT(lt, c, options);
+              if (lower === c && lower !== lt) {
+                return false;
+              }
+            } else if (lt.operator === '<=' && !satisfies(lt.semver, String(c), options)) {
+              return false;
+            }
+          }
+          if (!c.operator && (lt || gt) && gtltComp !== 0) {
+            return false;
+          }
+        }
+        if (gt && hasDomLT && !lt && gtltComp !== 0) {
+          return false;
+        }
+        if (lt && hasDomGT && !gt && gtltComp !== 0) {
+          return false;
+        }
+        if (needDomGTPre || needDomLTPre) {
+          return false;
+        }
+        return true;
+      };
+      const higherGT = (a, b, options) => {
+        if (!a) {
+          return b;
+        }
+        const comp = compare(a.semver, b.semver, options);
+        return comp > 0 ? a : comp < 0 ? b : b.operator === '>' && a.operator === '>=' ? b : a;
+      };
+      const lowerLT = (a, b, options) => {
+        if (!a) {
+          return b;
+        }
+        const comp = compare(a.semver, b.semver, options);
+        return comp < 0 ? a : comp > 0 ? b : b.operator === '<' && a.operator === '<=' ? b : a;
+      };
+      module.exports = subset;
+    }, {
+      "../classes/comparator.js": 49,
+      "../classes/range.js": 50,
+      "../functions/compare.js": 57,
+      "../functions/satisfies.js": 73
+    }],
+    91: [function (require, module, exports) {
+      const Range = require('../classes/range');
+      const toComparators = (range, options) => new Range(range, options).set.map(comp => comp.map(c => c.value).join(' ').trim().split(' '));
+      module.exports = toComparators;
+    }, {
+      "../classes/range": 50
+    }],
+    92: [function (require, module, exports) {
+      const Range = require('../classes/range');
+      const validRange = (range, options) => {
+        try {
+          return new Range(range, options).range || '*';
+        } catch (er) {
+          return null;
+        }
+      };
+      module.exports = validRange;
+    }, {
+      "../classes/range": 50
+    }],
+    93: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -3408,9 +6973,9 @@
         }
       });
     }, {
-      "crypto": 134
+      "crypto": 198
     }],
-    30: [function (require, module, exports) {
+    94: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -3459,7 +7024,7 @@
       };
       exports.default = assert;
     }, {}],
-    31: [function (require, module, exports) {
+    95: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -3582,10 +7147,10 @@
       }
       exports.SHA2 = SHA2;
     }, {
-      "./_assert.js": 30,
-      "./utils.js": 40
+      "./_assert.js": 94,
+      "./utils.js": 104
     }],
-    32: [function (require, module, exports) {
+    96: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -3672,7 +7237,7 @@
       };
       exports.default = u64;
     }, {}],
-    33: [function (require, module, exports) {
+    97: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -3684,7 +7249,7 @@
         web: typeof self === 'object' && 'crypto' in self ? self.crypto : undefined
       };
     }, {}],
-    34: [function (require, module, exports) {
+    98: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -3762,10 +7327,10 @@
       exports.hmac = hmac;
       exports.hmac.create = (hash, key) => new HMAC(hash, key);
     }, {
-      "./_assert.js": 30,
-      "./utils.js": 40
+      "./_assert.js": 94,
+      "./utils.js": 104
     }],
-    35: [function (require, module, exports) {
+    99: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -3863,11 +7428,11 @@
       }
       exports.pbkdf2Async = pbkdf2Async;
     }, {
-      "./_assert.js": 30,
-      "./hmac.js": 34,
-      "./utils.js": 40
+      "./_assert.js": 94,
+      "./hmac.js": 98,
+      "./utils.js": 104
     }],
-    36: [function (require, module, exports) {
+    100: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -3963,10 +7528,10 @@
       exports.RIPEMD160 = RIPEMD160;
       exports.ripemd160 = (0, utils_js_1.wrapConstructor)(() => new RIPEMD160());
     }, {
-      "./_sha2.js": 31,
-      "./utils.js": 40
+      "./_sha2.js": 95,
+      "./utils.js": 104
     }],
-    37: [function (require, module, exports) {
+    101: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -4068,10 +7633,10 @@
       }
       exports.sha256 = (0, utils_js_1.wrapConstructor)(() => new SHA256());
     }, {
-      "./_sha2.js": 31,
-      "./utils.js": 40
+      "./_sha2.js": 95,
+      "./utils.js": 104
     }],
-    38: [function (require, module, exports) {
+    102: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -4265,11 +7830,11 @@
       exports.shake128 = genShake(0x1f, 168, 128 / 8);
       exports.shake256 = genShake(0x1f, 136, 256 / 8);
     }, {
-      "./_assert.js": 30,
-      "./_u64.js": 32,
-      "./utils.js": 40
+      "./_assert.js": 94,
+      "./_u64.js": 96,
+      "./utils.js": 104
     }],
-    39: [function (require, module, exports) {
+    103: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -4502,11 +8067,11 @@
       exports.sha512_256 = (0, utils_js_1.wrapConstructor)(() => new SHA512_256());
       exports.sha384 = (0, utils_js_1.wrapConstructor)(() => new SHA384());
     }, {
-      "./_sha2.js": 31,
-      "./_u64.js": 32,
-      "./utils.js": 40
+      "./_sha2.js": 95,
+      "./_u64.js": 96,
+      "./utils.js": 104
     }],
-    40: [function (require, module, exports) {
+    104: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -4633,9 +8198,9 @@
       }
       exports.randomBytes = randomBytes;
     }, {
-      "@noble/hashes/crypto": 33
+      "@noble/hashes/crypto": 97
     }],
-    41: [function (require, module, exports) {
+    105: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -5912,9 +9477,9 @@
         }
       });
     }, {
-      "crypto": 134
+      "crypto": 198
     }],
-    42: [function (require, module, exports) {
+    106: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -6277,7 +9842,7 @@
       exports.stringToBytes = stringToBytes;
       exports.bytes = exports.stringToBytes;
     }, {}],
-    43: [function (require, module, exports) {
+    107: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -6364,14 +9929,14 @@
       }
       exports.mnemonicToSeedSync = mnemonicToSeedSync;
     }, {
-      "@noble/hashes/_assert": 30,
-      "@noble/hashes/pbkdf2": 35,
-      "@noble/hashes/sha256": 37,
-      "@noble/hashes/sha512": 39,
-      "@noble/hashes/utils": 40,
-      "@scure/base": 42
+      "@noble/hashes/_assert": 94,
+      "@noble/hashes/pbkdf2": 99,
+      "@noble/hashes/sha256": 101,
+      "@noble/hashes/sha512": 103,
+      "@noble/hashes/utils": 104,
+      "@scure/base": 106
     }],
-    44: [function (require, module, exports) {
+    108: [function (require, module, exports) {
       (function (process) {
         (function () {
           !function (t, e) {
@@ -7652,9 +11217,9 @@
         }).call(this);
       }).call(this, require('_process'));
     }, {
-      "_process": 195
+      "_process": 261
     }],
-    45: [function (require, module, exports) {
+    109: [function (require, module, exports) {
       "use strict";
 
       globalThis.Buffer = require('buffer/').Buffer;
@@ -7695,10 +11260,10 @@
       __exportStar(require("./src/main"), exports);
       exports.default = algosdk;
     }, {
-      "./src/main": 115,
-      "buffer/": 136
+      "./src/main": 179,
+      "buffer/": 200
     }],
-    46: [function (require, module, exports) {
+    110: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -8342,12 +11907,12 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../encoding/address": 100,
-      "../encoding/bigint": 101,
-      "../utils/utils": 130,
-      "buffer": 135
+      "../encoding/address": 164,
+      "../encoding/bigint": 165,
+      "../utils/utils": 194,
+      "buffer": 199
     }],
-    47: [function (require, module, exports) {
+    111: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -8378,9 +11943,9 @@
       }
       exports.ABIContract = ABIContract;
     }, {
-      "./method": 50
+      "./method": 114
     }],
-    48: [function (require, module, exports) {
+    112: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -8408,14 +11973,14 @@
       __exportStar(require("./transaction"), exports);
       __exportStar(require("./reference"), exports);
     }, {
-      "./abi_type": 46,
-      "./contract": 47,
-      "./interface": 49,
-      "./method": 50,
-      "./reference": 51,
-      "./transaction": 52
+      "./abi_type": 110,
+      "./contract": 111,
+      "./interface": 113,
+      "./method": 114,
+      "./reference": 115,
+      "./transaction": 116
     }],
-    49: [function (require, module, exports) {
+    113: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -8442,9 +12007,9 @@
       }
       exports.ABIInterface = ABIInterface;
     }, {
-      "./method": 50
+      "./method": 114
     }],
-    50: [function (require, module, exports) {
+    114: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -8572,12 +12137,12 @@
       }
       exports.ABIMethod = ABIMethod;
     }, {
-      "../nacl/naclWrappers": 120,
-      "./abi_type": 46,
-      "./reference": 51,
-      "./transaction": 52
+      "../nacl/naclWrappers": 184,
+      "./abi_type": 110,
+      "./reference": 115,
+      "./transaction": 116
     }],
-    51: [function (require, module, exports) {
+    115: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -8595,7 +12160,7 @@
       }
       exports.abiTypeIsReference = abiTypeIsReference;
     }, {}],
-    52: [function (require, module, exports) {
+    116: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -8624,7 +12189,7 @@
       }
       exports.abiCheckTransactionType = abiCheckTransactionType;
     }, {}],
-    53: [function (require, module, exports) {
+    117: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -8669,10 +12234,10 @@
       }
       exports.default = generateAccount;
     }, {
-      "./encoding/address": 100,
-      "./nacl/naclWrappers": 120
+      "./encoding/address": 164,
+      "./nacl/naclWrappers": 184
     }],
-    54: [function (require, module, exports) {
+    118: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -8765,13 +12330,13 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./encoding/address": 100,
-      "./encoding/encoding": 102,
-      "./nacl/naclWrappers": 120,
-      "./utils/utils": 130,
-      "buffer": 135
+      "./encoding/address": 164,
+      "./encoding/encoding": 166,
+      "./nacl/naclWrappers": 184,
+      "./utils/utils": 194,
+      "buffer": 199
     }],
-    55: [function (require, module, exports) {
+    119: [function (require, module, exports) {
       (function () {
         (function () {
           const {
@@ -8938,11 +12503,11 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./client": 56,
-      "./v2/algod/sendRawTransaction": 74,
-      "buffer": 135
+      "./client": 120,
+      "./v2/algod/sendRawTransaction": 138,
+      "buffer": 199
     }],
-    56: [function (require, module, exports) {
+    120: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -9100,11 +12665,11 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../utils/utils": 130,
-      "./urlTokenBaseHTTPClient": 58,
-      "buffer": 135
+      "../utils/utils": 194,
+      "./urlTokenBaseHTTPClient": 122,
+      "buffer": 199
     }],
-    57: [function (require, module, exports) {
+    121: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -9337,11 +12902,11 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../transaction": 122,
-      "./v2/serviceClient": 96,
-      "buffer": 135
+      "../transaction": 186,
+      "./v2/serviceClient": 160,
+      "buffer": 199
     }],
-    58: [function (require, module, exports) {
+    122: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -9449,12 +13014,12 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "buffer": 135,
-      "path": 194,
-      "superagent": 208,
-      "url-parse": 215
+      "buffer": 199,
+      "path": 260,
+      "superagent": 274,
+      "url-parse": 281
     }],
-    59: [function (require, module, exports) {
+    123: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -9478,9 +13043,9 @@
       }
       exports.default = AccountInformation;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    60: [function (require, module, exports) {
+    124: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -9571,27 +13136,27 @@
       }
       exports.default = AlgodClient;
     }, {
-      "../serviceClient": 96,
-      "./accountInformation": 59,
-      "./block": 61,
-      "./compile": 62,
-      "./dryrun": 63,
-      "./genesis": 64,
-      "./getApplicationByID": 65,
-      "./getAssetByID": 66,
-      "./healthCheck": 67,
-      "./pendingTransactionInformation": 70,
-      "./pendingTransactions": 71,
-      "./pendingTransactionsByAddress": 72,
-      "./proof": 73,
-      "./sendRawTransaction": 74,
-      "./status": 75,
-      "./statusAfterBlock": 76,
-      "./suggestedParams": 77,
-      "./supply": 78,
-      "./versions": 79
+      "../serviceClient": 160,
+      "./accountInformation": 123,
+      "./block": 125,
+      "./compile": 126,
+      "./dryrun": 127,
+      "./genesis": 128,
+      "./getApplicationByID": 129,
+      "./getAssetByID": 130,
+      "./healthCheck": 131,
+      "./pendingTransactionInformation": 134,
+      "./pendingTransactions": 135,
+      "./pendingTransactionsByAddress": 136,
+      "./proof": 137,
+      "./sendRawTransaction": 138,
+      "./status": 139,
+      "./statusAfterBlock": 140,
+      "./suggestedParams": 141,
+      "./supply": 142,
+      "./versions": 143
     }],
-    61: [function (require, module, exports) {
+    125: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -9652,10 +13217,10 @@
       }
       exports.default = Block;
     }, {
-      "../../../encoding/encoding": 102,
-      "../jsonrequest": 95
+      "../../../encoding/encoding": 166,
+      "../jsonrequest": 159
     }],
-    62: [function (require, module, exports) {
+    126: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -9700,10 +13265,10 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../jsonrequest": 95,
-      "buffer": 135
+      "../jsonrequest": 159,
+      "buffer": 199
     }],
-    63: [function (require, module, exports) {
+    127: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -9764,12 +13329,12 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../../../encoding/encoding": 102,
-      "../jsonrequest": 95,
-      "./compile": 62,
-      "buffer": 135
+      "../../../encoding/encoding": 166,
+      "../jsonrequest": 159,
+      "./compile": 126,
+      "buffer": 199
     }],
-    64: [function (require, module, exports) {
+    128: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -9788,9 +13353,9 @@
       }
       exports.default = Genesis;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    65: [function (require, module, exports) {
+    129: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -9814,9 +13379,9 @@
       }
       exports.default = GetApplicationByID;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    66: [function (require, module, exports) {
+    130: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -9840,9 +13405,9 @@
       }
       exports.default = GetAssetByID;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    67: [function (require, module, exports) {
+    131: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -9868,9 +13433,9 @@
       }
       exports.default = HealthCheck;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    68: [function (require, module, exports) {
+    132: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -9922,9 +13487,9 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "buffer": 135
+      "buffer": 199
     }],
-    69: [function (require, module, exports) {
+    133: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -10660,10 +14225,10 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./base": 68,
-      "buffer": 135
+      "./base": 132,
+      "buffer": 199
     }],
-    70: [function (require, module, exports) {
+    134: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -10726,10 +14291,10 @@
       }
       exports.default = PendingTransactionInformation;
     }, {
-      "../../../encoding/encoding": 102,
-      "../jsonrequest": 95
+      "../../../encoding/encoding": 166,
+      "../jsonrequest": 159
     }],
-    71: [function (require, module, exports) {
+    135: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -10790,10 +14355,10 @@
       }
       exports.default = PendingTransactions;
     }, {
-      "../../../encoding/encoding": 102,
-      "../jsonrequest": 95
+      "../../../encoding/encoding": 166,
+      "../jsonrequest": 159
     }],
-    72: [function (require, module, exports) {
+    136: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -10856,10 +14421,10 @@
       }
       exports.default = PendingTransactionsByAddress;
     }, {
-      "../../../encoding/encoding": 102,
-      "../jsonrequest": 95
+      "../../../encoding/encoding": 166,
+      "../jsonrequest": 159
     }],
-    73: [function (require, module, exports) {
+    137: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -10885,9 +14450,9 @@
       }
       exports.default = Proof;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    74: [function (require, module, exports) {
+    138: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -10944,11 +14509,11 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../../../utils/utils": 130,
-      "../jsonrequest": 95,
-      "buffer": 135
+      "../../../utils/utils": 194,
+      "../jsonrequest": 159,
+      "buffer": 199
     }],
-    75: [function (require, module, exports) {
+    139: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -10967,9 +14532,9 @@
       }
       exports.default = Status;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    76: [function (require, module, exports) {
+    140: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -10994,9 +14559,9 @@
       }
       exports.default = StatusAfterBlock;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    77: [function (require, module, exports) {
+    141: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11025,9 +14590,9 @@
       }
       exports.default = SuggestedParamsRequest;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    78: [function (require, module, exports) {
+    142: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11046,9 +14611,9 @@
       }
       exports.default = Supply;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    79: [function (require, module, exports) {
+    143: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11067,9 +14632,9 @@
       }
       exports.default = Versions;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    80: [function (require, module, exports) {
+    144: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11144,23 +14709,23 @@
       }
       exports.default = IndexerClient;
     }, {
-      "../serviceClient": 96,
-      "./lookupAccountByID": 81,
-      "./lookupAccountTransactions": 82,
-      "./lookupApplicationLogs": 83,
-      "./lookupApplications": 84,
-      "./lookupAssetBalances": 85,
-      "./lookupAssetByID": 86,
-      "./lookupAssetTransactions": 87,
-      "./lookupBlock": 88,
-      "./lookupTransactionByID": 89,
-      "./makeHealthCheck": 90,
-      "./searchAccounts": 91,
-      "./searchForApplications": 92,
-      "./searchForAssets": 93,
-      "./searchForTransactions": 94
+      "../serviceClient": 160,
+      "./lookupAccountByID": 145,
+      "./lookupAccountTransactions": 146,
+      "./lookupApplicationLogs": 147,
+      "./lookupApplications": 148,
+      "./lookupAssetBalances": 149,
+      "./lookupAssetByID": 150,
+      "./lookupAssetTransactions": 151,
+      "./lookupBlock": 152,
+      "./lookupTransactionByID": 153,
+      "./makeHealthCheck": 154,
+      "./searchAccounts": 155,
+      "./searchForApplications": 156,
+      "./searchForAssets": 157,
+      "./searchForTransactions": 158
     }],
-    81: [function (require, module, exports) {
+    145: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11192,9 +14757,9 @@
       }
       exports.default = LookupAccountByID;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    82: [function (require, module, exports) {
+    146: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -11290,10 +14855,10 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../jsonrequest": 95,
-      "buffer": 135
+      "../jsonrequest": 159,
+      "buffer": 199
     }],
-    83: [function (require, module, exports) {
+    147: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11341,9 +14906,9 @@
       }
       exports.default = LookupApplicationLogs;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    84: [function (require, module, exports) {
+    148: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11371,9 +14936,9 @@
       }
       exports.default = LookupApplications;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    85: [function (require, module, exports) {
+    149: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11421,9 +14986,9 @@
       }
       exports.default = LookupAssetBalances;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    86: [function (require, module, exports) {
+    150: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11451,9 +15016,9 @@
       }
       exports.default = LookupAssetByID;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    87: [function (require, module, exports) {
+    151: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11550,10 +15115,10 @@
       }
       exports.default = LookupAssetTransactions;
     }, {
-      "../jsonrequest": 95,
-      "./lookupAccountTransactions": 82
+      "../jsonrequest": 159,
+      "./lookupAccountTransactions": 146
     }],
-    88: [function (require, module, exports) {
+    152: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11577,9 +15142,9 @@
       }
       exports.default = LookupBlock;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    89: [function (require, module, exports) {
+    153: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11603,9 +15168,9 @@
       }
       exports.default = LookupTransactionByID;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    90: [function (require, module, exports) {
+    154: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11624,9 +15189,9 @@
       }
       exports.default = MakeHealthCheck;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    91: [function (require, module, exports) {
+    155: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11681,9 +15246,9 @@
       }
       exports.default = SearchAccounts;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    92: [function (require, module, exports) {
+    156: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11718,9 +15283,9 @@
       }
       exports.default = SearchForApplications;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    93: [function (require, module, exports) {
+    157: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11767,9 +15332,9 @@
       }
       exports.default = SearchForAssets;
     }, {
-      "../jsonrequest": 95
+      "../jsonrequest": 159
     }],
-    94: [function (require, module, exports) {
+    158: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11865,10 +15430,10 @@
       }
       exports.default = SearchForTransactions;
     }, {
-      "../jsonrequest": 95,
-      "./lookupAccountTransactions": 82
+      "../jsonrequest": 159,
+      "./lookupAccountTransactions": 146
     }],
-    95: [function (require, module, exports) {
+    159: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11905,9 +15470,9 @@
       }
       exports.default = JSONRequest;
     }, {
-      "../../types/intDecoding": 125
+      "../../types/intDecoding": 189
     }],
-    96: [function (require, module, exports) {
+    160: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -11952,10 +15517,10 @@
       }
       exports.default = ServiceClient;
     }, {
-      "../../types/intDecoding": 125,
-      "../client": 56
+      "../../types/intDecoding": 189,
+      "../client": 120
     }],
-    97: [function (require, module, exports) {
+    161: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -12309,16 +15874,16 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./abi": 48,
-      "./group": 104,
-      "./makeTxn": 116,
-      "./signer": 121,
-      "./transaction": 122,
-      "./types/transactions/base": 127,
-      "./wait": 131,
-      "buffer": 135
+      "./abi": 112,
+      "./group": 168,
+      "./makeTxn": 180,
+      "./signer": 185,
+      "./transaction": 186,
+      "./types/transactions/base": 191,
+      "./wait": 195,
+      "buffer": 199
     }],
-    98: [function (require, module, exports) {
+    162: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -12340,7 +15905,7 @@
       }
       exports.algosToMicroalgos = algosToMicroalgos;
     }, {}],
-    99: [function (require, module, exports) {
+    163: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -12434,12 +15999,12 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./client/v2/algod/models/types": 69,
-      "./encoding/address": 100,
-      "./types/transactions": 129,
-      "buffer": 135
+      "./client/v2/algod/models/types": 133,
+      "./encoding/address": 164,
+      "./types/transactions": 193,
+      "buffer": 199
     }],
-    100: [function (require, module, exports) {
+    164: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -12575,13 +16140,13 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../nacl/naclWrappers": 120,
-      "../utils/utils": 130,
-      "./uint64": 103,
-      "buffer": 135,
-      "hi-base32": 184
+      "../nacl/naclWrappers": 184,
+      "../utils/utils": 194,
+      "./uint64": 167,
+      "buffer": 199,
+      "hi-base32": 248
     }],
-    101: [function (require, module, exports) {
+    165: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -12614,9 +16179,9 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "buffer": 135
+      "buffer": 199
     }],
-    102: [function (require, module, exports) {
+    166: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -12684,9 +16249,9 @@
       }
       exports.decode = decode;
     }, {
-      "algo-msgpack-with-bigint": 44
+      "algo-msgpack-with-bigint": 108
     }],
-    103: [function (require, module, exports) {
+    167: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -12732,9 +16297,9 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "buffer": 135
+      "buffer": 199
     }],
-    104: [function (require, module, exports) {
+    168: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -12837,14 +16402,14 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./encoding/address": 100,
-      "./encoding/encoding": 102,
-      "./nacl/naclWrappers": 120,
-      "./transaction": 122,
-      "./utils/utils": 130,
-      "buffer": 135
+      "./encoding/address": 164,
+      "./encoding/encoding": 166,
+      "./nacl/naclWrappers": 184,
+      "./transaction": 186,
+      "./utils/utils": 194,
+      "buffer": 199
     }],
-    105: [function (require, module, exports) {
+    169: [function (require, module, exports) {
       (function () {
         (function () {
           const address = require('../encoding/address');
@@ -12966,17 +16531,17 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../encoding/address": 100,
-      "../encoding/encoding": 102,
-      "../group": 104,
-      "../logic/logic": 113,
-      "../logicsig": 114,
-      "../nacl/naclWrappers": 120,
-      "../transaction": 122,
-      "./templates": 111,
-      "buffer": 135
+      "../encoding/address": 164,
+      "../encoding/encoding": 166,
+      "../group": 168,
+      "../logic/logic": 177,
+      "../logicsig": 178,
+      "../nacl/naclWrappers": 184,
+      "../transaction": 186,
+      "./templates": 175,
+      "buffer": 199
     }],
-    106: [function (require, module, exports) {
+    170: [function (require, module, exports) {
       (function () {
         (function () {
           const sha256 = require('js-sha256');
@@ -13058,15 +16623,15 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../logic/logic": 113,
-      "../logicsig": 114,
-      "../transaction": 122,
-      "./templates": 111,
-      "buffer": 135,
-      "js-sha256": 186,
-      "js-sha3": 187
+      "../logic/logic": 177,
+      "../logicsig": 178,
+      "../transaction": 186,
+      "./templates": 175,
+      "buffer": 199,
+      "js-sha256": 250,
+      "js-sha3": 251
     }],
-    107: [function (require, module, exports) {
+    171: [function (require, module, exports) {
       const dynamicFeeTemplate = require('./dynamicfee');
       const htlcTemplate = require('./htlc');
       const limitOrderTemplate = require('./limitorder');
@@ -13086,13 +16651,13 @@
         getPeriodicPaymentWithdrawalTransaction: periodicPayTemplate.getPeriodicPaymentWithdrawalTransaction
       };
     }, {
-      "./dynamicfee": 105,
-      "./htlc": 106,
-      "./limitorder": 108,
-      "./periodicpayment": 109,
-      "./split": 110
+      "./dynamicfee": 169,
+      "./htlc": 170,
+      "./limitorder": 172,
+      "./periodicpayment": 173,
+      "./split": 174
     }],
-    108: [function (require, module, exports) {
+    172: [function (require, module, exports) {
       (function () {
         (function () {
           const address = require('../encoding/address');
@@ -13173,17 +16738,17 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../encoding/address": 100,
-      "../group": 104,
-      "../logic/logic": 113,
-      "../logicsig": 114,
-      "../makeTxn": 116,
-      "../nacl/naclWrappers": 120,
-      "../utils/utils": 130,
-      "./templates": 111,
-      "buffer": 135
+      "../encoding/address": 164,
+      "../group": 168,
+      "../logic/logic": 177,
+      "../logicsig": 178,
+      "../makeTxn": 180,
+      "../nacl/naclWrappers": 184,
+      "../utils/utils": 194,
+      "./templates": 175,
+      "buffer": 199
     }],
-    109: [function (require, module, exports) {
+    173: [function (require, module, exports) {
       (function () {
         (function () {
           const address = require('../encoding/address');
@@ -13274,15 +16839,15 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../encoding/address": 100,
-      "../logic/logic": 113,
-      "../logicsig": 114,
-      "../makeTxn": 116,
-      "../nacl/naclWrappers": 120,
-      "./templates": 111,
-      "buffer": 135
+      "../encoding/address": 164,
+      "../logic/logic": 177,
+      "../logicsig": 178,
+      "../makeTxn": 180,
+      "../nacl/naclWrappers": 184,
+      "./templates": 175,
+      "buffer": 199
     }],
-    110: [function (require, module, exports) {
+    174: [function (require, module, exports) {
       (function () {
         (function () {
           const address = require('../encoding/address');
@@ -13357,16 +16922,16 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../encoding/address": 100,
-      "../group": 104,
-      "../logic/logic": 113,
-      "../logicsig": 114,
-      "../makeTxn": 116,
-      "../utils/utils": 130,
-      "./templates": 111,
-      "buffer": 135
+      "../encoding/address": 164,
+      "../group": 168,
+      "../logic/logic": 177,
+      "../logicsig": 178,
+      "../makeTxn": 180,
+      "../utils/utils": 194,
+      "./templates": 175,
+      "buffer": 199
     }],
-    111: [function (require, module, exports) {
+    175: [function (require, module, exports) {
       (function () {
         (function () {
           const address = require('../encoding/address');
@@ -13435,10 +17000,10 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "../encoding/address": 100,
-      "buffer": 135
+      "../encoding/address": 164,
+      "buffer": 199
     }],
-    112: [function (require, module, exports) {
+    176: [function (require, module, exports) {
       module.exports = {
         "EvalMaxVersion": 6,
         "LogicSigVersion": 5,
@@ -14844,7 +18409,7 @@
         }]
       };
     }, {}],
-    113: [function (require, module, exports) {
+    177: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -15072,9 +18637,9 @@
       exports.langspecEvalMaxVersion = langspec_json_1.default.EvalMaxVersion;
       exports.langspecLogicSigVersion = langspec_json_1.default.LogicSigVersion;
     }, {
-      "./langspec.json": 112
+      "./langspec.json": 176
     }],
-    114: [function (require, module, exports) {
+    178: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -15367,16 +18932,16 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./encoding/address": 100,
-      "./encoding/encoding": 102,
-      "./logic/logic": 113,
-      "./multisig": 119,
-      "./nacl/naclWrappers": 120,
-      "./transaction": 122,
-      "./utils/utils": 130,
-      "buffer": 135
+      "./encoding/address": 164,
+      "./encoding/encoding": 166,
+      "./logic/logic": 177,
+      "./multisig": 183,
+      "./nacl/naclWrappers": 184,
+      "./transaction": 186,
+      "./utils/utils": 194,
+      "buffer": 199
     }],
-    115: [function (require, module, exports) {
+    179: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -15712,37 +19277,37 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./abi": 48,
-      "./account": 53,
-      "./bid": 54,
-      "./client/algod": 55,
-      "./client/kmd": 57,
-      "./client/v2/algod/algod": 60,
-      "./client/v2/algod/models/types": 69,
-      "./client/v2/indexer/indexer": 80,
-      "./composer": 97,
-      "./convert": 98,
-      "./dryrun": 99,
-      "./encoding/address": 100,
-      "./encoding/bigint": 101,
-      "./encoding/encoding": 102,
-      "./encoding/uint64": 103,
-      "./group": 104,
-      "./logicTemplates": 107,
-      "./logicsig": 114,
-      "./makeTxn": 116,
-      "./mnemonic/mnemonic": 117,
-      "./multisig": 119,
-      "./nacl/naclWrappers": 120,
-      "./signer": 121,
-      "./transaction": 122,
-      "./types": 124,
-      "./types/intDecoding": 125,
-      "./utils/utils": 130,
-      "./wait": 131,
-      "buffer": 135
+      "./abi": 112,
+      "./account": 117,
+      "./bid": 118,
+      "./client/algod": 119,
+      "./client/kmd": 121,
+      "./client/v2/algod/algod": 124,
+      "./client/v2/algod/models/types": 133,
+      "./client/v2/indexer/indexer": 144,
+      "./composer": 161,
+      "./convert": 162,
+      "./dryrun": 163,
+      "./encoding/address": 164,
+      "./encoding/bigint": 165,
+      "./encoding/encoding": 166,
+      "./encoding/uint64": 167,
+      "./group": 168,
+      "./logicTemplates": 171,
+      "./logicsig": 178,
+      "./makeTxn": 180,
+      "./mnemonic/mnemonic": 181,
+      "./multisig": 183,
+      "./nacl/naclWrappers": 184,
+      "./signer": 185,
+      "./transaction": 186,
+      "./types": 188,
+      "./types/intDecoding": 189,
+      "./utils/utils": 194,
+      "./wait": 195,
+      "buffer": 199
     }],
-    116: [function (require, module, exports) {
+    180: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -16195,11 +19760,11 @@
       }
       exports.makeApplicationCallTxnFromObject = makeApplicationCallTxnFromObject;
     }, {
-      "./transaction": 122,
-      "./types/transactions": 129,
-      "./types/transactions/base": 127
+      "./transaction": 186,
+      "./types/transactions": 193,
+      "./types/transactions/base": 191
     }],
-    117: [function (require, module, exports) {
+    181: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -16347,11 +19912,11 @@
       }
       exports.masterDerivationKeyToMnemonic = masterDerivationKeyToMnemonic;
     }, {
-      "../encoding/address": 100,
-      "../nacl/naclWrappers": 120,
-      "./wordlists/english": 118
+      "../encoding/address": 164,
+      "../nacl/naclWrappers": 184,
+      "./wordlists/english": 182
     }],
-    118: [function (require, module, exports) {
+    182: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -16360,7 +19925,7 @@
       const english = ['abandon', 'ability', 'able', 'about', 'above', 'absent', 'absorb', 'abstract', 'absurd', 'abuse', 'access', 'accident', 'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire', 'across', 'act', 'action', 'actor', 'actress', 'actual', 'adapt', 'add', 'addict', 'address', 'adjust', 'admit', 'adult', 'advance', 'advice', 'aerobic', 'affair', 'afford', 'afraid', 'again', 'age', 'agent', 'agree', 'ahead', 'aim', 'air', 'airport', 'aisle', 'alarm', 'album', 'alcohol', 'alert', 'alien', 'all', 'alley', 'allow', 'almost', 'alone', 'alpha', 'already', 'also', 'alter', 'always', 'amateur', 'amazing', 'among', 'amount', 'amused', 'analyst', 'anchor', 'ancient', 'anger', 'angle', 'angry', 'animal', 'ankle', 'announce', 'annual', 'another', 'answer', 'antenna', 'antique', 'anxiety', 'any', 'apart', 'apology', 'appear', 'apple', 'approve', 'april', 'arch', 'arctic', 'area', 'arena', 'argue', 'arm', 'armed', 'armor', 'army', 'around', 'arrange', 'arrest', 'arrive', 'arrow', 'art', 'artefact', 'artist', 'artwork', 'ask', 'aspect', 'assault', 'asset', 'assist', 'assume', 'asthma', 'athlete', 'atom', 'attack', 'attend', 'attitude', 'attract', 'auction', 'audit', 'august', 'aunt', 'author', 'auto', 'autumn', 'average', 'avocado', 'avoid', 'awake', 'aware', 'away', 'awesome', 'awful', 'awkward', 'axis', 'baby', 'bachelor', 'bacon', 'badge', 'bag', 'balance', 'balcony', 'ball', 'bamboo', 'banana', 'banner', 'bar', 'barely', 'bargain', 'barrel', 'base', 'basic', 'basket', 'battle', 'beach', 'bean', 'beauty', 'because', 'become', 'beef', 'before', 'begin', 'behave', 'behind', 'believe', 'below', 'belt', 'bench', 'benefit', 'best', 'betray', 'better', 'between', 'beyond', 'bicycle', 'bid', 'bike', 'bind', 'biology', 'bird', 'birth', 'bitter', 'black', 'blade', 'blame', 'blanket', 'blast', 'bleak', 'bless', 'blind', 'blood', 'blossom', 'blouse', 'blue', 'blur', 'blush', 'board', 'boat', 'body', 'boil', 'bomb', 'bone', 'bonus', 'book', 'boost', 'border', 'boring', 'borrow', 'boss', 'bottom', 'bounce', 'box', 'boy', 'bracket', 'brain', 'brand', 'brass', 'brave', 'bread', 'breeze', 'brick', 'bridge', 'brief', 'bright', 'bring', 'brisk', 'broccoli', 'broken', 'bronze', 'broom', 'brother', 'brown', 'brush', 'bubble', 'buddy', 'budget', 'buffalo', 'build', 'bulb', 'bulk', 'bullet', 'bundle', 'bunker', 'burden', 'burger', 'burst', 'bus', 'business', 'busy', 'butter', 'buyer', 'buzz', 'cabbage', 'cabin', 'cable', 'cactus', 'cage', 'cake', 'call', 'calm', 'camera', 'camp', 'can', 'canal', 'cancel', 'candy', 'cannon', 'canoe', 'canvas', 'canyon', 'capable', 'capital', 'captain', 'car', 'carbon', 'card', 'cargo', 'carpet', 'carry', 'cart', 'case', 'cash', 'casino', 'castle', 'casual', 'cat', 'catalog', 'catch', 'category', 'cattle', 'caught', 'cause', 'caution', 'cave', 'ceiling', 'celery', 'cement', 'census', 'century', 'cereal', 'certain', 'chair', 'chalk', 'champion', 'change', 'chaos', 'chapter', 'charge', 'chase', 'chat', 'cheap', 'check', 'cheese', 'chef', 'cherry', 'chest', 'chicken', 'chief', 'child', 'chimney', 'choice', 'choose', 'chronic', 'chuckle', 'chunk', 'churn', 'cigar', 'cinnamon', 'circle', 'citizen', 'city', 'civil', 'claim', 'clap', 'clarify', 'claw', 'clay', 'clean', 'clerk', 'clever', 'click', 'client', 'cliff', 'climb', 'clinic', 'clip', 'clock', 'clog', 'close', 'cloth', 'cloud', 'clown', 'club', 'clump', 'cluster', 'clutch', 'coach', 'coast', 'coconut', 'code', 'coffee', 'coil', 'coin', 'collect', 'color', 'column', 'combine', 'come', 'comfort', 'comic', 'common', 'company', 'concert', 'conduct', 'confirm', 'congress', 'connect', 'consider', 'control', 'convince', 'cook', 'cool', 'copper', 'copy', 'coral', 'core', 'corn', 'correct', 'cost', 'cotton', 'couch', 'country', 'couple', 'course', 'cousin', 'cover', 'coyote', 'crack', 'cradle', 'craft', 'cram', 'crane', 'crash', 'crater', 'crawl', 'crazy', 'cream', 'credit', 'creek', 'crew', 'cricket', 'crime', 'crisp', 'critic', 'crop', 'cross', 'crouch', 'crowd', 'crucial', 'cruel', 'cruise', 'crumble', 'crunch', 'crush', 'cry', 'crystal', 'cube', 'culture', 'cup', 'cupboard', 'curious', 'current', 'curtain', 'curve', 'cushion', 'custom', 'cute', 'cycle', 'dad', 'damage', 'damp', 'dance', 'danger', 'daring', 'dash', 'daughter', 'dawn', 'day', 'deal', 'debate', 'debris', 'decade', 'december', 'decide', 'decline', 'decorate', 'decrease', 'deer', 'defense', 'define', 'defy', 'degree', 'delay', 'deliver', 'demand', 'demise', 'denial', 'dentist', 'deny', 'depart', 'depend', 'deposit', 'depth', 'deputy', 'derive', 'describe', 'desert', 'design', 'desk', 'despair', 'destroy', 'detail', 'detect', 'develop', 'device', 'devote', 'diagram', 'dial', 'diamond', 'diary', 'dice', 'diesel', 'diet', 'differ', 'digital', 'dignity', 'dilemma', 'dinner', 'dinosaur', 'direct', 'dirt', 'disagree', 'discover', 'disease', 'dish', 'dismiss', 'disorder', 'display', 'distance', 'divert', 'divide', 'divorce', 'dizzy', 'doctor', 'document', 'dog', 'doll', 'dolphin', 'domain', 'donate', 'donkey', 'donor', 'door', 'dose', 'double', 'dove', 'draft', 'dragon', 'drama', 'drastic', 'draw', 'dream', 'dress', 'drift', 'drill', 'drink', 'drip', 'drive', 'drop', 'drum', 'dry', 'duck', 'dumb', 'dune', 'during', 'dust', 'dutch', 'duty', 'dwarf', 'dynamic', 'eager', 'eagle', 'early', 'earn', 'earth', 'easily', 'east', 'easy', 'echo', 'ecology', 'economy', 'edge', 'edit', 'educate', 'effort', 'egg', 'eight', 'either', 'elbow', 'elder', 'electric', 'elegant', 'element', 'elephant', 'elevator', 'elite', 'else', 'embark', 'embody', 'embrace', 'emerge', 'emotion', 'employ', 'empower', 'empty', 'enable', 'enact', 'end', 'endless', 'endorse', 'enemy', 'energy', 'enforce', 'engage', 'engine', 'enhance', 'enjoy', 'enlist', 'enough', 'enrich', 'enroll', 'ensure', 'enter', 'entire', 'entry', 'envelope', 'episode', 'equal', 'equip', 'era', 'erase', 'erode', 'erosion', 'error', 'erupt', 'escape', 'essay', 'essence', 'estate', 'eternal', 'ethics', 'evidence', 'evil', 'evoke', 'evolve', 'exact', 'example', 'excess', 'exchange', 'excite', 'exclude', 'excuse', 'execute', 'exercise', 'exhaust', 'exhibit', 'exile', 'exist', 'exit', 'exotic', 'expand', 'expect', 'expire', 'explain', 'expose', 'express', 'extend', 'extra', 'eye', 'eyebrow', 'fabric', 'face', 'faculty', 'fade', 'faint', 'faith', 'fall', 'false', 'fame', 'family', 'famous', 'fan', 'fancy', 'fantasy', 'farm', 'fashion', 'fat', 'fatal', 'father', 'fatigue', 'fault', 'favorite', 'feature', 'february', 'federal', 'fee', 'feed', 'feel', 'female', 'fence', 'festival', 'fetch', 'fever', 'few', 'fiber', 'fiction', 'field', 'figure', 'file', 'film', 'filter', 'final', 'find', 'fine', 'finger', 'finish', 'fire', 'firm', 'first', 'fiscal', 'fish', 'fit', 'fitness', 'fix', 'flag', 'flame', 'flash', 'flat', 'flavor', 'flee', 'flight', 'flip', 'float', 'flock', 'floor', 'flower', 'fluid', 'flush', 'fly', 'foam', 'focus', 'fog', 'foil', 'fold', 'follow', 'food', 'foot', 'force', 'forest', 'forget', 'fork', 'fortune', 'forum', 'forward', 'fossil', 'foster', 'found', 'fox', 'fragile', 'frame', 'frequent', 'fresh', 'friend', 'fringe', 'frog', 'front', 'frost', 'frown', 'frozen', 'fruit', 'fuel', 'fun', 'funny', 'furnace', 'fury', 'future', 'gadget', 'gain', 'galaxy', 'gallery', 'game', 'gap', 'garage', 'garbage', 'garden', 'garlic', 'garment', 'gas', 'gasp', 'gate', 'gather', 'gauge', 'gaze', 'general', 'genius', 'genre', 'gentle', 'genuine', 'gesture', 'ghost', 'giant', 'gift', 'giggle', 'ginger', 'giraffe', 'girl', 'give', 'glad', 'glance', 'glare', 'glass', 'glide', 'glimpse', 'globe', 'gloom', 'glory', 'glove', 'glow', 'glue', 'goat', 'goddess', 'gold', 'good', 'goose', 'gorilla', 'gospel', 'gossip', 'govern', 'gown', 'grab', 'grace', 'grain', 'grant', 'grape', 'grass', 'gravity', 'great', 'green', 'grid', 'grief', 'grit', 'grocery', 'group', 'grow', 'grunt', 'guard', 'guess', 'guide', 'guilt', 'guitar', 'gun', 'gym', 'habit', 'hair', 'half', 'hammer', 'hamster', 'hand', 'happy', 'harbor', 'hard', 'harsh', 'harvest', 'hat', 'have', 'hawk', 'hazard', 'head', 'health', 'heart', 'heavy', 'hedgehog', 'height', 'hello', 'helmet', 'help', 'hen', 'hero', 'hidden', 'high', 'hill', 'hint', 'hip', 'hire', 'history', 'hobby', 'hockey', 'hold', 'hole', 'holiday', 'hollow', 'home', 'honey', 'hood', 'hope', 'horn', 'horror', 'horse', 'hospital', 'host', 'hotel', 'hour', 'hover', 'hub', 'huge', 'human', 'humble', 'humor', 'hundred', 'hungry', 'hunt', 'hurdle', 'hurry', 'hurt', 'husband', 'hybrid', 'ice', 'icon', 'idea', 'identify', 'idle', 'ignore', 'ill', 'illegal', 'illness', 'image', 'imitate', 'immense', 'immune', 'impact', 'impose', 'improve', 'impulse', 'inch', 'include', 'income', 'increase', 'index', 'indicate', 'indoor', 'industry', 'infant', 'inflict', 'inform', 'inhale', 'inherit', 'initial', 'inject', 'injury', 'inmate', 'inner', 'innocent', 'input', 'inquiry', 'insane', 'insect', 'inside', 'inspire', 'install', 'intact', 'interest', 'into', 'invest', 'invite', 'involve', 'iron', 'island', 'isolate', 'issue', 'item', 'ivory', 'jacket', 'jaguar', 'jar', 'jazz', 'jealous', 'jeans', 'jelly', 'jewel', 'job', 'join', 'joke', 'journey', 'joy', 'judge', 'juice', 'jump', 'jungle', 'junior', 'junk', 'just', 'kangaroo', 'keen', 'keep', 'ketchup', 'key', 'kick', 'kid', 'kidney', 'kind', 'kingdom', 'kiss', 'kit', 'kitchen', 'kite', 'kitten', 'kiwi', 'knee', 'knife', 'knock', 'know', 'lab', 'label', 'labor', 'ladder', 'lady', 'lake', 'lamp', 'language', 'laptop', 'large', 'later', 'latin', 'laugh', 'laundry', 'lava', 'law', 'lawn', 'lawsuit', 'layer', 'lazy', 'leader', 'leaf', 'learn', 'leave', 'lecture', 'left', 'leg', 'legal', 'legend', 'leisure', 'lemon', 'lend', 'length', 'lens', 'leopard', 'lesson', 'letter', 'level', 'liar', 'liberty', 'library', 'license', 'life', 'lift', 'light', 'like', 'limb', 'limit', 'link', 'lion', 'liquid', 'list', 'little', 'live', 'lizard', 'load', 'loan', 'lobster', 'local', 'lock', 'logic', 'lonely', 'long', 'loop', 'lottery', 'loud', 'lounge', 'love', 'loyal', 'lucky', 'luggage', 'lumber', 'lunar', 'lunch', 'luxury', 'lyrics', 'machine', 'mad', 'magic', 'magnet', 'maid', 'mail', 'main', 'major', 'make', 'mammal', 'man', 'manage', 'mandate', 'mango', 'mansion', 'manual', 'maple', 'marble', 'march', 'margin', 'marine', 'market', 'marriage', 'mask', 'mass', 'master', 'match', 'material', 'math', 'matrix', 'matter', 'maximum', 'maze', 'meadow', 'mean', 'measure', 'meat', 'mechanic', 'medal', 'media', 'melody', 'melt', 'member', 'memory', 'mention', 'menu', 'mercy', 'merge', 'merit', 'merry', 'mesh', 'message', 'metal', 'method', 'middle', 'midnight', 'milk', 'million', 'mimic', 'mind', 'minimum', 'minor', 'minute', 'miracle', 'mirror', 'misery', 'miss', 'mistake', 'mix', 'mixed', 'mixture', 'mobile', 'model', 'modify', 'mom', 'moment', 'monitor', 'monkey', 'monster', 'month', 'moon', 'moral', 'more', 'morning', 'mosquito', 'mother', 'motion', 'motor', 'mountain', 'mouse', 'move', 'movie', 'much', 'muffin', 'mule', 'multiply', 'muscle', 'museum', 'mushroom', 'music', 'must', 'mutual', 'myself', 'mystery', 'myth', 'naive', 'name', 'napkin', 'narrow', 'nasty', 'nation', 'nature', 'near', 'neck', 'need', 'negative', 'neglect', 'neither', 'nephew', 'nerve', 'nest', 'net', 'network', 'neutral', 'never', 'news', 'next', 'nice', 'night', 'noble', 'noise', 'nominee', 'noodle', 'normal', 'north', 'nose', 'notable', 'note', 'nothing', 'notice', 'novel', 'now', 'nuclear', 'number', 'nurse', 'nut', 'oak', 'obey', 'object', 'oblige', 'obscure', 'observe', 'obtain', 'obvious', 'occur', 'ocean', 'october', 'odor', 'off', 'offer', 'office', 'often', 'oil', 'okay', 'old', 'olive', 'olympic', 'omit', 'once', 'one', 'onion', 'online', 'only', 'open', 'opera', 'opinion', 'oppose', 'option', 'orange', 'orbit', 'orchard', 'order', 'ordinary', 'organ', 'orient', 'original', 'orphan', 'ostrich', 'other', 'outdoor', 'outer', 'output', 'outside', 'oval', 'oven', 'over', 'own', 'owner', 'oxygen', 'oyster', 'ozone', 'pact', 'paddle', 'page', 'pair', 'palace', 'palm', 'panda', 'panel', 'panic', 'panther', 'paper', 'parade', 'parent', 'park', 'parrot', 'party', 'pass', 'patch', 'path', 'patient', 'patrol', 'pattern', 'pause', 'pave', 'payment', 'peace', 'peanut', 'pear', 'peasant', 'pelican', 'pen', 'penalty', 'pencil', 'people', 'pepper', 'perfect', 'permit', 'person', 'pet', 'phone', 'photo', 'phrase', 'physical', 'piano', 'picnic', 'picture', 'piece', 'pig', 'pigeon', 'pill', 'pilot', 'pink', 'pioneer', 'pipe', 'pistol', 'pitch', 'pizza', 'place', 'planet', 'plastic', 'plate', 'play', 'please', 'pledge', 'pluck', 'plug', 'plunge', 'poem', 'poet', 'point', 'polar', 'pole', 'police', 'pond', 'pony', 'pool', 'popular', 'portion', 'position', 'possible', 'post', 'potato', 'pottery', 'poverty', 'powder', 'power', 'practice', 'praise', 'predict', 'prefer', 'prepare', 'present', 'pretty', 'prevent', 'price', 'pride', 'primary', 'print', 'priority', 'prison', 'private', 'prize', 'problem', 'process', 'produce', 'profit', 'program', 'project', 'promote', 'proof', 'property', 'prosper', 'protect', 'proud', 'provide', 'public', 'pudding', 'pull', 'pulp', 'pulse', 'pumpkin', 'punch', 'pupil', 'puppy', 'purchase', 'purity', 'purpose', 'purse', 'push', 'put', 'puzzle', 'pyramid', 'quality', 'quantum', 'quarter', 'question', 'quick', 'quit', 'quiz', 'quote', 'rabbit', 'raccoon', 'race', 'rack', 'radar', 'radio', 'rail', 'rain', 'raise', 'rally', 'ramp', 'ranch', 'random', 'range', 'rapid', 'rare', 'rate', 'rather', 'raven', 'raw', 'razor', 'ready', 'real', 'reason', 'rebel', 'rebuild', 'recall', 'receive', 'recipe', 'record', 'recycle', 'reduce', 'reflect', 'reform', 'refuse', 'region', 'regret', 'regular', 'reject', 'relax', 'release', 'relief', 'rely', 'remain', 'remember', 'remind', 'remove', 'render', 'renew', 'rent', 'reopen', 'repair', 'repeat', 'replace', 'report', 'require', 'rescue', 'resemble', 'resist', 'resource', 'response', 'result', 'retire', 'retreat', 'return', 'reunion', 'reveal', 'review', 'reward', 'rhythm', 'rib', 'ribbon', 'rice', 'rich', 'ride', 'ridge', 'rifle', 'right', 'rigid', 'ring', 'riot', 'ripple', 'risk', 'ritual', 'rival', 'river', 'road', 'roast', 'robot', 'robust', 'rocket', 'romance', 'roof', 'rookie', 'room', 'rose', 'rotate', 'rough', 'round', 'route', 'royal', 'rubber', 'rude', 'rug', 'rule', 'run', 'runway', 'rural', 'sad', 'saddle', 'sadness', 'safe', 'sail', 'salad', 'salmon', 'salon', 'salt', 'salute', 'same', 'sample', 'sand', 'satisfy', 'satoshi', 'sauce', 'sausage', 'save', 'say', 'scale', 'scan', 'scare', 'scatter', 'scene', 'scheme', 'school', 'science', 'scissors', 'scorpion', 'scout', 'scrap', 'screen', 'script', 'scrub', 'sea', 'search', 'season', 'seat', 'second', 'secret', 'section', 'security', 'seed', 'seek', 'segment', 'select', 'sell', 'seminar', 'senior', 'sense', 'sentence', 'series', 'service', 'session', 'settle', 'setup', 'seven', 'shadow', 'shaft', 'shallow', 'share', 'shed', 'shell', 'sheriff', 'shield', 'shift', 'shine', 'ship', 'shiver', 'shock', 'shoe', 'shoot', 'shop', 'short', 'shoulder', 'shove', 'shrimp', 'shrug', 'shuffle', 'shy', 'sibling', 'sick', 'side', 'siege', 'sight', 'sign', 'silent', 'silk', 'silly', 'silver', 'similar', 'simple', 'since', 'sing', 'siren', 'sister', 'situate', 'six', 'size', 'skate', 'sketch', 'ski', 'skill', 'skin', 'skirt', 'skull', 'slab', 'slam', 'sleep', 'slender', 'slice', 'slide', 'slight', 'slim', 'slogan', 'slot', 'slow', 'slush', 'small', 'smart', 'smile', 'smoke', 'smooth', 'snack', 'snake', 'snap', 'sniff', 'snow', 'soap', 'soccer', 'social', 'sock', 'soda', 'soft', 'solar', 'soldier', 'solid', 'solution', 'solve', 'someone', 'song', 'soon', 'sorry', 'sort', 'soul', 'sound', 'soup', 'source', 'south', 'space', 'spare', 'spatial', 'spawn', 'speak', 'special', 'speed', 'spell', 'spend', 'sphere', 'spice', 'spider', 'spike', 'spin', 'spirit', 'split', 'spoil', 'sponsor', 'spoon', 'sport', 'spot', 'spray', 'spread', 'spring', 'spy', 'square', 'squeeze', 'squirrel', 'stable', 'stadium', 'staff', 'stage', 'stairs', 'stamp', 'stand', 'start', 'state', 'stay', 'steak', 'steel', 'stem', 'step', 'stereo', 'stick', 'still', 'sting', 'stock', 'stomach', 'stone', 'stool', 'story', 'stove', 'strategy', 'street', 'strike', 'strong', 'struggle', 'student', 'stuff', 'stumble', 'style', 'subject', 'submit', 'subway', 'success', 'such', 'sudden', 'suffer', 'sugar', 'suggest', 'suit', 'summer', 'sun', 'sunny', 'sunset', 'super', 'supply', 'supreme', 'sure', 'surface', 'surge', 'surprise', 'surround', 'survey', 'suspect', 'sustain', 'swallow', 'swamp', 'swap', 'swarm', 'swear', 'sweet', 'swift', 'swim', 'swing', 'switch', 'sword', 'symbol', 'symptom', 'syrup', 'system', 'table', 'tackle', 'tag', 'tail', 'talent', 'talk', 'tank', 'tape', 'target', 'task', 'taste', 'tattoo', 'taxi', 'teach', 'team', 'tell', 'ten', 'tenant', 'tennis', 'tent', 'term', 'test', 'text', 'thank', 'that', 'theme', 'then', 'theory', 'there', 'they', 'thing', 'this', 'thought', 'three', 'thrive', 'throw', 'thumb', 'thunder', 'ticket', 'tide', 'tiger', 'tilt', 'timber', 'time', 'tiny', 'tip', 'tired', 'tissue', 'title', 'toast', 'tobacco', 'today', 'toddler', 'toe', 'together', 'toilet', 'token', 'tomato', 'tomorrow', 'tone', 'tongue', 'tonight', 'tool', 'tooth', 'top', 'topic', 'topple', 'torch', 'tornado', 'tortoise', 'toss', 'total', 'tourist', 'toward', 'tower', 'town', 'toy', 'track', 'trade', 'traffic', 'tragic', 'train', 'transfer', 'trap', 'trash', 'travel', 'tray', 'treat', 'tree', 'trend', 'trial', 'tribe', 'trick', 'trigger', 'trim', 'trip', 'trophy', 'trouble', 'truck', 'true', 'truly', 'trumpet', 'trust', 'truth', 'try', 'tube', 'tuition', 'tumble', 'tuna', 'tunnel', 'turkey', 'turn', 'turtle', 'twelve', 'twenty', 'twice', 'twin', 'twist', 'two', 'type', 'typical', 'ugly', 'umbrella', 'unable', 'unaware', 'uncle', 'uncover', 'under', 'undo', 'unfair', 'unfold', 'unhappy', 'uniform', 'unique', 'unit', 'universe', 'unknown', 'unlock', 'until', 'unusual', 'unveil', 'update', 'upgrade', 'uphold', 'upon', 'upper', 'upset', 'urban', 'urge', 'usage', 'use', 'used', 'useful', 'useless', 'usual', 'utility', 'vacant', 'vacuum', 'vague', 'valid', 'valley', 'valve', 'van', 'vanish', 'vapor', 'various', 'vast', 'vault', 'vehicle', 'velvet', 'vendor', 'venture', 'venue', 'verb', 'verify', 'version', 'very', 'vessel', 'veteran', 'viable', 'vibrant', 'vicious', 'victory', 'video', 'view', 'village', 'vintage', 'violin', 'virtual', 'virus', 'visa', 'visit', 'visual', 'vital', 'vivid', 'vocal', 'voice', 'void', 'volcano', 'volume', 'vote', 'voyage', 'wage', 'wagon', 'wait', 'walk', 'wall', 'walnut', 'want', 'warfare', 'warm', 'warrior', 'wash', 'wasp', 'waste', 'water', 'wave', 'way', 'wealth', 'weapon', 'wear', 'weasel', 'weather', 'web', 'wedding', 'weekend', 'weird', 'welcome', 'west', 'wet', 'whale', 'what', 'wheat', 'wheel', 'when', 'where', 'whip', 'whisper', 'wide', 'width', 'wife', 'wild', 'will', 'win', 'window', 'wine', 'wing', 'wink', 'winner', 'winter', 'wire', 'wisdom', 'wise', 'wish', 'witness', 'wolf', 'woman', 'wonder', 'wood', 'wool', 'word', 'work', 'world', 'worry', 'worth', 'wrap', 'wreck', 'wrestle', 'wrist', 'write', 'wrong', 'yard', 'year', 'yellow', 'you', 'young', 'youth', 'zebra', 'zero', 'zone', 'zoo'];
       exports.default = english;
     }, {}],
-    119: [function (require, module, exports) {
+    183: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -16669,14 +20234,14 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./encoding/address": 100,
-      "./encoding/encoding": 102,
-      "./nacl/naclWrappers": 120,
-      "./transaction": 122,
-      "./utils/utils": 130,
-      "buffer": 135
+      "./encoding/address": 164,
+      "./encoding/encoding": 166,
+      "./nacl/naclWrappers": 184,
+      "./transaction": 186,
+      "./utils/utils": 194,
+      "buffer": 199
     }],
-    120: [function (require, module, exports) {
+    184: [function (require, module, exports) {
       "use strict";
 
       var __importDefault = this && this.__importDefault || function (mod) {
@@ -16728,10 +20293,10 @@
       exports.HASH_BYTES_LENGTH = 32;
       exports.SEED_BTYES_LENGTH = 32;
     }, {
-      "js-sha512": 188,
-      "tweetnacl": 214
+      "js-sha512": 252,
+      "tweetnacl": 280
     }],
-    121: [function (require, module, exports) {
+    185: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -16786,10 +20351,10 @@
       }
       exports.isTransactionWithSigner = isTransactionWithSigner;
     }, {
-      "./logicsig": 114,
-      "./multisig": 119
+      "./logicsig": 178,
+      "./multisig": 183
     }],
-    122: [function (require, module, exports) {
+    186: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -17486,22 +21051,22 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./encoding/address": 100,
-      "./encoding/encoding": 102,
-      "./nacl/naclWrappers": 120,
-      "./types/transactions/base": 127,
-      "./utils/utils": 130,
-      "buffer": 135,
-      "hi-base32": 184
+      "./encoding/address": 164,
+      "./encoding/encoding": 166,
+      "./nacl/naclWrappers": 184,
+      "./types/transactions/base": 191,
+      "./utils/utils": 194,
+      "buffer": 199,
+      "hi-base32": 248
     }],
-    123: [function (require, module, exports) {
+    187: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
         value: true
       });
     }, {}],
-    124: [function (require, module, exports) {
+    188: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -17526,11 +21091,11 @@
       __exportStar(require("./multisig"), exports);
       __exportStar(require("./address"), exports);
     }, {
-      "./address": 123,
-      "./multisig": 126,
-      "./transactions": 129
+      "./address": 187,
+      "./multisig": 190,
+      "./transactions": 193
     }],
-    125: [function (require, module, exports) {
+    189: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -17545,14 +21110,14 @@
       })(IntDecoding || (IntDecoding = {}));
       exports.default = IntDecoding;
     }, {}],
-    126: [function (require, module, exports) {
+    190: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
         value: true
       });
     }, {}],
-    127: [function (require, module, exports) {
+    191: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -17582,14 +21147,14 @@
         OnApplicationComplete[OnApplicationComplete["DeleteApplicationOC"] = 5] = "DeleteApplicationOC";
       })(OnApplicationComplete = exports.OnApplicationComplete || (exports.OnApplicationComplete = {}));
     }, {}],
-    128: [function (require, module, exports) {
+    192: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
         value: true
       });
     }, {}],
-    129: [function (require, module, exports) {
+    193: [function (require, module, exports) {
       "use strict";
 
       var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
@@ -17620,10 +21185,10 @@
       });
       __exportStar(require("./encoded"), exports);
     }, {
-      "./base": 127,
-      "./encoded": 128
+      "./base": 191,
+      "./encoded": 192
     }],
-    130: [function (require, module, exports) {
+    194: [function (require, module, exports) {
       (function (process) {
         (function () {
           "use strict";
@@ -17703,11 +21268,11 @@
         }).call(this);
       }).call(this, require('_process'));
     }, {
-      "../types/intDecoding": 125,
-      "_process": 195,
-      "json-bigint": 189
+      "../types/intDecoding": 189,
+      "_process": 261,
+      "json-bigint": 253
     }],
-    131: [function (require, module, exports) {
+    195: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -17744,7 +21309,7 @@
       }
       exports.waitForConfirmation = waitForConfirmation;
     }, {}],
-    132: [function (require, module, exports) {
+    196: [function (require, module, exports) {
       'use strict';
 
       exports.byteLength = byteLength;
@@ -17836,7 +21401,7 @@
         return parts.join('');
       }
     }, {}],
-    133: [function (require, module, exports) {
+    197: [function (require, module, exports) {
       ;
       (function (globalObject) {
         'use strict';
@@ -19360,8 +22925,8 @@
         }
       })(this);
     }, {}],
-    134: [function (require, module, exports) {}, {}],
-    135: [function (require, module, exports) {
+    198: [function (require, module, exports) {}, {}],
+    199: [function (require, module, exports) {
       (function () {
         (function () {
           'use strict';
@@ -20676,11 +24241,11 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "base64-js": 132,
-      "buffer": 135,
-      "ieee754": 185
+      "base64-js": 196,
+      "buffer": 199,
+      "ieee754": 249
     }],
-    136: [function (require, module, exports) {
+    200: [function (require, module, exports) {
       (function () {
         (function () {
           'use strict';
@@ -22215,11 +25780,11 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "base64-js": 132,
-      "buffer": 135,
-      "ieee754": 185
+      "base64-js": 196,
+      "buffer": 199,
+      "ieee754": 249
     }],
-    137: [function (require, module, exports) {
+    201: [function (require, module, exports) {
       'use strict';
 
       var GetIntrinsic = require('get-intrinsic');
@@ -22233,10 +25798,10 @@
         return intrinsic;
       };
     }, {
-      "./": 138,
-      "get-intrinsic": 180
+      "./": 202,
+      "get-intrinsic": 244
     }],
-    138: [function (require, module, exports) {
+    202: [function (require, module, exports) {
       'use strict';
 
       var bind = require('function-bind');
@@ -22279,10 +25844,10 @@
         module.exports.apply = applyBind;
       }
     }, {
-      "function-bind": 179,
-      "get-intrinsic": 180
+      "function-bind": 243,
+      "get-intrinsic": 244
     }],
-    139: [function (require, module, exports) {
+    203: [function (require, module, exports) {
       if (typeof module !== 'undefined') {
         module.exports = Emitter;
       }
@@ -22358,7 +25923,7 @@
         return !!this.listeners(event).length;
       };
     }, {}],
-    140: [function (require, module, exports) {
+    204: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -22509,13 +26074,13 @@
         return CryptoJS.AES;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142,
-      "./enc-base64": 143,
-      "./evpkdf": 146,
-      "./md5": 151
+      "./cipher-core": 205,
+      "./core": 206,
+      "./enc-base64": 207,
+      "./evpkdf": 210,
+      "./md5": 215
     }],
-    141: [function (require, module, exports) {
+    205: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -22817,10 +26382,10 @@
         }();
       });
     }, {
-      "./core": 142,
-      "./evpkdf": 146
+      "./core": 206,
+      "./evpkdf": 210
     }],
-    142: [function (require, module, exports) {
+    206: [function (require, module, exports) {
       (function (global) {
         (function () {
           ;
@@ -23108,9 +26673,9 @@
         }).call(this);
       }).call(this, typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
     }, {
-      "crypto": 134
+      "crypto": 198
     }],
-    143: [function (require, module, exports) {
+    207: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -23189,9 +26754,9 @@
         return CryptoJS.enc.Base64;
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    144: [function (require, module, exports) {
+    208: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -23271,9 +26836,9 @@
         return CryptoJS.enc.Base64url;
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    145: [function (require, module, exports) {
+    209: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -23336,9 +26901,9 @@
         return CryptoJS.enc.Utf16;
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    146: [function (require, module, exports) {
+    210: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -23396,11 +26961,11 @@
         return CryptoJS.EvpKDF;
       });
     }, {
-      "./core": 142,
-      "./hmac": 148,
-      "./sha1": 167
+      "./core": 206,
+      "./hmac": 212,
+      "./sha1": 231
     }],
-    147: [function (require, module, exports) {
+    211: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -23433,10 +26998,10 @@
         return CryptoJS.format.Hex;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    148: [function (require, module, exports) {
+    212: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -23497,9 +27062,9 @@
         })();
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    149: [function (require, module, exports) {
+    213: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -23513,42 +27078,42 @@
         return CryptoJS;
       });
     }, {
-      "./aes": 140,
-      "./cipher-core": 141,
-      "./core": 142,
-      "./enc-base64": 143,
-      "./enc-base64url": 144,
-      "./enc-utf16": 145,
-      "./evpkdf": 146,
-      "./format-hex": 147,
-      "./hmac": 148,
-      "./lib-typedarrays": 150,
-      "./md5": 151,
-      "./mode-cfb": 152,
-      "./mode-ctr": 154,
-      "./mode-ctr-gladman": 153,
-      "./mode-ecb": 155,
-      "./mode-ofb": 156,
-      "./pad-ansix923": 157,
-      "./pad-iso10126": 158,
-      "./pad-iso97971": 159,
-      "./pad-nopadding": 160,
-      "./pad-zeropadding": 161,
-      "./pbkdf2": 162,
-      "./rabbit": 164,
-      "./rabbit-legacy": 163,
-      "./rc4": 165,
-      "./ripemd160": 166,
-      "./sha1": 167,
-      "./sha224": 168,
-      "./sha256": 169,
-      "./sha3": 170,
-      "./sha384": 171,
-      "./sha512": 172,
-      "./tripledes": 173,
-      "./x64-core": 174
+      "./aes": 204,
+      "./cipher-core": 205,
+      "./core": 206,
+      "./enc-base64": 207,
+      "./enc-base64url": 208,
+      "./enc-utf16": 209,
+      "./evpkdf": 210,
+      "./format-hex": 211,
+      "./hmac": 212,
+      "./lib-typedarrays": 214,
+      "./md5": 215,
+      "./mode-cfb": 216,
+      "./mode-ctr": 218,
+      "./mode-ctr-gladman": 217,
+      "./mode-ecb": 219,
+      "./mode-ofb": 220,
+      "./pad-ansix923": 221,
+      "./pad-iso10126": 222,
+      "./pad-iso97971": 223,
+      "./pad-nopadding": 224,
+      "./pad-zeropadding": 225,
+      "./pbkdf2": 226,
+      "./rabbit": 228,
+      "./rabbit-legacy": 227,
+      "./rc4": 229,
+      "./ripemd160": 230,
+      "./sha1": 231,
+      "./sha224": 232,
+      "./sha256": 233,
+      "./sha3": 234,
+      "./sha384": 235,
+      "./sha512": 236,
+      "./tripledes": 237,
+      "./x64-core": 238
     }],
-    150: [function (require, module, exports) {
+    214: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -23590,9 +27155,9 @@
         return CryptoJS.lib.WordArray;
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    151: [function (require, module, exports) {
+    215: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -23763,9 +27328,9 @@
         return CryptoJS.MD5;
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    152: [function (require, module, exports) {
+    216: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -23814,10 +27379,10 @@
         return CryptoJS.mode.CFB;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    153: [function (require, module, exports) {
+    217: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -23889,10 +27454,10 @@
         return CryptoJS.mode.CTRGladman;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    154: [function (require, module, exports) {
+    218: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -23929,10 +27494,10 @@
         return CryptoJS.mode.CTR;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    155: [function (require, module, exports) {
+    219: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -23960,10 +27525,10 @@
         return CryptoJS.mode.ECB;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    156: [function (require, module, exports) {
+    220: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -23998,10 +27563,10 @@
         return CryptoJS.mode.OFB;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    157: [function (require, module, exports) {
+    221: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24030,10 +27595,10 @@
         return CryptoJS.pad.Ansix923;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    158: [function (require, module, exports) {
+    222: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24058,10 +27623,10 @@
         return CryptoJS.pad.Iso10126;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    159: [function (require, module, exports) {
+    223: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24085,10 +27650,10 @@
         return CryptoJS.pad.Iso97971;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    160: [function (require, module, exports) {
+    224: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24106,10 +27671,10 @@
         return CryptoJS.pad.NoPadding;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    161: [function (require, module, exports) {
+    225: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24140,10 +27705,10 @@
         return CryptoJS.pad.ZeroPadding;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142
+      "./cipher-core": 205,
+      "./core": 206
     }],
-    162: [function (require, module, exports) {
+    226: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24208,11 +27773,11 @@
         return CryptoJS.PBKDF2;
       });
     }, {
-      "./core": 142,
-      "./hmac": 148,
-      "./sha1": 167
+      "./core": 206,
+      "./hmac": 212,
+      "./sha1": 231
     }],
-    163: [function (require, module, exports) {
+    227: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24317,13 +27882,13 @@
         return CryptoJS.RabbitLegacy;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142,
-      "./enc-base64": 143,
-      "./evpkdf": 146,
-      "./md5": 151
+      "./cipher-core": 205,
+      "./core": 206,
+      "./enc-base64": 207,
+      "./evpkdf": 210,
+      "./md5": 215
     }],
-    164: [function (require, module, exports) {
+    228: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24431,13 +27996,13 @@
         return CryptoJS.Rabbit;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142,
-      "./enc-base64": 143,
-      "./evpkdf": 146,
-      "./md5": 151
+      "./cipher-core": 205,
+      "./core": 206,
+      "./enc-base64": 207,
+      "./evpkdf": 210,
+      "./md5": 215
     }],
-    165: [function (require, module, exports) {
+    229: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24512,13 +28077,13 @@
         return CryptoJS.RC4;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142,
-      "./enc-base64": 143,
-      "./evpkdf": 146,
-      "./md5": 151
+      "./cipher-core": 205,
+      "./core": 206,
+      "./enc-base64": 207,
+      "./evpkdf": 210,
+      "./md5": 215
     }],
-    166: [function (require, module, exports) {
+    230: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -24662,9 +28227,9 @@
         return CryptoJS.RIPEMD160;
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    167: [function (require, module, exports) {
+    231: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -24746,9 +28311,9 @@
         return CryptoJS.SHA1;
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    168: [function (require, module, exports) {
+    232: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -24781,10 +28346,10 @@
         return CryptoJS.SHA224;
       });
     }, {
-      "./core": 142,
-      "./sha256": 169
+      "./core": 206,
+      "./sha256": 233
     }],
-    169: [function (require, module, exports) {
+    233: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -24902,9 +28467,9 @@
         return CryptoJS.SHA256;
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    170: [function (require, module, exports) {
+    234: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -25097,10 +28662,10 @@
         return CryptoJS.SHA3;
       });
     }, {
-      "./core": 142,
-      "./x64-core": 174
+      "./core": 206,
+      "./x64-core": 238
     }],
-    171: [function (require, module, exports) {
+    235: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -25134,11 +28699,11 @@
         return CryptoJS.SHA384;
       });
     }, {
-      "./core": 142,
-      "./sha512": 172,
-      "./x64-core": 174
+      "./core": 206,
+      "./sha512": 236,
+      "./x64-core": 238
     }],
-    172: [function (require, module, exports) {
+    236: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -25327,10 +28892,10 @@
         return CryptoJS.SHA512;
       });
     }, {
-      "./core": 142,
-      "./x64-core": 174
+      "./core": 206,
+      "./x64-core": 238
     }],
-    173: [function (require, module, exports) {
+    237: [function (require, module, exports) {
       ;
       (function (root, factory, undef) {
         if (typeof exports === "object") {
@@ -25984,13 +29549,13 @@
         return CryptoJS.TripleDES;
       });
     }, {
-      "./cipher-core": 141,
-      "./core": 142,
-      "./enc-base64": 143,
-      "./evpkdf": 146,
-      "./md5": 151
+      "./cipher-core": 205,
+      "./core": 206,
+      "./enc-base64": 207,
+      "./evpkdf": 210,
+      "./md5": 215
     }],
-    174: [function (require, module, exports) {
+    238: [function (require, module, exports) {
       ;
       (function (root, factory) {
         if (typeof exports === "object") {
@@ -26047,9 +29612,9 @@
         return CryptoJS;
       });
     }, {
-      "./core": 142
+      "./core": 206
     }],
-    175: [function (require, module, exports) {
+    239: [function (require, module, exports) {
       (function (process) {
         (function () {
           exports.formatArgs = formatArgs;
@@ -26135,10 +29700,10 @@
         }).call(this);
       }).call(this, require('_process'));
     }, {
-      "./common": 176,
-      "_process": 195
+      "./common": 240,
+      "_process": 261
     }],
-    176: [function (require, module, exports) {
+    240: [function (require, module, exports) {
       function setup(env) {
         createDebug.debug = createDebug;
         createDebug.default = createDebug;
@@ -26294,9 +29859,9 @@
       }
       module.exports = setup;
     }, {
-      "ms": 192
+      "ms": 258
     }],
-    177: [function (require, module, exports) {
+    241: [function (require, module, exports) {
       module.exports = stringify;
       stringify.default = stringify;
       stringify.stable = deterministicStringify;
@@ -26488,7 +30053,7 @@
         };
       }
     }, {}],
-    178: [function (require, module, exports) {
+    242: [function (require, module, exports) {
       'use strict';
 
       var ERROR_MESSAGE = 'Function.prototype.bind called on incompatible ';
@@ -26528,15 +30093,15 @@
         return bound;
       };
     }, {}],
-    179: [function (require, module, exports) {
+    243: [function (require, module, exports) {
       'use strict';
 
       var implementation = require('./implementation');
       module.exports = Function.prototype.bind || implementation;
     }, {
-      "./implementation": 178
+      "./implementation": 242
     }],
-    180: [function (require, module, exports) {
+    244: [function (require, module, exports) {
       'use strict';
 
       var undefined;
@@ -26826,11 +30391,11 @@
         return value;
       };
     }, {
-      "function-bind": 179,
-      "has": 183,
-      "has-symbols": 181
+      "function-bind": 243,
+      "has": 247,
+      "has-symbols": 245
     }],
-    181: [function (require, module, exports) {
+    245: [function (require, module, exports) {
       'use strict';
 
       var origSymbol = typeof Symbol !== 'undefined' && Symbol;
@@ -26851,9 +30416,9 @@
         return hasSymbolSham();
       };
     }, {
-      "./shams": 182
+      "./shams": 246
     }],
-    182: [function (require, module, exports) {
+    246: [function (require, module, exports) {
       'use strict';
 
       module.exports = function hasSymbols() {
@@ -26902,15 +30467,15 @@
         return true;
       };
     }, {}],
-    183: [function (require, module, exports) {
+    247: [function (require, module, exports) {
       'use strict';
 
       var bind = require('function-bind');
       module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
     }, {
-      "function-bind": 179
+      "function-bind": 243
     }],
-    184: [function (require, module, exports) {
+    248: [function (require, module, exports) {
       (function (process, global) {
         (function () {
           (function () {
@@ -27328,9 +30893,9 @@
         }).call(this);
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
     }, {
-      "_process": 195
+      "_process": 261
     }],
-    185: [function (require, module, exports) {
+    249: [function (require, module, exports) {
       exports.read = function (buffer, offset, isLE, mLen, nBytes) {
         var e, m;
         var eLen = nBytes * 8 - mLen - 1;
@@ -27405,7 +30970,7 @@
         buffer[offset + i - d] |= s * 128;
       };
     }, {}],
-    186: [function (require, module, exports) {
+    250: [function (require, module, exports) {
       (function (process, global) {
         (function () {
           (function () {
@@ -27865,9 +31430,9 @@
         }).call(this);
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
     }, {
-      "_process": 195
+      "_process": 261
     }],
-    187: [function (require, module, exports) {
+    251: [function (require, module, exports) {
       (function (process, global) {
         (function () {
           (function () {
@@ -28520,9 +32085,9 @@
         }).call(this);
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
     }, {
-      "_process": 195
+      "_process": 261
     }],
-    188: [function (require, module, exports) {
+    252: [function (require, module, exports) {
       (function (process, global) {
         (function () {
           (function () {
@@ -29276,9 +32841,9 @@
         }).call(this);
       }).call(this, require('_process'), typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
     }, {
-      "_process": 195
+      "_process": 261
     }],
-    189: [function (require, module, exports) {
+    253: [function (require, module, exports) {
       var json_stringify = require('./lib/stringify.js').stringify;
       var json_parse = require('./lib/parse.js');
       module.exports = function (options) {
@@ -29290,10 +32855,10 @@
       module.exports.parse = json_parse();
       module.exports.stringify = json_stringify;
     }, {
-      "./lib/parse.js": 190,
-      "./lib/stringify.js": 191
+      "./lib/parse.js": 254,
+      "./lib/stringify.js": 255
     }],
-    190: [function (require, module, exports) {
+    254: [function (require, module, exports) {
       var BigNumber = null;
       const suspectProtoRx = /(?:_|\\u005[Ff])(?:_|\\u005[Ff])(?:p|\\u0070)(?:r|\\u0072)(?:o|\\u006[Ff])(?:t|\\u0074)(?:o|\\u006[Ff])(?:_|\\u005[Ff])(?:_|\\u005[Ff])/;
       const suspectConstructorRx = /(?:c|\\u0063)(?:o|\\u006[Ff])(?:n|\\u006[Ee])(?:s|\\u0073)(?:t|\\u0074)(?:r|\\u0072)(?:u|\\u0075)(?:c|\\u0063)(?:t|\\u0074)(?:o|\\u006[Ff])(?:r|\\u0072)/;
@@ -29581,9 +33146,9 @@
       };
       module.exports = json_parse;
     }, {
-      "bignumber.js": 133
+      "bignumber.js": 256
     }],
-    191: [function (require, module, exports) {
+    255: [function (require, module, exports) {
       var BigNumber = require('bignumber.js');
       var JSON = module.exports;
       (function () {
@@ -29703,9 +33268,1760 @@
         }
       })();
     }, {
-      "bignumber.js": 133
+      "bignumber.js": 256
     }],
-    192: [function (require, module, exports) {
+    256: [function (require, module, exports) {
+      ;
+      (function (globalObject) {
+        'use strict';
+
+        var BigNumber,
+          isNumeric = /^-?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i,
+          mathceil = Math.ceil,
+          mathfloor = Math.floor,
+          bignumberError = '[BigNumber Error] ',
+          tooManyDigits = bignumberError + 'Number primitive has more than 15 significant digits: ',
+          BASE = 1e14,
+          LOG_BASE = 14,
+          MAX_SAFE_INTEGER = 0x1fffffffffffff,
+          POWS_TEN = [1, 10, 100, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9, 1e10, 1e11, 1e12, 1e13],
+          SQRT_BASE = 1e7,
+          MAX = 1E9;
+        function clone(configObject) {
+          var div,
+            convertBase,
+            parseNumeric,
+            P = BigNumber.prototype = {
+              constructor: BigNumber,
+              toString: null,
+              valueOf: null
+            },
+            ONE = new BigNumber(1),
+            DECIMAL_PLACES = 20,
+            ROUNDING_MODE = 4,
+            TO_EXP_NEG = -7,
+            TO_EXP_POS = 21,
+            MIN_EXP = -1e7,
+            MAX_EXP = 1e7,
+            CRYPTO = false,
+            MODULO_MODE = 1,
+            POW_PRECISION = 0,
+            FORMAT = {
+              prefix: '',
+              groupSize: 3,
+              secondaryGroupSize: 0,
+              groupSeparator: ',',
+              decimalSeparator: '.',
+              fractionGroupSize: 0,
+              fractionGroupSeparator: '\xA0',
+              suffix: ''
+            },
+            ALPHABET = '0123456789abcdefghijklmnopqrstuvwxyz',
+            alphabetHasNormalDecimalDigits = true;
+          function BigNumber(v, b) {
+            var alphabet,
+              c,
+              caseChanged,
+              e,
+              i,
+              isNum,
+              len,
+              str,
+              x = this;
+            if (!(x instanceof BigNumber)) return new BigNumber(v, b);
+            if (b == null) {
+              if (v && v._isBigNumber === true) {
+                x.s = v.s;
+                if (!v.c || v.e > MAX_EXP) {
+                  x.c = x.e = null;
+                } else if (v.e < MIN_EXP) {
+                  x.c = [x.e = 0];
+                } else {
+                  x.e = v.e;
+                  x.c = v.c.slice();
+                }
+                return;
+              }
+              if ((isNum = typeof v == 'number') && v * 0 == 0) {
+                x.s = 1 / v < 0 ? (v = -v, -1) : 1;
+                if (v === ~~v) {
+                  for (e = 0, i = v; i >= 10; i /= 10, e++);
+                  if (e > MAX_EXP) {
+                    x.c = x.e = null;
+                  } else {
+                    x.e = e;
+                    x.c = [v];
+                  }
+                  return;
+                }
+                str = String(v);
+              } else {
+                if (!isNumeric.test(str = String(v))) return parseNumeric(x, str, isNum);
+                x.s = str.charCodeAt(0) == 45 ? (str = str.slice(1), -1) : 1;
+              }
+              if ((e = str.indexOf('.')) > -1) str = str.replace('.', '');
+              if ((i = str.search(/e/i)) > 0) {
+                if (e < 0) e = i;
+                e += +str.slice(i + 1);
+                str = str.substring(0, i);
+              } else if (e < 0) {
+                e = str.length;
+              }
+            } else {
+              intCheck(b, 2, ALPHABET.length, 'Base');
+              if (b == 10 && alphabetHasNormalDecimalDigits) {
+                x = new BigNumber(v);
+                return round(x, DECIMAL_PLACES + x.e + 1, ROUNDING_MODE);
+              }
+              str = String(v);
+              if (isNum = typeof v == 'number') {
+                if (v * 0 != 0) return parseNumeric(x, str, isNum, b);
+                x.s = 1 / v < 0 ? (str = str.slice(1), -1) : 1;
+                if (BigNumber.DEBUG && str.replace(/^0\.0*|\./, '').length > 15) {
+                  throw Error(tooManyDigits + v);
+                }
+              } else {
+                x.s = str.charCodeAt(0) === 45 ? (str = str.slice(1), -1) : 1;
+              }
+              alphabet = ALPHABET.slice(0, b);
+              e = i = 0;
+              for (len = str.length; i < len; i++) {
+                if (alphabet.indexOf(c = str.charAt(i)) < 0) {
+                  if (c == '.') {
+                    if (i > e) {
+                      e = len;
+                      continue;
+                    }
+                  } else if (!caseChanged) {
+                    if (str == str.toUpperCase() && (str = str.toLowerCase()) || str == str.toLowerCase() && (str = str.toUpperCase())) {
+                      caseChanged = true;
+                      i = -1;
+                      e = 0;
+                      continue;
+                    }
+                  }
+                  return parseNumeric(x, String(v), isNum, b);
+                }
+              }
+              isNum = false;
+              str = convertBase(str, b, 10, x.s);
+              if ((e = str.indexOf('.')) > -1) str = str.replace('.', '');else e = str.length;
+            }
+            for (i = 0; str.charCodeAt(i) === 48; i++);
+            for (len = str.length; str.charCodeAt(--len) === 48;);
+            if (str = str.slice(i, ++len)) {
+              len -= i;
+              if (isNum && BigNumber.DEBUG && len > 15 && (v > MAX_SAFE_INTEGER || v !== mathfloor(v))) {
+                throw Error(tooManyDigits + x.s * v);
+              }
+              if ((e = e - i - 1) > MAX_EXP) {
+                x.c = x.e = null;
+              } else if (e < MIN_EXP) {
+                x.c = [x.e = 0];
+              } else {
+                x.e = e;
+                x.c = [];
+                i = (e + 1) % LOG_BASE;
+                if (e < 0) i += LOG_BASE;
+                if (i < len) {
+                  if (i) x.c.push(+str.slice(0, i));
+                  for (len -= LOG_BASE; i < len;) {
+                    x.c.push(+str.slice(i, i += LOG_BASE));
+                  }
+                  i = LOG_BASE - (str = str.slice(i)).length;
+                } else {
+                  i -= len;
+                }
+                for (; i--; str += '0');
+                x.c.push(+str);
+              }
+            } else {
+              x.c = [x.e = 0];
+            }
+          }
+          BigNumber.clone = clone;
+          BigNumber.ROUND_UP = 0;
+          BigNumber.ROUND_DOWN = 1;
+          BigNumber.ROUND_CEIL = 2;
+          BigNumber.ROUND_FLOOR = 3;
+          BigNumber.ROUND_HALF_UP = 4;
+          BigNumber.ROUND_HALF_DOWN = 5;
+          BigNumber.ROUND_HALF_EVEN = 6;
+          BigNumber.ROUND_HALF_CEIL = 7;
+          BigNumber.ROUND_HALF_FLOOR = 8;
+          BigNumber.EUCLID = 9;
+          BigNumber.config = BigNumber.set = function (obj) {
+            var p, v;
+            if (obj != null) {
+              if (typeof obj == 'object') {
+                if (obj.hasOwnProperty(p = 'DECIMAL_PLACES')) {
+                  v = obj[p];
+                  intCheck(v, 0, MAX, p);
+                  DECIMAL_PLACES = v;
+                }
+                if (obj.hasOwnProperty(p = 'ROUNDING_MODE')) {
+                  v = obj[p];
+                  intCheck(v, 0, 8, p);
+                  ROUNDING_MODE = v;
+                }
+                if (obj.hasOwnProperty(p = 'EXPONENTIAL_AT')) {
+                  v = obj[p];
+                  if (v && v.pop) {
+                    intCheck(v[0], -MAX, 0, p);
+                    intCheck(v[1], 0, MAX, p);
+                    TO_EXP_NEG = v[0];
+                    TO_EXP_POS = v[1];
+                  } else {
+                    intCheck(v, -MAX, MAX, p);
+                    TO_EXP_NEG = -(TO_EXP_POS = v < 0 ? -v : v);
+                  }
+                }
+                if (obj.hasOwnProperty(p = 'RANGE')) {
+                  v = obj[p];
+                  if (v && v.pop) {
+                    intCheck(v[0], -MAX, -1, p);
+                    intCheck(v[1], 1, MAX, p);
+                    MIN_EXP = v[0];
+                    MAX_EXP = v[1];
+                  } else {
+                    intCheck(v, -MAX, MAX, p);
+                    if (v) {
+                      MIN_EXP = -(MAX_EXP = v < 0 ? -v : v);
+                    } else {
+                      throw Error(bignumberError + p + ' cannot be zero: ' + v);
+                    }
+                  }
+                }
+                if (obj.hasOwnProperty(p = 'CRYPTO')) {
+                  v = obj[p];
+                  if (v === !!v) {
+                    if (v) {
+                      if (typeof crypto != 'undefined' && crypto && (crypto.getRandomValues || crypto.randomBytes)) {
+                        CRYPTO = v;
+                      } else {
+                        CRYPTO = !v;
+                        throw Error(bignumberError + 'crypto unavailable');
+                      }
+                    } else {
+                      CRYPTO = v;
+                    }
+                  } else {
+                    throw Error(bignumberError + p + ' not true or false: ' + v);
+                  }
+                }
+                if (obj.hasOwnProperty(p = 'MODULO_MODE')) {
+                  v = obj[p];
+                  intCheck(v, 0, 9, p);
+                  MODULO_MODE = v;
+                }
+                if (obj.hasOwnProperty(p = 'POW_PRECISION')) {
+                  v = obj[p];
+                  intCheck(v, 0, MAX, p);
+                  POW_PRECISION = v;
+                }
+                if (obj.hasOwnProperty(p = 'FORMAT')) {
+                  v = obj[p];
+                  if (typeof v == 'object') FORMAT = v;else throw Error(bignumberError + p + ' not an object: ' + v);
+                }
+                if (obj.hasOwnProperty(p = 'ALPHABET')) {
+                  v = obj[p];
+                  if (typeof v == 'string' && !/^.?$|[+\-.\s]|(.).*\1/.test(v)) {
+                    alphabetHasNormalDecimalDigits = v.slice(0, 10) == '0123456789';
+                    ALPHABET = v;
+                  } else {
+                    throw Error(bignumberError + p + ' invalid: ' + v);
+                  }
+                }
+              } else {
+                throw Error(bignumberError + 'Object expected: ' + obj);
+              }
+            }
+            return {
+              DECIMAL_PLACES: DECIMAL_PLACES,
+              ROUNDING_MODE: ROUNDING_MODE,
+              EXPONENTIAL_AT: [TO_EXP_NEG, TO_EXP_POS],
+              RANGE: [MIN_EXP, MAX_EXP],
+              CRYPTO: CRYPTO,
+              MODULO_MODE: MODULO_MODE,
+              POW_PRECISION: POW_PRECISION,
+              FORMAT: FORMAT,
+              ALPHABET: ALPHABET
+            };
+          };
+          BigNumber.isBigNumber = function (v) {
+            if (!v || v._isBigNumber !== true) return false;
+            if (!BigNumber.DEBUG) return true;
+            var i,
+              n,
+              c = v.c,
+              e = v.e,
+              s = v.s;
+            out: if ({}.toString.call(c) == '[object Array]') {
+              if ((s === 1 || s === -1) && e >= -MAX && e <= MAX && e === mathfloor(e)) {
+                if (c[0] === 0) {
+                  if (e === 0 && c.length === 1) return true;
+                  break out;
+                }
+                i = (e + 1) % LOG_BASE;
+                if (i < 1) i += LOG_BASE;
+                if (String(c[0]).length == i) {
+                  for (i = 0; i < c.length; i++) {
+                    n = c[i];
+                    if (n < 0 || n >= BASE || n !== mathfloor(n)) break out;
+                  }
+                  if (n !== 0) return true;
+                }
+              }
+            } else if (c === null && e === null && (s === null || s === 1 || s === -1)) {
+              return true;
+            }
+            throw Error(bignumberError + 'Invalid BigNumber: ' + v);
+          };
+          BigNumber.maximum = BigNumber.max = function () {
+            return maxOrMin(arguments, P.lt);
+          };
+          BigNumber.minimum = BigNumber.min = function () {
+            return maxOrMin(arguments, P.gt);
+          };
+          BigNumber.random = function () {
+            var pow2_53 = 0x20000000000000;
+            var random53bitInt = Math.random() * pow2_53 & 0x1fffff ? function () {
+              return mathfloor(Math.random() * pow2_53);
+            } : function () {
+              return (Math.random() * 0x40000000 | 0) * 0x800000 + (Math.random() * 0x800000 | 0);
+            };
+            return function (dp) {
+              var a,
+                b,
+                e,
+                k,
+                v,
+                i = 0,
+                c = [],
+                rand = new BigNumber(ONE);
+              if (dp == null) dp = DECIMAL_PLACES;else intCheck(dp, 0, MAX);
+              k = mathceil(dp / LOG_BASE);
+              if (CRYPTO) {
+                if (crypto.getRandomValues) {
+                  a = crypto.getRandomValues(new Uint32Array(k *= 2));
+                  for (; i < k;) {
+                    v = a[i] * 0x20000 + (a[i + 1] >>> 11);
+                    if (v >= 9e15) {
+                      b = crypto.getRandomValues(new Uint32Array(2));
+                      a[i] = b[0];
+                      a[i + 1] = b[1];
+                    } else {
+                      c.push(v % 1e14);
+                      i += 2;
+                    }
+                  }
+                  i = k / 2;
+                } else if (crypto.randomBytes) {
+                  a = crypto.randomBytes(k *= 7);
+                  for (; i < k;) {
+                    v = (a[i] & 31) * 0x1000000000000 + a[i + 1] * 0x10000000000 + a[i + 2] * 0x100000000 + a[i + 3] * 0x1000000 + (a[i + 4] << 16) + (a[i + 5] << 8) + a[i + 6];
+                    if (v >= 9e15) {
+                      crypto.randomBytes(7).copy(a, i);
+                    } else {
+                      c.push(v % 1e14);
+                      i += 7;
+                    }
+                  }
+                  i = k / 7;
+                } else {
+                  CRYPTO = false;
+                  throw Error(bignumberError + 'crypto unavailable');
+                }
+              }
+              if (!CRYPTO) {
+                for (; i < k;) {
+                  v = random53bitInt();
+                  if (v < 9e15) c[i++] = v % 1e14;
+                }
+              }
+              k = c[--i];
+              dp %= LOG_BASE;
+              if (k && dp) {
+                v = POWS_TEN[LOG_BASE - dp];
+                c[i] = mathfloor(k / v) * v;
+              }
+              for (; c[i] === 0; c.pop(), i--);
+              if (i < 0) {
+                c = [e = 0];
+              } else {
+                for (e = -1; c[0] === 0; c.splice(0, 1), e -= LOG_BASE);
+                for (i = 1, v = c[0]; v >= 10; v /= 10, i++);
+                if (i < LOG_BASE) e -= LOG_BASE - i;
+              }
+              rand.e = e;
+              rand.c = c;
+              return rand;
+            };
+          }();
+          BigNumber.sum = function () {
+            var i = 1,
+              args = arguments,
+              sum = new BigNumber(args[0]);
+            for (; i < args.length;) sum = sum.plus(args[i++]);
+            return sum;
+          };
+          convertBase = function () {
+            var decimal = '0123456789';
+            function toBaseOut(str, baseIn, baseOut, alphabet) {
+              var j,
+                arr = [0],
+                arrL,
+                i = 0,
+                len = str.length;
+              for (; i < len;) {
+                for (arrL = arr.length; arrL--; arr[arrL] *= baseIn);
+                arr[0] += alphabet.indexOf(str.charAt(i++));
+                for (j = 0; j < arr.length; j++) {
+                  if (arr[j] > baseOut - 1) {
+                    if (arr[j + 1] == null) arr[j + 1] = 0;
+                    arr[j + 1] += arr[j] / baseOut | 0;
+                    arr[j] %= baseOut;
+                  }
+                }
+              }
+              return arr.reverse();
+            }
+            return function (str, baseIn, baseOut, sign, callerIsToString) {
+              var alphabet,
+                d,
+                e,
+                k,
+                r,
+                x,
+                xc,
+                y,
+                i = str.indexOf('.'),
+                dp = DECIMAL_PLACES,
+                rm = ROUNDING_MODE;
+              if (i >= 0) {
+                k = POW_PRECISION;
+                POW_PRECISION = 0;
+                str = str.replace('.', '');
+                y = new BigNumber(baseIn);
+                x = y.pow(str.length - i);
+                POW_PRECISION = k;
+                y.c = toBaseOut(toFixedPoint(coeffToString(x.c), x.e, '0'), 10, baseOut, decimal);
+                y.e = y.c.length;
+              }
+              xc = toBaseOut(str, baseIn, baseOut, callerIsToString ? (alphabet = ALPHABET, decimal) : (alphabet = decimal, ALPHABET));
+              e = k = xc.length;
+              for (; xc[--k] == 0; xc.pop());
+              if (!xc[0]) return alphabet.charAt(0);
+              if (i < 0) {
+                --e;
+              } else {
+                x.c = xc;
+                x.e = e;
+                x.s = sign;
+                x = div(x, y, dp, rm, baseOut);
+                xc = x.c;
+                r = x.r;
+                e = x.e;
+              }
+              d = e + dp + 1;
+              i = xc[d];
+              k = baseOut / 2;
+              r = r || d < 0 || xc[d + 1] != null;
+              r = rm < 4 ? (i != null || r) && (rm == 0 || rm == (x.s < 0 ? 3 : 2)) : i > k || i == k && (rm == 4 || r || rm == 6 && xc[d - 1] & 1 || rm == (x.s < 0 ? 8 : 7));
+              if (d < 1 || !xc[0]) {
+                str = r ? toFixedPoint(alphabet.charAt(1), -dp, alphabet.charAt(0)) : alphabet.charAt(0);
+              } else {
+                xc.length = d;
+                if (r) {
+                  for (--baseOut; ++xc[--d] > baseOut;) {
+                    xc[d] = 0;
+                    if (!d) {
+                      ++e;
+                      xc = [1].concat(xc);
+                    }
+                  }
+                }
+                for (k = xc.length; !xc[--k];);
+                for (i = 0, str = ''; i <= k; str += alphabet.charAt(xc[i++]));
+                str = toFixedPoint(str, e, alphabet.charAt(0));
+              }
+              return str;
+            };
+          }();
+          div = function () {
+            function multiply(x, k, base) {
+              var m,
+                temp,
+                xlo,
+                xhi,
+                carry = 0,
+                i = x.length,
+                klo = k % SQRT_BASE,
+                khi = k / SQRT_BASE | 0;
+              for (x = x.slice(); i--;) {
+                xlo = x[i] % SQRT_BASE;
+                xhi = x[i] / SQRT_BASE | 0;
+                m = khi * xlo + xhi * klo;
+                temp = klo * xlo + m % SQRT_BASE * SQRT_BASE + carry;
+                carry = (temp / base | 0) + (m / SQRT_BASE | 0) + khi * xhi;
+                x[i] = temp % base;
+              }
+              if (carry) x = [carry].concat(x);
+              return x;
+            }
+            function compare(a, b, aL, bL) {
+              var i, cmp;
+              if (aL != bL) {
+                cmp = aL > bL ? 1 : -1;
+              } else {
+                for (i = cmp = 0; i < aL; i++) {
+                  if (a[i] != b[i]) {
+                    cmp = a[i] > b[i] ? 1 : -1;
+                    break;
+                  }
+                }
+              }
+              return cmp;
+            }
+            function subtract(a, b, aL, base) {
+              var i = 0;
+              for (; aL--;) {
+                a[aL] -= i;
+                i = a[aL] < b[aL] ? 1 : 0;
+                a[aL] = i * base + a[aL] - b[aL];
+              }
+              for (; !a[0] && a.length > 1; a.splice(0, 1));
+            }
+            return function (x, y, dp, rm, base) {
+              var cmp,
+                e,
+                i,
+                more,
+                n,
+                prod,
+                prodL,
+                q,
+                qc,
+                rem,
+                remL,
+                rem0,
+                xi,
+                xL,
+                yc0,
+                yL,
+                yz,
+                s = x.s == y.s ? 1 : -1,
+                xc = x.c,
+                yc = y.c;
+              if (!xc || !xc[0] || !yc || !yc[0]) {
+                return new BigNumber(!x.s || !y.s || (xc ? yc && xc[0] == yc[0] : !yc) ? NaN : xc && xc[0] == 0 || !yc ? s * 0 : s / 0);
+              }
+              q = new BigNumber(s);
+              qc = q.c = [];
+              e = x.e - y.e;
+              s = dp + e + 1;
+              if (!base) {
+                base = BASE;
+                e = bitFloor(x.e / LOG_BASE) - bitFloor(y.e / LOG_BASE);
+                s = s / LOG_BASE | 0;
+              }
+              for (i = 0; yc[i] == (xc[i] || 0); i++);
+              if (yc[i] > (xc[i] || 0)) e--;
+              if (s < 0) {
+                qc.push(1);
+                more = true;
+              } else {
+                xL = xc.length;
+                yL = yc.length;
+                i = 0;
+                s += 2;
+                n = mathfloor(base / (yc[0] + 1));
+                if (n > 1) {
+                  yc = multiply(yc, n, base);
+                  xc = multiply(xc, n, base);
+                  yL = yc.length;
+                  xL = xc.length;
+                }
+                xi = yL;
+                rem = xc.slice(0, yL);
+                remL = rem.length;
+                for (; remL < yL; rem[remL++] = 0);
+                yz = yc.slice();
+                yz = [0].concat(yz);
+                yc0 = yc[0];
+                if (yc[1] >= base / 2) yc0++;
+                do {
+                  n = 0;
+                  cmp = compare(yc, rem, yL, remL);
+                  if (cmp < 0) {
+                    rem0 = rem[0];
+                    if (yL != remL) rem0 = rem0 * base + (rem[1] || 0);
+                    n = mathfloor(rem0 / yc0);
+                    if (n > 1) {
+                      if (n >= base) n = base - 1;
+                      prod = multiply(yc, n, base);
+                      prodL = prod.length;
+                      remL = rem.length;
+                      while (compare(prod, rem, prodL, remL) == 1) {
+                        n--;
+                        subtract(prod, yL < prodL ? yz : yc, prodL, base);
+                        prodL = prod.length;
+                        cmp = 1;
+                      }
+                    } else {
+                      if (n == 0) {
+                        cmp = n = 1;
+                      }
+                      prod = yc.slice();
+                      prodL = prod.length;
+                    }
+                    if (prodL < remL) prod = [0].concat(prod);
+                    subtract(rem, prod, remL, base);
+                    remL = rem.length;
+                    if (cmp == -1) {
+                      while (compare(yc, rem, yL, remL) < 1) {
+                        n++;
+                        subtract(rem, yL < remL ? yz : yc, remL, base);
+                        remL = rem.length;
+                      }
+                    }
+                  } else if (cmp === 0) {
+                    n++;
+                    rem = [0];
+                  }
+                  qc[i++] = n;
+                  if (rem[0]) {
+                    rem[remL++] = xc[xi] || 0;
+                  } else {
+                    rem = [xc[xi]];
+                    remL = 1;
+                  }
+                } while ((xi++ < xL || rem[0] != null) && s--);
+                more = rem[0] != null;
+                if (!qc[0]) qc.splice(0, 1);
+              }
+              if (base == BASE) {
+                for (i = 1, s = qc[0]; s >= 10; s /= 10, i++);
+                round(q, dp + (q.e = i + e * LOG_BASE - 1) + 1, rm, more);
+              } else {
+                q.e = e;
+                q.r = +more;
+              }
+              return q;
+            };
+          }();
+          function format(n, i, rm, id) {
+            var c0, e, ne, len, str;
+            if (rm == null) rm = ROUNDING_MODE;else intCheck(rm, 0, 8);
+            if (!n.c) return n.toString();
+            c0 = n.c[0];
+            ne = n.e;
+            if (i == null) {
+              str = coeffToString(n.c);
+              str = id == 1 || id == 2 && (ne <= TO_EXP_NEG || ne >= TO_EXP_POS) ? toExponential(str, ne) : toFixedPoint(str, ne, '0');
+            } else {
+              n = round(new BigNumber(n), i, rm);
+              e = n.e;
+              str = coeffToString(n.c);
+              len = str.length;
+              if (id == 1 || id == 2 && (i <= e || e <= TO_EXP_NEG)) {
+                for (; len < i; str += '0', len++);
+                str = toExponential(str, e);
+              } else {
+                i -= ne;
+                str = toFixedPoint(str, e, '0');
+                if (e + 1 > len) {
+                  if (--i > 0) for (str += '.'; i--; str += '0');
+                } else {
+                  i += e - len;
+                  if (i > 0) {
+                    if (e + 1 == len) str += '.';
+                    for (; i--; str += '0');
+                  }
+                }
+              }
+            }
+            return n.s < 0 && c0 ? '-' + str : str;
+          }
+          function maxOrMin(args, method) {
+            var n,
+              i = 1,
+              m = new BigNumber(args[0]);
+            for (; i < args.length; i++) {
+              n = new BigNumber(args[i]);
+              if (!n.s) {
+                m = n;
+                break;
+              } else if (method.call(m, n)) {
+                m = n;
+              }
+            }
+            return m;
+          }
+          function normalise(n, c, e) {
+            var i = 1,
+              j = c.length;
+            for (; !c[--j]; c.pop());
+            for (j = c[0]; j >= 10; j /= 10, i++);
+            if ((e = i + e * LOG_BASE - 1) > MAX_EXP) {
+              n.c = n.e = null;
+            } else if (e < MIN_EXP) {
+              n.c = [n.e = 0];
+            } else {
+              n.e = e;
+              n.c = c;
+            }
+            return n;
+          }
+          parseNumeric = function () {
+            var basePrefix = /^(-?)0([xbo])(?=\w[\w.]*$)/i,
+              dotAfter = /^([^.]+)\.$/,
+              dotBefore = /^\.([^.]+)$/,
+              isInfinityOrNaN = /^-?(Infinity|NaN)$/,
+              whitespaceOrPlus = /^\s*\+(?=[\w.])|^\s+|\s+$/g;
+            return function (x, str, isNum, b) {
+              var base,
+                s = isNum ? str : str.replace(whitespaceOrPlus, '');
+              if (isInfinityOrNaN.test(s)) {
+                x.s = isNaN(s) ? null : s < 0 ? -1 : 1;
+              } else {
+                if (!isNum) {
+                  s = s.replace(basePrefix, function (m, p1, p2) {
+                    base = (p2 = p2.toLowerCase()) == 'x' ? 16 : p2 == 'b' ? 2 : 8;
+                    return !b || b == base ? p1 : m;
+                  });
+                  if (b) {
+                    base = b;
+                    s = s.replace(dotAfter, '$1').replace(dotBefore, '0.$1');
+                  }
+                  if (str != s) return new BigNumber(s, base);
+                }
+                if (BigNumber.DEBUG) {
+                  throw Error(bignumberError + 'Not a' + (b ? ' base ' + b : '') + ' number: ' + str);
+                }
+                x.s = null;
+              }
+              x.c = x.e = null;
+            };
+          }();
+          function round(x, sd, rm, r) {
+            var d,
+              i,
+              j,
+              k,
+              n,
+              ni,
+              rd,
+              xc = x.c,
+              pows10 = POWS_TEN;
+            if (xc) {
+              out: {
+                for (d = 1, k = xc[0]; k >= 10; k /= 10, d++);
+                i = sd - d;
+                if (i < 0) {
+                  i += LOG_BASE;
+                  j = sd;
+                  n = xc[ni = 0];
+                  rd = n / pows10[d - j - 1] % 10 | 0;
+                } else {
+                  ni = mathceil((i + 1) / LOG_BASE);
+                  if (ni >= xc.length) {
+                    if (r) {
+                      for (; xc.length <= ni; xc.push(0));
+                      n = rd = 0;
+                      d = 1;
+                      i %= LOG_BASE;
+                      j = i - LOG_BASE + 1;
+                    } else {
+                      break out;
+                    }
+                  } else {
+                    n = k = xc[ni];
+                    for (d = 1; k >= 10; k /= 10, d++);
+                    i %= LOG_BASE;
+                    j = i - LOG_BASE + d;
+                    rd = j < 0 ? 0 : n / pows10[d - j - 1] % 10 | 0;
+                  }
+                }
+                r = r || sd < 0 || xc[ni + 1] != null || (j < 0 ? n : n % pows10[d - j - 1]);
+                r = rm < 4 ? (rd || r) && (rm == 0 || rm == (x.s < 0 ? 3 : 2)) : rd > 5 || rd == 5 && (rm == 4 || r || rm == 6 && (i > 0 ? j > 0 ? n / pows10[d - j] : 0 : xc[ni - 1]) % 10 & 1 || rm == (x.s < 0 ? 8 : 7));
+                if (sd < 1 || !xc[0]) {
+                  xc.length = 0;
+                  if (r) {
+                    sd -= x.e + 1;
+                    xc[0] = pows10[(LOG_BASE - sd % LOG_BASE) % LOG_BASE];
+                    x.e = -sd || 0;
+                  } else {
+                    xc[0] = x.e = 0;
+                  }
+                  return x;
+                }
+                if (i == 0) {
+                  xc.length = ni;
+                  k = 1;
+                  ni--;
+                } else {
+                  xc.length = ni + 1;
+                  k = pows10[LOG_BASE - i];
+                  xc[ni] = j > 0 ? mathfloor(n / pows10[d - j] % pows10[j]) * k : 0;
+                }
+                if (r) {
+                  for (;;) {
+                    if (ni == 0) {
+                      for (i = 1, j = xc[0]; j >= 10; j /= 10, i++);
+                      j = xc[0] += k;
+                      for (k = 1; j >= 10; j /= 10, k++);
+                      if (i != k) {
+                        x.e++;
+                        if (xc[0] == BASE) xc[0] = 1;
+                      }
+                      break;
+                    } else {
+                      xc[ni] += k;
+                      if (xc[ni] != BASE) break;
+                      xc[ni--] = 0;
+                      k = 1;
+                    }
+                  }
+                }
+                for (i = xc.length; xc[--i] === 0; xc.pop());
+              }
+              if (x.e > MAX_EXP) {
+                x.c = x.e = null;
+              } else if (x.e < MIN_EXP) {
+                x.c = [x.e = 0];
+              }
+            }
+            return x;
+          }
+          function valueOf(n) {
+            var str,
+              e = n.e;
+            if (e === null) return n.toString();
+            str = coeffToString(n.c);
+            str = e <= TO_EXP_NEG || e >= TO_EXP_POS ? toExponential(str, e) : toFixedPoint(str, e, '0');
+            return n.s < 0 ? '-' + str : str;
+          }
+          P.absoluteValue = P.abs = function () {
+            var x = new BigNumber(this);
+            if (x.s < 0) x.s = 1;
+            return x;
+          };
+          P.comparedTo = function (y, b) {
+            return compare(this, new BigNumber(y, b));
+          };
+          P.decimalPlaces = P.dp = function (dp, rm) {
+            var c,
+              n,
+              v,
+              x = this;
+            if (dp != null) {
+              intCheck(dp, 0, MAX);
+              if (rm == null) rm = ROUNDING_MODE;else intCheck(rm, 0, 8);
+              return round(new BigNumber(x), dp + x.e + 1, rm);
+            }
+            if (!(c = x.c)) return null;
+            n = ((v = c.length - 1) - bitFloor(this.e / LOG_BASE)) * LOG_BASE;
+            if (v = c[v]) for (; v % 10 == 0; v /= 10, n--);
+            if (n < 0) n = 0;
+            return n;
+          };
+          P.dividedBy = P.div = function (y, b) {
+            return div(this, new BigNumber(y, b), DECIMAL_PLACES, ROUNDING_MODE);
+          };
+          P.dividedToIntegerBy = P.idiv = function (y, b) {
+            return div(this, new BigNumber(y, b), 0, 1);
+          };
+          P.exponentiatedBy = P.pow = function (n, m) {
+            var half,
+              isModExp,
+              i,
+              k,
+              more,
+              nIsBig,
+              nIsNeg,
+              nIsOdd,
+              y,
+              x = this;
+            n = new BigNumber(n);
+            if (n.c && !n.isInteger()) {
+              throw Error(bignumberError + 'Exponent not an integer: ' + valueOf(n));
+            }
+            if (m != null) m = new BigNumber(m);
+            nIsBig = n.e > 14;
+            if (!x.c || !x.c[0] || x.c[0] == 1 && !x.e && x.c.length == 1 || !n.c || !n.c[0]) {
+              y = new BigNumber(Math.pow(+valueOf(x), nIsBig ? 2 - isOdd(n) : +valueOf(n)));
+              return m ? y.mod(m) : y;
+            }
+            nIsNeg = n.s < 0;
+            if (m) {
+              if (m.c ? !m.c[0] : !m.s) return new BigNumber(NaN);
+              isModExp = !nIsNeg && x.isInteger() && m.isInteger();
+              if (isModExp) x = x.mod(m);
+            } else if (n.e > 9 && (x.e > 0 || x.e < -1 || (x.e == 0 ? x.c[0] > 1 || nIsBig && x.c[1] >= 24e7 : x.c[0] < 8e13 || nIsBig && x.c[0] <= 9999975e7))) {
+              k = x.s < 0 && isOdd(n) ? -0 : 0;
+              if (x.e > -1) k = 1 / k;
+              return new BigNumber(nIsNeg ? 1 / k : k);
+            } else if (POW_PRECISION) {
+              k = mathceil(POW_PRECISION / LOG_BASE + 2);
+            }
+            if (nIsBig) {
+              half = new BigNumber(0.5);
+              if (nIsNeg) n.s = 1;
+              nIsOdd = isOdd(n);
+            } else {
+              i = Math.abs(+valueOf(n));
+              nIsOdd = i % 2;
+            }
+            y = new BigNumber(ONE);
+            for (;;) {
+              if (nIsOdd) {
+                y = y.times(x);
+                if (!y.c) break;
+                if (k) {
+                  if (y.c.length > k) y.c.length = k;
+                } else if (isModExp) {
+                  y = y.mod(m);
+                }
+              }
+              if (i) {
+                i = mathfloor(i / 2);
+                if (i === 0) break;
+                nIsOdd = i % 2;
+              } else {
+                n = n.times(half);
+                round(n, n.e + 1, 1);
+                if (n.e > 14) {
+                  nIsOdd = isOdd(n);
+                } else {
+                  i = +valueOf(n);
+                  if (i === 0) break;
+                  nIsOdd = i % 2;
+                }
+              }
+              x = x.times(x);
+              if (k) {
+                if (x.c && x.c.length > k) x.c.length = k;
+              } else if (isModExp) {
+                x = x.mod(m);
+              }
+            }
+            if (isModExp) return y;
+            if (nIsNeg) y = ONE.div(y);
+            return m ? y.mod(m) : k ? round(y, POW_PRECISION, ROUNDING_MODE, more) : y;
+          };
+          P.integerValue = function (rm) {
+            var n = new BigNumber(this);
+            if (rm == null) rm = ROUNDING_MODE;else intCheck(rm, 0, 8);
+            return round(n, n.e + 1, rm);
+          };
+          P.isEqualTo = P.eq = function (y, b) {
+            return compare(this, new BigNumber(y, b)) === 0;
+          };
+          P.isFinite = function () {
+            return !!this.c;
+          };
+          P.isGreaterThan = P.gt = function (y, b) {
+            return compare(this, new BigNumber(y, b)) > 0;
+          };
+          P.isGreaterThanOrEqualTo = P.gte = function (y, b) {
+            return (b = compare(this, new BigNumber(y, b))) === 1 || b === 0;
+          };
+          P.isInteger = function () {
+            return !!this.c && bitFloor(this.e / LOG_BASE) > this.c.length - 2;
+          };
+          P.isLessThan = P.lt = function (y, b) {
+            return compare(this, new BigNumber(y, b)) < 0;
+          };
+          P.isLessThanOrEqualTo = P.lte = function (y, b) {
+            return (b = compare(this, new BigNumber(y, b))) === -1 || b === 0;
+          };
+          P.isNaN = function () {
+            return !this.s;
+          };
+          P.isNegative = function () {
+            return this.s < 0;
+          };
+          P.isPositive = function () {
+            return this.s > 0;
+          };
+          P.isZero = function () {
+            return !!this.c && this.c[0] == 0;
+          };
+          P.minus = function (y, b) {
+            var i,
+              j,
+              t,
+              xLTy,
+              x = this,
+              a = x.s;
+            y = new BigNumber(y, b);
+            b = y.s;
+            if (!a || !b) return new BigNumber(NaN);
+            if (a != b) {
+              y.s = -b;
+              return x.plus(y);
+            }
+            var xe = x.e / LOG_BASE,
+              ye = y.e / LOG_BASE,
+              xc = x.c,
+              yc = y.c;
+            if (!xe || !ye) {
+              if (!xc || !yc) return xc ? (y.s = -b, y) : new BigNumber(yc ? x : NaN);
+              if (!xc[0] || !yc[0]) {
+                return yc[0] ? (y.s = -b, y) : new BigNumber(xc[0] ? x : ROUNDING_MODE == 3 ? -0 : 0);
+              }
+            }
+            xe = bitFloor(xe);
+            ye = bitFloor(ye);
+            xc = xc.slice();
+            if (a = xe - ye) {
+              if (xLTy = a < 0) {
+                a = -a;
+                t = xc;
+              } else {
+                ye = xe;
+                t = yc;
+              }
+              t.reverse();
+              for (b = a; b--; t.push(0));
+              t.reverse();
+            } else {
+              j = (xLTy = (a = xc.length) < (b = yc.length)) ? a : b;
+              for (a = b = 0; b < j; b++) {
+                if (xc[b] != yc[b]) {
+                  xLTy = xc[b] < yc[b];
+                  break;
+                }
+              }
+            }
+            if (xLTy) t = xc, xc = yc, yc = t, y.s = -y.s;
+            b = (j = yc.length) - (i = xc.length);
+            if (b > 0) for (; b--; xc[i++] = 0);
+            b = BASE - 1;
+            for (; j > a;) {
+              if (xc[--j] < yc[j]) {
+                for (i = j; i && !xc[--i]; xc[i] = b);
+                --xc[i];
+                xc[j] += BASE;
+              }
+              xc[j] -= yc[j];
+            }
+            for (; xc[0] == 0; xc.splice(0, 1), --ye);
+            if (!xc[0]) {
+              y.s = ROUNDING_MODE == 3 ? -1 : 1;
+              y.c = [y.e = 0];
+              return y;
+            }
+            return normalise(y, xc, ye);
+          };
+          P.modulo = P.mod = function (y, b) {
+            var q,
+              s,
+              x = this;
+            y = new BigNumber(y, b);
+            if (!x.c || !y.s || y.c && !y.c[0]) {
+              return new BigNumber(NaN);
+            } else if (!y.c || x.c && !x.c[0]) {
+              return new BigNumber(x);
+            }
+            if (MODULO_MODE == 9) {
+              s = y.s;
+              y.s = 1;
+              q = div(x, y, 0, 3);
+              y.s = s;
+              q.s *= s;
+            } else {
+              q = div(x, y, 0, MODULO_MODE);
+            }
+            y = x.minus(q.times(y));
+            if (!y.c[0] && MODULO_MODE == 1) y.s = x.s;
+            return y;
+          };
+          P.multipliedBy = P.times = function (y, b) {
+            var c,
+              e,
+              i,
+              j,
+              k,
+              m,
+              xcL,
+              xlo,
+              xhi,
+              ycL,
+              ylo,
+              yhi,
+              zc,
+              base,
+              sqrtBase,
+              x = this,
+              xc = x.c,
+              yc = (y = new BigNumber(y, b)).c;
+            if (!xc || !yc || !xc[0] || !yc[0]) {
+              if (!x.s || !y.s || xc && !xc[0] && !yc || yc && !yc[0] && !xc) {
+                y.c = y.e = y.s = null;
+              } else {
+                y.s *= x.s;
+                if (!xc || !yc) {
+                  y.c = y.e = null;
+                } else {
+                  y.c = [0];
+                  y.e = 0;
+                }
+              }
+              return y;
+            }
+            e = bitFloor(x.e / LOG_BASE) + bitFloor(y.e / LOG_BASE);
+            y.s *= x.s;
+            xcL = xc.length;
+            ycL = yc.length;
+            if (xcL < ycL) zc = xc, xc = yc, yc = zc, i = xcL, xcL = ycL, ycL = i;
+            for (i = xcL + ycL, zc = []; i--; zc.push(0));
+            base = BASE;
+            sqrtBase = SQRT_BASE;
+            for (i = ycL; --i >= 0;) {
+              c = 0;
+              ylo = yc[i] % sqrtBase;
+              yhi = yc[i] / sqrtBase | 0;
+              for (k = xcL, j = i + k; j > i;) {
+                xlo = xc[--k] % sqrtBase;
+                xhi = xc[k] / sqrtBase | 0;
+                m = yhi * xlo + xhi * ylo;
+                xlo = ylo * xlo + m % sqrtBase * sqrtBase + zc[j] + c;
+                c = (xlo / base | 0) + (m / sqrtBase | 0) + yhi * xhi;
+                zc[j--] = xlo % base;
+              }
+              zc[j] = c;
+            }
+            if (c) {
+              ++e;
+            } else {
+              zc.splice(0, 1);
+            }
+            return normalise(y, zc, e);
+          };
+          P.negated = function () {
+            var x = new BigNumber(this);
+            x.s = -x.s || null;
+            return x;
+          };
+          P.plus = function (y, b) {
+            var t,
+              x = this,
+              a = x.s;
+            y = new BigNumber(y, b);
+            b = y.s;
+            if (!a || !b) return new BigNumber(NaN);
+            if (a != b) {
+              y.s = -b;
+              return x.minus(y);
+            }
+            var xe = x.e / LOG_BASE,
+              ye = y.e / LOG_BASE,
+              xc = x.c,
+              yc = y.c;
+            if (!xe || !ye) {
+              if (!xc || !yc) return new BigNumber(a / 0);
+              if (!xc[0] || !yc[0]) return yc[0] ? y : new BigNumber(xc[0] ? x : a * 0);
+            }
+            xe = bitFloor(xe);
+            ye = bitFloor(ye);
+            xc = xc.slice();
+            if (a = xe - ye) {
+              if (a > 0) {
+                ye = xe;
+                t = yc;
+              } else {
+                a = -a;
+                t = xc;
+              }
+              t.reverse();
+              for (; a--; t.push(0));
+              t.reverse();
+            }
+            a = xc.length;
+            b = yc.length;
+            if (a - b < 0) t = yc, yc = xc, xc = t, b = a;
+            for (a = 0; b;) {
+              a = (xc[--b] = xc[b] + yc[b] + a) / BASE | 0;
+              xc[b] = BASE === xc[b] ? 0 : xc[b] % BASE;
+            }
+            if (a) {
+              xc = [a].concat(xc);
+              ++ye;
+            }
+            return normalise(y, xc, ye);
+          };
+          P.precision = P.sd = function (sd, rm) {
+            var c,
+              n,
+              v,
+              x = this;
+            if (sd != null && sd !== !!sd) {
+              intCheck(sd, 1, MAX);
+              if (rm == null) rm = ROUNDING_MODE;else intCheck(rm, 0, 8);
+              return round(new BigNumber(x), sd, rm);
+            }
+            if (!(c = x.c)) return null;
+            v = c.length - 1;
+            n = v * LOG_BASE + 1;
+            if (v = c[v]) {
+              for (; v % 10 == 0; v /= 10, n--);
+              for (v = c[0]; v >= 10; v /= 10, n++);
+            }
+            if (sd && x.e + 1 > n) n = x.e + 1;
+            return n;
+          };
+          P.shiftedBy = function (k) {
+            intCheck(k, -MAX_SAFE_INTEGER, MAX_SAFE_INTEGER);
+            return this.times('1e' + k);
+          };
+          P.squareRoot = P.sqrt = function () {
+            var m,
+              n,
+              r,
+              rep,
+              t,
+              x = this,
+              c = x.c,
+              s = x.s,
+              e = x.e,
+              dp = DECIMAL_PLACES + 4,
+              half = new BigNumber('0.5');
+            if (s !== 1 || !c || !c[0]) {
+              return new BigNumber(!s || s < 0 && (!c || c[0]) ? NaN : c ? x : 1 / 0);
+            }
+            s = Math.sqrt(+valueOf(x));
+            if (s == 0 || s == 1 / 0) {
+              n = coeffToString(c);
+              if ((n.length + e) % 2 == 0) n += '0';
+              s = Math.sqrt(+n);
+              e = bitFloor((e + 1) / 2) - (e < 0 || e % 2);
+              if (s == 1 / 0) {
+                n = '5e' + e;
+              } else {
+                n = s.toExponential();
+                n = n.slice(0, n.indexOf('e') + 1) + e;
+              }
+              r = new BigNumber(n);
+            } else {
+              r = new BigNumber(s + '');
+            }
+            if (r.c[0]) {
+              e = r.e;
+              s = e + dp;
+              if (s < 3) s = 0;
+              for (;;) {
+                t = r;
+                r = half.times(t.plus(div(x, t, dp, 1)));
+                if (coeffToString(t.c).slice(0, s) === (n = coeffToString(r.c)).slice(0, s)) {
+                  if (r.e < e) --s;
+                  n = n.slice(s - 3, s + 1);
+                  if (n == '9999' || !rep && n == '4999') {
+                    if (!rep) {
+                      round(t, t.e + DECIMAL_PLACES + 2, 0);
+                      if (t.times(t).eq(x)) {
+                        r = t;
+                        break;
+                      }
+                    }
+                    dp += 4;
+                    s += 4;
+                    rep = 1;
+                  } else {
+                    if (!+n || !+n.slice(1) && n.charAt(0) == '5') {
+                      round(r, r.e + DECIMAL_PLACES + 2, 1);
+                      m = !r.times(r).eq(x);
+                    }
+                    break;
+                  }
+                }
+              }
+            }
+            return round(r, r.e + DECIMAL_PLACES + 1, ROUNDING_MODE, m);
+          };
+          P.toExponential = function (dp, rm) {
+            if (dp != null) {
+              intCheck(dp, 0, MAX);
+              dp++;
+            }
+            return format(this, dp, rm, 1);
+          };
+          P.toFixed = function (dp, rm) {
+            if (dp != null) {
+              intCheck(dp, 0, MAX);
+              dp = dp + this.e + 1;
+            }
+            return format(this, dp, rm);
+          };
+          P.toFormat = function (dp, rm, format) {
+            var str,
+              x = this;
+            if (format == null) {
+              if (dp != null && rm && typeof rm == 'object') {
+                format = rm;
+                rm = null;
+              } else if (dp && typeof dp == 'object') {
+                format = dp;
+                dp = rm = null;
+              } else {
+                format = FORMAT;
+              }
+            } else if (typeof format != 'object') {
+              throw Error(bignumberError + 'Argument not an object: ' + format);
+            }
+            str = x.toFixed(dp, rm);
+            if (x.c) {
+              var i,
+                arr = str.split('.'),
+                g1 = +format.groupSize,
+                g2 = +format.secondaryGroupSize,
+                groupSeparator = format.groupSeparator || '',
+                intPart = arr[0],
+                fractionPart = arr[1],
+                isNeg = x.s < 0,
+                intDigits = isNeg ? intPart.slice(1) : intPart,
+                len = intDigits.length;
+              if (g2) i = g1, g1 = g2, g2 = i, len -= i;
+              if (g1 > 0 && len > 0) {
+                i = len % g1 || g1;
+                intPart = intDigits.substr(0, i);
+                for (; i < len; i += g1) intPart += groupSeparator + intDigits.substr(i, g1);
+                if (g2 > 0) intPart += groupSeparator + intDigits.slice(i);
+                if (isNeg) intPart = '-' + intPart;
+              }
+              str = fractionPart ? intPart + (format.decimalSeparator || '') + ((g2 = +format.fractionGroupSize) ? fractionPart.replace(new RegExp('\\d{' + g2 + '}\\B', 'g'), '$&' + (format.fractionGroupSeparator || '')) : fractionPart) : intPart;
+            }
+            return (format.prefix || '') + str + (format.suffix || '');
+          };
+          P.toFraction = function (md) {
+            var d,
+              d0,
+              d1,
+              d2,
+              e,
+              exp,
+              n,
+              n0,
+              n1,
+              q,
+              r,
+              s,
+              x = this,
+              xc = x.c;
+            if (md != null) {
+              n = new BigNumber(md);
+              if (!n.isInteger() && (n.c || n.s !== 1) || n.lt(ONE)) {
+                throw Error(bignumberError + 'Argument ' + (n.isInteger() ? 'out of range: ' : 'not an integer: ') + valueOf(n));
+              }
+            }
+            if (!xc) return new BigNumber(x);
+            d = new BigNumber(ONE);
+            n1 = d0 = new BigNumber(ONE);
+            d1 = n0 = new BigNumber(ONE);
+            s = coeffToString(xc);
+            e = d.e = s.length - x.e - 1;
+            d.c[0] = POWS_TEN[(exp = e % LOG_BASE) < 0 ? LOG_BASE + exp : exp];
+            md = !md || n.comparedTo(d) > 0 ? e > 0 ? d : n1 : n;
+            exp = MAX_EXP;
+            MAX_EXP = 1 / 0;
+            n = new BigNumber(s);
+            n0.c[0] = 0;
+            for (;;) {
+              q = div(n, d, 0, 1);
+              d2 = d0.plus(q.times(d1));
+              if (d2.comparedTo(md) == 1) break;
+              d0 = d1;
+              d1 = d2;
+              n1 = n0.plus(q.times(d2 = n1));
+              n0 = d2;
+              d = n.minus(q.times(d2 = d));
+              n = d2;
+            }
+            d2 = div(md.minus(d0), d1, 0, 1);
+            n0 = n0.plus(d2.times(n1));
+            d0 = d0.plus(d2.times(d1));
+            n0.s = n1.s = x.s;
+            e = e * 2;
+            r = div(n1, d1, e, ROUNDING_MODE).minus(x).abs().comparedTo(div(n0, d0, e, ROUNDING_MODE).minus(x).abs()) < 1 ? [n1, d1] : [n0, d0];
+            MAX_EXP = exp;
+            return r;
+          };
+          P.toNumber = function () {
+            return +valueOf(this);
+          };
+          P.toPrecision = function (sd, rm) {
+            if (sd != null) intCheck(sd, 1, MAX);
+            return format(this, sd, rm, 2);
+          };
+          P.toString = function (b) {
+            var str,
+              n = this,
+              s = n.s,
+              e = n.e;
+            if (e === null) {
+              if (s) {
+                str = 'Infinity';
+                if (s < 0) str = '-' + str;
+              } else {
+                str = 'NaN';
+              }
+            } else {
+              if (b == null) {
+                str = e <= TO_EXP_NEG || e >= TO_EXP_POS ? toExponential(coeffToString(n.c), e) : toFixedPoint(coeffToString(n.c), e, '0');
+              } else if (b === 10 && alphabetHasNormalDecimalDigits) {
+                n = round(new BigNumber(n), DECIMAL_PLACES + e + 1, ROUNDING_MODE);
+                str = toFixedPoint(coeffToString(n.c), n.e, '0');
+              } else {
+                intCheck(b, 2, ALPHABET.length, 'Base');
+                str = convertBase(toFixedPoint(coeffToString(n.c), e, '0'), 10, b, s, true);
+              }
+              if (s < 0 && n.c[0]) str = '-' + str;
+            }
+            return str;
+          };
+          P.valueOf = P.toJSON = function () {
+            return valueOf(this);
+          };
+          P._isBigNumber = true;
+          if (configObject != null) BigNumber.set(configObject);
+          return BigNumber;
+        }
+        function bitFloor(n) {
+          var i = n | 0;
+          return n > 0 || n === i ? i : i - 1;
+        }
+        function coeffToString(a) {
+          var s,
+            z,
+            i = 1,
+            j = a.length,
+            r = a[0] + '';
+          for (; i < j;) {
+            s = a[i++] + '';
+            z = LOG_BASE - s.length;
+            for (; z--; s = '0' + s);
+            r += s;
+          }
+          for (j = r.length; r.charCodeAt(--j) === 48;);
+          return r.slice(0, j + 1 || 1);
+        }
+        function compare(x, y) {
+          var a,
+            b,
+            xc = x.c,
+            yc = y.c,
+            i = x.s,
+            j = y.s,
+            k = x.e,
+            l = y.e;
+          if (!i || !j) return null;
+          a = xc && !xc[0];
+          b = yc && !yc[0];
+          if (a || b) return a ? b ? 0 : -j : i;
+          if (i != j) return i;
+          a = i < 0;
+          b = k == l;
+          if (!xc || !yc) return b ? 0 : !xc ^ a ? 1 : -1;
+          if (!b) return k > l ^ a ? 1 : -1;
+          j = (k = xc.length) < (l = yc.length) ? k : l;
+          for (i = 0; i < j; i++) if (xc[i] != yc[i]) return xc[i] > yc[i] ^ a ? 1 : -1;
+          return k == l ? 0 : k > l ^ a ? 1 : -1;
+        }
+        function intCheck(n, min, max, name) {
+          if (n < min || n > max || n !== mathfloor(n)) {
+            throw Error(bignumberError + (name || 'Argument') + (typeof n == 'number' ? n < min || n > max ? ' out of range: ' : ' not an integer: ' : ' not a primitive number: ') + String(n));
+          }
+        }
+        function isOdd(n) {
+          var k = n.c.length - 1;
+          return bitFloor(n.e / LOG_BASE) == k && n.c[k] % 2 != 0;
+        }
+        function toExponential(str, e) {
+          return (str.length > 1 ? str.charAt(0) + '.' + str.slice(1) : str) + (e < 0 ? 'e' : 'e+') + e;
+        }
+        function toFixedPoint(str, e, z) {
+          var len, zs;
+          if (e < 0) {
+            for (zs = z + '.'; ++e; zs += z);
+            str = zs + str;
+          } else {
+            len = str.length;
+            if (++e > len) {
+              for (zs = z, e -= len; --e; zs += z);
+              str += zs;
+            } else if (e < len) {
+              str = str.slice(0, e) + '.' + str.slice(e);
+            }
+          }
+          return str;
+        }
+        BigNumber = clone();
+        BigNumber['default'] = BigNumber.BigNumber = BigNumber;
+        if (typeof define == 'function' && define.amd) {
+          define(function () {
+            return BigNumber;
+          });
+        } else if (typeof module != 'undefined' && module.exports) {
+          module.exports = BigNumber;
+        } else {
+          if (!globalObject) {
+            globalObject = typeof self != 'undefined' && self ? self : window;
+          }
+          globalObject.BigNumber = BigNumber;
+        }
+      })(this);
+    }, {}],
+    257: [function (require, module, exports) {
+      'use strict';
+
+      const Yallist = require('yallist');
+      const MAX = Symbol('max');
+      const LENGTH = Symbol('length');
+      const LENGTH_CALCULATOR = Symbol('lengthCalculator');
+      const ALLOW_STALE = Symbol('allowStale');
+      const MAX_AGE = Symbol('maxAge');
+      const DISPOSE = Symbol('dispose');
+      const NO_DISPOSE_ON_SET = Symbol('noDisposeOnSet');
+      const LRU_LIST = Symbol('lruList');
+      const CACHE = Symbol('cache');
+      const UPDATE_AGE_ON_GET = Symbol('updateAgeOnGet');
+      const naiveLength = () => 1;
+      class LRUCache {
+        constructor(options) {
+          if (typeof options === 'number') options = {
+            max: options
+          };
+          if (!options) options = {};
+          if (options.max && (typeof options.max !== 'number' || options.max < 0)) throw new TypeError('max must be a non-negative number');
+          const max = this[MAX] = options.max || Infinity;
+          const lc = options.length || naiveLength;
+          this[LENGTH_CALCULATOR] = typeof lc !== 'function' ? naiveLength : lc;
+          this[ALLOW_STALE] = options.stale || false;
+          if (options.maxAge && typeof options.maxAge !== 'number') throw new TypeError('maxAge must be a number');
+          this[MAX_AGE] = options.maxAge || 0;
+          this[DISPOSE] = options.dispose;
+          this[NO_DISPOSE_ON_SET] = options.noDisposeOnSet || false;
+          this[UPDATE_AGE_ON_GET] = options.updateAgeOnGet || false;
+          this.reset();
+        }
+        set max(mL) {
+          if (typeof mL !== 'number' || mL < 0) throw new TypeError('max must be a non-negative number');
+          this[MAX] = mL || Infinity;
+          trim(this);
+        }
+        get max() {
+          return this[MAX];
+        }
+        set allowStale(allowStale) {
+          this[ALLOW_STALE] = !!allowStale;
+        }
+        get allowStale() {
+          return this[ALLOW_STALE];
+        }
+        set maxAge(mA) {
+          if (typeof mA !== 'number') throw new TypeError('maxAge must be a non-negative number');
+          this[MAX_AGE] = mA;
+          trim(this);
+        }
+        get maxAge() {
+          return this[MAX_AGE];
+        }
+        set lengthCalculator(lC) {
+          if (typeof lC !== 'function') lC = naiveLength;
+          if (lC !== this[LENGTH_CALCULATOR]) {
+            this[LENGTH_CALCULATOR] = lC;
+            this[LENGTH] = 0;
+            this[LRU_LIST].forEach(hit => {
+              hit.length = this[LENGTH_CALCULATOR](hit.value, hit.key);
+              this[LENGTH] += hit.length;
+            });
+          }
+          trim(this);
+        }
+        get lengthCalculator() {
+          return this[LENGTH_CALCULATOR];
+        }
+        get length() {
+          return this[LENGTH];
+        }
+        get itemCount() {
+          return this[LRU_LIST].length;
+        }
+        rforEach(fn, thisp) {
+          thisp = thisp || this;
+          for (let walker = this[LRU_LIST].tail; walker !== null;) {
+            const prev = walker.prev;
+            forEachStep(this, fn, walker, thisp);
+            walker = prev;
+          }
+        }
+        forEach(fn, thisp) {
+          thisp = thisp || this;
+          for (let walker = this[LRU_LIST].head; walker !== null;) {
+            const next = walker.next;
+            forEachStep(this, fn, walker, thisp);
+            walker = next;
+          }
+        }
+        keys() {
+          return this[LRU_LIST].toArray().map(k => k.key);
+        }
+        values() {
+          return this[LRU_LIST].toArray().map(k => k.value);
+        }
+        reset() {
+          if (this[DISPOSE] && this[LRU_LIST] && this[LRU_LIST].length) {
+            this[LRU_LIST].forEach(hit => this[DISPOSE](hit.key, hit.value));
+          }
+          this[CACHE] = new Map();
+          this[LRU_LIST] = new Yallist();
+          this[LENGTH] = 0;
+        }
+        dump() {
+          return this[LRU_LIST].map(hit => isStale(this, hit) ? false : {
+            k: hit.key,
+            v: hit.value,
+            e: hit.now + (hit.maxAge || 0)
+          }).toArray().filter(h => h);
+        }
+        dumpLru() {
+          return this[LRU_LIST];
+        }
+        set(key, value, maxAge) {
+          maxAge = maxAge || this[MAX_AGE];
+          if (maxAge && typeof maxAge !== 'number') throw new TypeError('maxAge must be a number');
+          const now = maxAge ? Date.now() : 0;
+          const len = this[LENGTH_CALCULATOR](value, key);
+          if (this[CACHE].has(key)) {
+            if (len > this[MAX]) {
+              del(this, this[CACHE].get(key));
+              return false;
+            }
+            const node = this[CACHE].get(key);
+            const item = node.value;
+            if (this[DISPOSE]) {
+              if (!this[NO_DISPOSE_ON_SET]) this[DISPOSE](key, item.value);
+            }
+            item.now = now;
+            item.maxAge = maxAge;
+            item.value = value;
+            this[LENGTH] += len - item.length;
+            item.length = len;
+            this.get(key);
+            trim(this);
+            return true;
+          }
+          const hit = new Entry(key, value, len, now, maxAge);
+          if (hit.length > this[MAX]) {
+            if (this[DISPOSE]) this[DISPOSE](key, value);
+            return false;
+          }
+          this[LENGTH] += hit.length;
+          this[LRU_LIST].unshift(hit);
+          this[CACHE].set(key, this[LRU_LIST].head);
+          trim(this);
+          return true;
+        }
+        has(key) {
+          if (!this[CACHE].has(key)) return false;
+          const hit = this[CACHE].get(key).value;
+          return !isStale(this, hit);
+        }
+        get(key) {
+          return get(this, key, true);
+        }
+        peek(key) {
+          return get(this, key, false);
+        }
+        pop() {
+          const node = this[LRU_LIST].tail;
+          if (!node) return null;
+          del(this, node);
+          return node.value;
+        }
+        del(key) {
+          del(this, this[CACHE].get(key));
+        }
+        load(arr) {
+          this.reset();
+          const now = Date.now();
+          for (let l = arr.length - 1; l >= 0; l--) {
+            const hit = arr[l];
+            const expiresAt = hit.e || 0;
+            if (expiresAt === 0) this.set(hit.k, hit.v);else {
+              const maxAge = expiresAt - now;
+              if (maxAge > 0) {
+                this.set(hit.k, hit.v, maxAge);
+              }
+            }
+          }
+        }
+        prune() {
+          this[CACHE].forEach((value, key) => get(this, key, false));
+        }
+      }
+      const get = (self, key, doUse) => {
+        const node = self[CACHE].get(key);
+        if (node) {
+          const hit = node.value;
+          if (isStale(self, hit)) {
+            del(self, node);
+            if (!self[ALLOW_STALE]) return undefined;
+          } else {
+            if (doUse) {
+              if (self[UPDATE_AGE_ON_GET]) node.value.now = Date.now();
+              self[LRU_LIST].unshiftNode(node);
+            }
+          }
+          return hit.value;
+        }
+      };
+      const isStale = (self, hit) => {
+        if (!hit || !hit.maxAge && !self[MAX_AGE]) return false;
+        const diff = Date.now() - hit.now;
+        return hit.maxAge ? diff > hit.maxAge : self[MAX_AGE] && diff > self[MAX_AGE];
+      };
+      const trim = self => {
+        if (self[LENGTH] > self[MAX]) {
+          for (let walker = self[LRU_LIST].tail; self[LENGTH] > self[MAX] && walker !== null;) {
+            const prev = walker.prev;
+            del(self, walker);
+            walker = prev;
+          }
+        }
+      };
+      const del = (self, node) => {
+        if (node) {
+          const hit = node.value;
+          if (self[DISPOSE]) self[DISPOSE](hit.key, hit.value);
+          self[LENGTH] -= hit.length;
+          self[CACHE].delete(hit.key);
+          self[LRU_LIST].removeNode(node);
+        }
+      };
+      class Entry {
+        constructor(key, value, length, now, maxAge) {
+          this.key = key;
+          this.value = value;
+          this.length = length;
+          this.now = now;
+          this.maxAge = maxAge || 0;
+        }
+      }
+      const forEachStep = (self, fn, node, thisp) => {
+        let hit = node.value;
+        if (isStale(self, hit)) {
+          del(self, node);
+          if (!self[ALLOW_STALE]) hit = undefined;
+        }
+        if (hit) fn.call(thisp, hit.value, hit.key, self);
+      };
+      module.exports = LRUCache;
+    }, {
+      "yallist": 283
+    }],
+    258: [function (require, module, exports) {
       var s = 1000;
       var m = s * 60;
       var h = m * 60;
@@ -29813,7 +35129,7 @@
         return Math.round(ms / n) + ' ' + name + (isPlural ? 's' : '');
       }
     }, {}],
-    193: [function (require, module, exports) {
+    259: [function (require, module, exports) {
       var hasMap = typeof Map === 'function' && Map.prototype;
       var mapSizeDescriptor = Object.getOwnPropertyDescriptor && hasMap ? Object.getOwnPropertyDescriptor(Map.prototype, 'size') : null;
       var mapSize = hasMap && mapSizeDescriptor && typeof mapSizeDescriptor.get === 'function' ? mapSizeDescriptor.get : null;
@@ -30309,9 +35625,9 @@
         return xs;
       }
     }, {
-      "./util.inspect": 134
+      "./util.inspect": 198
     }],
-    194: [function (require, module, exports) {
+    260: [function (require, module, exports) {
       (function (process) {
         (function () {
           'use strict';
@@ -30679,9 +35995,9 @@
         }).call(this);
       }).call(this, require('_process'));
     }, {
-      "_process": 195
+      "_process": 261
     }],
-    195: [function (require, module, exports) {
+    261: [function (require, module, exports) {
       var process = module.exports = {};
       var cachedSetTimeout;
       var cachedClearTimeout;
@@ -30838,7 +36154,7 @@
         return 0;
       };
     }, {}],
-    196: [function (require, module, exports) {
+    262: [function (require, module, exports) {
       'use strict';
 
       var replace = String.prototype.replace;
@@ -30861,7 +36177,7 @@
         RFC3986: Format.RFC3986
       };
     }, {}],
-    197: [function (require, module, exports) {
+    263: [function (require, module, exports) {
       'use strict';
 
       var stringify = require('./stringify');
@@ -30873,11 +36189,11 @@
         stringify: stringify
       };
     }, {
-      "./formats": 196,
-      "./parse": 198,
-      "./stringify": 199
+      "./formats": 262,
+      "./parse": 264,
+      "./stringify": 265
     }],
-    198: [function (require, module, exports) {
+    264: [function (require, module, exports) {
       'use strict';
 
       var utils = require('./utils');
@@ -31074,9 +36390,9 @@
         return utils.compact(obj);
       };
     }, {
-      "./utils": 200
+      "./utils": 266
     }],
-    199: [function (require, module, exports) {
+    265: [function (require, module, exports) {
       'use strict';
 
       var getSideChannel = require('side-channel');
@@ -31303,11 +36619,11 @@
         return joined.length > 0 ? prefix + joined : '';
       };
     }, {
-      "./formats": 196,
-      "./utils": 200,
-      "side-channel": 206
+      "./formats": 262,
+      "./utils": 266,
+      "side-channel": 272
     }],
-    200: [function (require, module, exports) {
+    266: [function (require, module, exports) {
       'use strict';
 
       var formats = require('./formats');
@@ -31511,9 +36827,9 @@
         merge: merge
       };
     }, {
-      "./formats": 196
+      "./formats": 262
     }],
-    201: [function (require, module, exports) {
+    267: [function (require, module, exports) {
       'use strict';
 
       function hasOwnProperty(obj, prop) {
@@ -31566,7 +36882,7 @@
         return Object.prototype.toString.call(xs) === '[object Array]';
       };
     }, {}],
-    202: [function (require, module, exports) {
+    268: [function (require, module, exports) {
       'use strict';
 
       var stringifyPrimitive = function (v) {
@@ -31621,16 +36937,16 @@
         return res;
       };
     }, {}],
-    203: [function (require, module, exports) {
+    269: [function (require, module, exports) {
       'use strict';
 
       exports.decode = exports.parse = require('./decode');
       exports.encode = exports.stringify = require('./encode');
     }, {
-      "./decode": 201,
-      "./encode": 202
+      "./decode": 267,
+      "./encode": 268
     }],
-    204: [function (require, module, exports) {
+    270: [function (require, module, exports) {
       'use strict';
 
       var has = Object.prototype.hasOwnProperty,
@@ -31684,7 +37000,7 @@
       exports.stringify = querystringify;
       exports.parse = querystring;
     }, {}],
-    205: [function (require, module, exports) {
+    271: [function (require, module, exports) {
       'use strict';
 
       module.exports = function required(port, protocol) {
@@ -31708,7 +37024,7 @@
         return port !== 0;
       };
     }, {}],
-    206: [function (require, module, exports) {
+    272: [function (require, module, exports) {
       'use strict';
 
       var GetIntrinsic = require('get-intrinsic');
@@ -31818,11 +37134,11 @@
         return channel;
       };
     }, {
-      "call-bind/callBound": 137,
-      "get-intrinsic": 180,
-      "object-inspect": 193
+      "call-bind/callBound": 201,
+      "get-intrinsic": 244,
+      "object-inspect": 259
     }],
-    207: [function (require, module, exports) {
+    273: [function (require, module, exports) {
       "use strict";
 
       function _toConsumableArray(arr) {
@@ -31874,7 +37190,7 @@
       };
       module.exports = Agent;
     }, {}],
-    208: [function (require, module, exports) {
+    274: [function (require, module, exports) {
       "use strict";
 
       function _typeof(obj) {
@@ -32375,15 +37691,15 @@
         return req;
       };
     }, {
-      "./agent-base": 207,
-      "./is-object": 209,
-      "./request-base": 210,
-      "./response-base": 211,
-      "component-emitter": 139,
-      "fast-safe-stringify": 177,
-      "qs": 197
+      "./agent-base": 273,
+      "./is-object": 275,
+      "./request-base": 276,
+      "./response-base": 277,
+      "component-emitter": 203,
+      "fast-safe-stringify": 241,
+      "qs": 263
     }],
-    209: [function (require, module, exports) {
+    275: [function (require, module, exports) {
       "use strict";
 
       function _typeof(obj) {
@@ -32405,7 +37721,7 @@
       }
       module.exports = isObject;
     }, {}],
-    210: [function (require, module, exports) {
+    276: [function (require, module, exports) {
       "use strict";
 
       function _typeof(obj) {
@@ -32763,9 +38079,9 @@
         }
       };
     }, {
-      "./is-object": 209
+      "./is-object": 275
     }],
-    211: [function (require, module, exports) {
+    277: [function (require, module, exports) {
       "use strict";
 
       var utils = require('./utils');
@@ -32818,9 +38134,9 @@
         this.unprocessableEntity = status === 422;
       };
     }, {
-      "./utils": 212
+      "./utils": 278
     }],
-    212: [function (require, module, exports) {
+    278: [function (require, module, exports) {
       "use strict";
 
       function _createForOfIteratorHelper(o, allowArrayLike) {
@@ -32942,857 +38258,836 @@
         return header;
       };
     }, {}],
-    213: [function (require, module, exports) {
-      'use strict';
+    279: [function (require, module, exports) {
+      (function (global, factory) {
+        typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) : typeof define === 'function' && define.amd ? define(['exports'], factory) : (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.Superstruct = {}));
+      })(this, function (exports) {
+        'use strict';
 
-      Object.defineProperty(exports, '__esModule', {
-        value: true
-      });
-      class StructError extends TypeError {
-        constructor(failure, failures) {
-          let cached;
+        class StructError extends TypeError {
+          constructor(failure, failures) {
+            let cached;
+            const {
+              message,
+              explanation,
+              ...rest
+            } = failure;
+            const {
+              path
+            } = failure;
+            const msg = path.length === 0 ? message : `At path: ${path.join('.')} -- ${message}`;
+            super(explanation ?? msg);
+            if (explanation != null) this.cause = msg;
+            Object.assign(this, rest);
+            this.name = this.constructor.name;
+            this.failures = () => {
+              return cached ?? (cached = [failure, ...failures()]);
+            };
+          }
+        }
+        function isIterable(x) {
+          return isObject(x) && typeof x[Symbol.iterator] === 'function';
+        }
+        function isObject(x) {
+          return typeof x === 'object' && x != null;
+        }
+        function isPlainObject(x) {
+          if (Object.prototype.toString.call(x) !== '[object Object]') {
+            return false;
+          }
+          const prototype = Object.getPrototypeOf(x);
+          return prototype === null || prototype === Object.prototype;
+        }
+        function print(value) {
+          if (typeof value === 'symbol') {
+            return value.toString();
+          }
+          return typeof value === 'string' ? JSON.stringify(value) : `${value}`;
+        }
+        function shiftIterator(input) {
           const {
-            message,
-            ...rest
-          } = failure;
+            done,
+            value
+          } = input.next();
+          return done ? undefined : value;
+        }
+        function toFailure(result, context, struct, value) {
+          if (result === true) {
+            return;
+          } else if (result === false) {
+            result = {};
+          } else if (typeof result === 'string') {
+            result = {
+              message: result
+            };
+          }
           const {
-            path
-          } = failure;
-          const msg = path.length === 0 ? message : `At path: ${path.join('.')} -- ${message}`;
-          super(msg);
-          this.value = void 0;
-          this.key = void 0;
-          this.type = void 0;
-          this.refinement = void 0;
-          this.path = void 0;
-          this.branch = void 0;
-          this.failures = void 0;
-          Object.assign(this, rest);
-          this.name = this.constructor.name;
-          this.failures = () => {
-            return cached ?? (cached = [failure, ...failures()]);
-          };
-        }
-      }
-      function isIterable(x) {
-        return isObject(x) && typeof x[Symbol.iterator] === 'function';
-      }
-      function isObject(x) {
-        return typeof x === 'object' && x != null;
-      }
-      function isPlainObject(x) {
-        if (Object.prototype.toString.call(x) !== '[object Object]') {
-          return false;
-        }
-        const prototype = Object.getPrototypeOf(x);
-        return prototype === null || prototype === Object.prototype;
-      }
-      function print(value) {
-        if (typeof value === 'symbol') {
-          return value.toString();
-        }
-        return typeof value === 'string' ? JSON.stringify(value) : `${value}`;
-      }
-      function shiftIterator(input) {
-        const {
-          done,
-          value
-        } = input.next();
-        return done ? undefined : value;
-      }
-      function toFailure(result, context, struct, value) {
-        if (result === true) {
-          return;
-        } else if (result === false) {
-          result = {};
-        } else if (typeof result === 'string') {
-          result = {
-            message: result
-          };
-        }
-        const {
-          path,
-          branch
-        } = context;
-        const {
-          type
-        } = struct;
-        const {
-          refinement,
-          message = `Expected a value of type \`${type}\`${refinement ? ` with refinement \`${refinement}\`` : ''}, but received: \`${print(value)}\``
-        } = result;
-        return {
-          value,
-          type,
-          refinement,
-          key: path[path.length - 1],
-          path,
-          branch,
-          ...result,
-          message
-        };
-      }
-      function* toFailures(result, context, struct, value) {
-        if (!isIterable(result)) {
-          result = [result];
-        }
-        for (const r of result) {
-          const failure = toFailure(r, context, struct, value);
-          if (failure) {
-            yield failure;
-          }
-        }
-      }
-      function* run(value, struct, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        const {
-          path = [],
-          branch = [value],
-          coerce = false,
-          mask = false
-        } = options;
-        const ctx = {
-          path,
-          branch
-        };
-        if (coerce) {
-          value = struct.coercer(value, ctx);
-          if (mask && struct.type !== 'type' && isObject(struct.schema) && isObject(value) && !Array.isArray(value)) {
-            for (const key in value) {
-              if (struct.schema[key] === undefined) {
-                delete value[key];
-              }
-            }
-          }
-        }
-        let status = 'valid';
-        for (const failure of struct.validator(value, ctx)) {
-          status = 'not_valid';
-          yield [failure, undefined];
-        }
-        for (let [k, v, s] of struct.entries(value, ctx)) {
-          const ts = run(v, s, {
-            path: k === undefined ? path : [...path, k],
-            branch: k === undefined ? branch : [...branch, v],
-            coerce,
-            mask
-          });
-          for (const t of ts) {
-            if (t[0]) {
-              status = t[0].refinement != null ? 'not_refined' : 'not_valid';
-              yield [t[0], undefined];
-            } else if (coerce) {
-              v = t[1];
-              if (k === undefined) {
-                value = v;
-              } else if (value instanceof Map) {
-                value.set(k, v);
-              } else if (value instanceof Set) {
-                value.add(v);
-              } else if (isObject(value)) {
-                if (v !== undefined || k in value) value[k] = v;
-              }
-            }
-          }
-        }
-        if (status !== 'not_valid') {
-          for (const failure of struct.refiner(value, ctx)) {
-            status = 'not_refined';
-            yield [failure, undefined];
-          }
-        }
-        if (status === 'valid') {
-          yield [undefined, value];
-        }
-      }
-      class Struct {
-        constructor(props) {
-          this.TYPE = void 0;
-          this.type = void 0;
-          this.schema = void 0;
-          this.coercer = void 0;
-          this.validator = void 0;
-          this.refiner = void 0;
-          this.entries = void 0;
+            path,
+            branch
+          } = context;
           const {
+            type
+          } = struct;
+          const {
+            refinement,
+            message = `Expected a value of type \`${type}\`${refinement ? ` with refinement \`${refinement}\`` : ''}, but received: \`${print(value)}\``
+          } = result;
+          return {
+            value,
             type,
-            schema,
-            validator,
-            refiner,
-            coercer = value => value,
-            entries = function* () {}
-          } = props;
-          this.type = type;
-          this.schema = schema;
-          this.entries = entries;
-          this.coercer = coercer;
-          if (validator) {
-            this.validator = (value, context) => {
-              const result = validator(value, context);
-              return toFailures(result, context, this, value);
-            };
-          } else {
-            this.validator = () => [];
+            refinement,
+            key: path[path.length - 1],
+            path,
+            branch,
+            ...result,
+            message
+          };
+        }
+        function* toFailures(result, context, struct, value) {
+          if (!isIterable(result)) {
+            result = [result];
           }
-          if (refiner) {
-            this.refiner = (value, context) => {
-              const result = refiner(value, context);
-              return toFailures(result, context, this, value);
-            };
-          } else {
-            this.refiner = () => [];
-          }
-        }
-        assert(value) {
-          return assert(value, this);
-        }
-        create(value) {
-          return create(value, this);
-        }
-        is(value) {
-          return is(value, this);
-        }
-        mask(value) {
-          return mask(value, this);
-        }
-        validate(value, options) {
-          if (options === void 0) {
-            options = {};
-          }
-          return validate(value, this, options);
-        }
-      }
-      function assert(value, struct) {
-        const result = validate(value, struct);
-        if (result[0]) {
-          throw result[0];
-        }
-      }
-      function create(value, struct) {
-        const result = validate(value, struct, {
-          coerce: true
-        });
-        if (result[0]) {
-          throw result[0];
-        } else {
-          return result[1];
-        }
-      }
-      function mask(value, struct) {
-        const result = validate(value, struct, {
-          coerce: true,
-          mask: true
-        });
-        if (result[0]) {
-          throw result[0];
-        } else {
-          return result[1];
-        }
-      }
-      function is(value, struct) {
-        const result = validate(value, struct);
-        return !result[0];
-      }
-      function validate(value, struct, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        const tuples = run(value, struct, options);
-        const tuple = shiftIterator(tuples);
-        if (tuple[0]) {
-          const error = new StructError(tuple[0], function* () {
-            for (const t of tuples) {
-              if (t[0]) {
-                yield t[0];
-              }
-            }
-          });
-          return [error, undefined];
-        } else {
-          const v = tuple[1];
-          return [undefined, v];
-        }
-      }
-      function assign() {
-        for (var _len = arguments.length, Structs = new Array(_len), _key = 0; _key < _len; _key++) {
-          Structs[_key] = arguments[_key];
-        }
-        const isType = Structs[0].type === 'type';
-        const schemas = Structs.map(s => s.schema);
-        const schema = Object.assign({}, ...schemas);
-        return isType ? type(schema) : object(schema);
-      }
-      function define(name, validator) {
-        return new Struct({
-          type: name,
-          schema: null,
-          validator
-        });
-      }
-      function deprecated(struct, log) {
-        return new Struct({
-          ...struct,
-          refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx),
-          validator(value, ctx) {
-            if (value === undefined) {
-              return true;
-            } else {
-              log(value, ctx);
-              return struct.validator(value, ctx);
+          for (const r of result) {
+            const failure = toFailure(r, context, struct, value);
+            if (failure) {
+              yield failure;
             }
           }
-        });
-      }
-      function dynamic(fn) {
-        return new Struct({
-          type: 'dynamic',
-          schema: null,
-          *entries(value, ctx) {
-            const struct = fn(value, ctx);
-            yield* struct.entries(value, ctx);
-          },
-          validator(value, ctx) {
-            const struct = fn(value, ctx);
-            return struct.validator(value, ctx);
-          },
-          coercer(value, ctx) {
-            const struct = fn(value, ctx);
-            return struct.coercer(value, ctx);
-          },
-          refiner(value, ctx) {
-            const struct = fn(value, ctx);
-            return struct.refiner(value, ctx);
-          }
-        });
-      }
-      function lazy(fn) {
-        let struct;
-        return new Struct({
-          type: 'lazy',
-          schema: null,
-          *entries(value, ctx) {
-            struct ?? (struct = fn());
-            yield* struct.entries(value, ctx);
-          },
-          validator(value, ctx) {
-            struct ?? (struct = fn());
-            return struct.validator(value, ctx);
-          },
-          coercer(value, ctx) {
-            struct ?? (struct = fn());
-            return struct.coercer(value, ctx);
-          },
-          refiner(value, ctx) {
-            struct ?? (struct = fn());
-            return struct.refiner(value, ctx);
-          }
-        });
-      }
-      function omit(struct, keys) {
-        const {
-          schema
-        } = struct;
-        const subschema = {
-          ...schema
-        };
-        for (const key of keys) {
-          delete subschema[key];
         }
-        switch (struct.type) {
-          case 'type':
-            return type(subschema);
-          default:
-            return object(subschema);
-        }
-      }
-      function partial(struct) {
-        const schema = struct instanceof Struct ? {
-          ...struct.schema
-        } : {
-          ...struct
-        };
-        for (const key in schema) {
-          schema[key] = optional(schema[key]);
-        }
-        return object(schema);
-      }
-      function pick(struct, keys) {
-        const {
-          schema
-        } = struct;
-        const subschema = {};
-        for (const key of keys) {
-          subschema[key] = schema[key];
-        }
-        return object(subschema);
-      }
-      function struct(name, validator) {
-        console.warn('superstruct@0.11 - The `struct` helper has been renamed to `define`.');
-        return define(name, validator);
-      }
-      function any() {
-        return define('any', () => true);
-      }
-      function array(Element) {
-        return new Struct({
-          type: 'array',
-          schema: Element,
-          *entries(value) {
-            if (Element && Array.isArray(value)) {
-              for (const [i, v] of value.entries()) {
-                yield [i, v, Element];
-              }
-            }
-          },
-          coercer(value) {
-            return Array.isArray(value) ? value.slice() : value;
-          },
-          validator(value) {
-            return Array.isArray(value) || `Expected an array value, but received: ${print(value)}`;
-          }
-        });
-      }
-      function bigint() {
-        return define('bigint', value => {
-          return typeof value === 'bigint';
-        });
-      }
-      function boolean() {
-        return define('boolean', value => {
-          return typeof value === 'boolean';
-        });
-      }
-      function date() {
-        return define('date', value => {
-          return value instanceof Date && !isNaN(value.getTime()) || `Expected a valid \`Date\` object, but received: ${print(value)}`;
-        });
-      }
-      function enums(values) {
-        const schema = {};
-        const description = values.map(v => print(v)).join();
-        for (const key of values) {
-          schema[key] = key;
-        }
-        return new Struct({
-          type: 'enums',
-          schema,
-          validator(value) {
-            return values.includes(value) || `Expected one of \`${description}\`, but received: ${print(value)}`;
-          }
-        });
-      }
-      function func() {
-        return define('func', value => {
-          return typeof value === 'function' || `Expected a function, but received: ${print(value)}`;
-        });
-      }
-      function instance(Class) {
-        return define('instance', value => {
-          return value instanceof Class || `Expected a \`${Class.name}\` instance, but received: ${print(value)}`;
-        });
-      }
-      function integer() {
-        return define('integer', value => {
-          return typeof value === 'number' && !isNaN(value) && Number.isInteger(value) || `Expected an integer, but received: ${print(value)}`;
-        });
-      }
-      function intersection(Structs) {
-        return new Struct({
-          type: 'intersection',
-          schema: null,
-          *entries(value, ctx) {
-            for (const S of Structs) {
-              yield* S.entries(value, ctx);
-            }
-          },
-          *validator(value, ctx) {
-            for (const S of Structs) {
-              yield* S.validator(value, ctx);
-            }
-          },
-          *refiner(value, ctx) {
-            for (const S of Structs) {
-              yield* S.refiner(value, ctx);
-            }
-          }
-        });
-      }
-      function literal(constant) {
-        const description = print(constant);
-        const t = typeof constant;
-        return new Struct({
-          type: 'literal',
-          schema: t === 'string' || t === 'number' || t === 'boolean' ? constant : null,
-          validator(value) {
-            return value === constant || `Expected the literal \`${description}\`, but received: ${print(value)}`;
-          }
-        });
-      }
-      function map(Key, Value) {
-        return new Struct({
-          type: 'map',
-          schema: null,
-          *entries(value) {
-            if (Key && Value && value instanceof Map) {
-              for (const [k, v] of value.entries()) {
-                yield [k, k, Key];
-                yield [k, v, Value];
-              }
-            }
-          },
-          coercer(value) {
-            return value instanceof Map ? new Map(value) : value;
-          },
-          validator(value) {
-            return value instanceof Map || `Expected a \`Map\` object, but received: ${print(value)}`;
-          }
-        });
-      }
-      function never() {
-        return define('never', () => false);
-      }
-      function nullable(struct) {
-        return new Struct({
-          ...struct,
-          validator: (value, ctx) => value === null || struct.validator(value, ctx),
-          refiner: (value, ctx) => value === null || struct.refiner(value, ctx)
-        });
-      }
-      function number() {
-        return define('number', value => {
-          return typeof value === 'number' && !isNaN(value) || `Expected a number, but received: ${print(value)}`;
-        });
-      }
-      function object(schema) {
-        const knowns = schema ? Object.keys(schema) : [];
-        const Never = never();
-        return new Struct({
-          type: 'object',
-          schema: schema ? schema : null,
-          *entries(value) {
-            if (schema && isObject(value)) {
-              const unknowns = new Set(Object.keys(value));
-              for (const key of knowns) {
-                unknowns.delete(key);
-                yield [key, value[key], schema[key]];
-              }
-              for (const key of unknowns) {
-                yield [key, value[key], Never];
-              }
-            }
-          },
-          validator(value) {
-            return isObject(value) || `Expected an object, but received: ${print(value)}`;
-          },
-          coercer(value) {
-            return isObject(value) ? {
-              ...value
-            } : value;
-          }
-        });
-      }
-      function optional(struct) {
-        return new Struct({
-          ...struct,
-          validator: (value, ctx) => value === undefined || struct.validator(value, ctx),
-          refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx)
-        });
-      }
-      function record(Key, Value) {
-        return new Struct({
-          type: 'record',
-          schema: null,
-          *entries(value) {
-            if (isObject(value)) {
-              for (const k in value) {
-                const v = value[k];
-                yield [k, k, Key];
-                yield [k, v, Value];
-              }
-            }
-          },
-          validator(value) {
-            return isObject(value) || `Expected an object, but received: ${print(value)}`;
-          }
-        });
-      }
-      function regexp() {
-        return define('regexp', value => {
-          return value instanceof RegExp;
-        });
-      }
-      function set(Element) {
-        return new Struct({
-          type: 'set',
-          schema: null,
-          *entries(value) {
-            if (Element && value instanceof Set) {
-              for (const v of value) {
-                yield [v, v, Element];
-              }
-            }
-          },
-          coercer(value) {
-            return value instanceof Set ? new Set(value) : value;
-          },
-          validator(value) {
-            return value instanceof Set || `Expected a \`Set\` object, but received: ${print(value)}`;
-          }
-        });
-      }
-      function string() {
-        return define('string', value => {
-          return typeof value === 'string' || `Expected a string, but received: ${print(value)}`;
-        });
-      }
-      function tuple(Structs) {
-        const Never = never();
-        return new Struct({
-          type: 'tuple',
-          schema: null,
-          *entries(value) {
-            if (Array.isArray(value)) {
-              const length = Math.max(Structs.length, value.length);
-              for (let i = 0; i < length; i++) {
-                yield [i, value[i], Structs[i] || Never];
-              }
-            }
-          },
-          validator(value) {
-            return Array.isArray(value) || `Expected an array, but received: ${print(value)}`;
-          }
-        });
-      }
-      function type(schema) {
-        const keys = Object.keys(schema);
-        return new Struct({
-          type: 'type',
-          schema,
-          *entries(value) {
-            if (isObject(value)) {
-              for (const k of keys) {
-                yield [k, value[k], schema[k]];
-              }
-            }
-          },
-          validator(value) {
-            return isObject(value) || `Expected an object, but received: ${print(value)}`;
-          }
-        });
-      }
-      function union(Structs) {
-        const description = Structs.map(s => s.type).join(' | ');
-        return new Struct({
-          type: 'union',
-          schema: null,
-          coercer(value, ctx) {
-            const firstMatch = Structs.find(s => {
-              const [e] = s.validate(value, {
-                coerce: true
-              });
-              return !e;
-            }) || unknown();
-            return firstMatch.coercer(value, ctx);
-          },
-          validator(value, ctx) {
-            const failures = [];
-            for (const S of Structs) {
-              const [...tuples] = run(value, S, ctx);
-              const [first] = tuples;
-              if (!first[0]) {
-                return [];
-              } else {
-                for (const [failure] of tuples) {
-                  if (failure) {
-                    failures.push(failure);
-                  }
+        function* run(value, struct, options = {}) {
+          const {
+            path = [],
+            branch = [value],
+            coerce = false,
+            mask = false
+          } = options;
+          const ctx = {
+            path,
+            branch
+          };
+          if (coerce) {
+            value = struct.coercer(value, ctx);
+            if (mask && struct.type !== 'type' && isObject(struct.schema) && isObject(value) && !Array.isArray(value)) {
+              for (const key in value) {
+                if (struct.schema[key] === undefined) {
+                  delete value[key];
                 }
               }
             }
-            return [`Expected the value to satisfy a union of \`${description}\`, but received: ${print(value)}`, ...failures];
           }
-        });
-      }
-      function unknown() {
-        return define('unknown', () => true);
-      }
-      function coerce(struct, condition, coercer) {
-        return new Struct({
-          ...struct,
-          coercer: (value, ctx) => {
-            return is(value, condition) ? struct.coercer(coercer(value, ctx), ctx) : struct.coercer(value, ctx);
+          let status = 'valid';
+          for (const failure of struct.validator(value, ctx)) {
+            failure.explanation = options.message;
+            status = 'not_valid';
+            yield [failure, undefined];
           }
-        });
-      }
-      function defaulted(struct, fallback, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        return coerce(struct, unknown(), x => {
-          const f = typeof fallback === 'function' ? fallback() : fallback;
-          if (x === undefined) {
-            return f;
-          }
-          if (!options.strict && isPlainObject(x) && isPlainObject(f)) {
-            const ret = {
-              ...x
-            };
-            let changed = false;
-            for (const key in f) {
-              if (ret[key] === undefined) {
-                ret[key] = f[key];
-                changed = true;
+          for (let [k, v, s] of struct.entries(value, ctx)) {
+            const ts = run(v, s, {
+              path: k === undefined ? path : [...path, k],
+              branch: k === undefined ? branch : [...branch, v],
+              coerce,
+              mask,
+              message: options.message
+            });
+            for (const t of ts) {
+              if (t[0]) {
+                status = t[0].refinement != null ? 'not_refined' : 'not_valid';
+                yield [t[0], undefined];
+              } else if (coerce) {
+                v = t[1];
+                if (k === undefined) {
+                  value = v;
+                } else if (value instanceof Map) {
+                  value.set(k, v);
+                } else if (value instanceof Set) {
+                  value.add(v);
+                } else if (isObject(value)) {
+                  if (v !== undefined || k in value) value[k] = v;
+                }
               }
             }
-            if (changed) {
-              return ret;
+          }
+          if (status !== 'not_valid') {
+            for (const failure of struct.refiner(value, ctx)) {
+              failure.explanation = options.message;
+              status = 'not_refined';
+              yield [failure, undefined];
             }
           }
-          return x;
-        });
-      }
-      function trimmed(struct) {
-        return coerce(struct, string(), x => x.trim());
-      }
-      function empty(struct) {
-        return refine(struct, 'empty', value => {
-          const size = getSize(value);
-          return size === 0 || `Expected an empty ${struct.type} but received one with a size of \`${size}\``;
-        });
-      }
-      function getSize(value) {
-        if (value instanceof Map || value instanceof Set) {
-          return value.size;
-        } else {
-          return value.length;
-        }
-      }
-      function max(struct, threshold, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        const {
-          exclusive
-        } = options;
-        return refine(struct, 'max', value => {
-          return exclusive ? value < threshold : value <= threshold || `Expected a ${struct.type} less than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
-        });
-      }
-      function min(struct, threshold, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        const {
-          exclusive
-        } = options;
-        return refine(struct, 'min', value => {
-          return exclusive ? value > threshold : value >= threshold || `Expected a ${struct.type} greater than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
-        });
-      }
-      function nonempty(struct) {
-        return refine(struct, 'nonempty', value => {
-          const size = getSize(value);
-          return size > 0 || `Expected a nonempty ${struct.type} but received an empty one`;
-        });
-      }
-      function pattern(struct, regexp) {
-        return refine(struct, 'pattern', value => {
-          return regexp.test(value) || `Expected a ${struct.type} matching \`/${regexp.source}/\` but received "${value}"`;
-        });
-      }
-      function size(struct, min, max) {
-        if (max === void 0) {
-          max = min;
-        }
-        const expected = `Expected a ${struct.type}`;
-        const of = min === max ? `of \`${min}\`` : `between \`${min}\` and \`${max}\``;
-        return refine(struct, 'size', value => {
-          if (typeof value === 'number' || value instanceof Date) {
-            return min <= value && value <= max || `${expected} ${of} but received \`${value}\``;
-          } else if (value instanceof Map || value instanceof Set) {
-            const {
-              size
-            } = value;
-            return min <= size && size <= max || `${expected} with a size ${of} but received one with a size of \`${size}\``;
-          } else {
-            const {
-              length
-            } = value;
-            return min <= length && length <= max || `${expected} with a length ${of} but received one with a length of \`${length}\``;
+          if (status === 'valid') {
+            yield [undefined, value];
           }
-        });
-      }
-      function refine(struct, name, refiner) {
-        return new Struct({
-          ...struct,
-          *refiner(value, ctx) {
-            yield* struct.refiner(value, ctx);
-            const result = refiner(value, ctx);
-            const failures = toFailures(result, ctx, struct, value);
-            for (const failure of failures) {
-              yield {
-                ...failure,
-                refinement: name
+        }
+        class Struct {
+          constructor(props) {
+            const {
+              type,
+              schema,
+              validator,
+              refiner,
+              coercer = value => value,
+              entries = function* () {}
+            } = props;
+            this.type = type;
+            this.schema = schema;
+            this.entries = entries;
+            this.coercer = coercer;
+            if (validator) {
+              this.validator = (value, context) => {
+                const result = validator(value, context);
+                return toFailures(result, context, this, value);
               };
+            } else {
+              this.validator = () => [];
+            }
+            if (refiner) {
+              this.refiner = (value, context) => {
+                const result = refiner(value, context);
+                return toFailures(result, context, this, value);
+              };
+            } else {
+              this.refiner = () => [];
             }
           }
-        });
-      }
-      exports.Struct = Struct;
-      exports.StructError = StructError;
-      exports.any = any;
-      exports.array = array;
-      exports.assert = assert;
-      exports.assign = assign;
-      exports.bigint = bigint;
-      exports.boolean = boolean;
-      exports.coerce = coerce;
-      exports.create = create;
-      exports.date = date;
-      exports.defaulted = defaulted;
-      exports.define = define;
-      exports.deprecated = deprecated;
-      exports.dynamic = dynamic;
-      exports.empty = empty;
-      exports.enums = enums;
-      exports.func = func;
-      exports.instance = instance;
-      exports.integer = integer;
-      exports.intersection = intersection;
-      exports.is = is;
-      exports.lazy = lazy;
-      exports.literal = literal;
-      exports.map = map;
-      exports.mask = mask;
-      exports.max = max;
-      exports.min = min;
-      exports.never = never;
-      exports.nonempty = nonempty;
-      exports.nullable = nullable;
-      exports.number = number;
-      exports.object = object;
-      exports.omit = omit;
-      exports.optional = optional;
-      exports.partial = partial;
-      exports.pattern = pattern;
-      exports.pick = pick;
-      exports.record = record;
-      exports.refine = refine;
-      exports.regexp = regexp;
-      exports.set = set;
-      exports.size = size;
-      exports.string = string;
-      exports.struct = struct;
-      exports.trimmed = trimmed;
-      exports.tuple = tuple;
-      exports.type = type;
-      exports.union = union;
-      exports.unknown = unknown;
-      exports.validate = validate;
+          assert(value, message) {
+            return assert(value, this, message);
+          }
+          create(value, message) {
+            return create(value, this, message);
+          }
+          is(value) {
+            return is(value, this);
+          }
+          mask(value, message) {
+            return mask(value, this, message);
+          }
+          validate(value, options = {}) {
+            return validate(value, this, options);
+          }
+        }
+        function assert(value, struct, message) {
+          const result = validate(value, struct, {
+            message
+          });
+          if (result[0]) {
+            throw result[0];
+          }
+        }
+        function create(value, struct, message) {
+          const result = validate(value, struct, {
+            coerce: true,
+            message
+          });
+          if (result[0]) {
+            throw result[0];
+          } else {
+            return result[1];
+          }
+        }
+        function mask(value, struct, message) {
+          const result = validate(value, struct, {
+            coerce: true,
+            mask: true,
+            message
+          });
+          if (result[0]) {
+            throw result[0];
+          } else {
+            return result[1];
+          }
+        }
+        function is(value, struct) {
+          const result = validate(value, struct);
+          return !result[0];
+        }
+        function validate(value, struct, options = {}) {
+          const tuples = run(value, struct, options);
+          const tuple = shiftIterator(tuples);
+          if (tuple[0]) {
+            const error = new StructError(tuple[0], function* () {
+              for (const t of tuples) {
+                if (t[0]) {
+                  yield t[0];
+                }
+              }
+            });
+            return [error, undefined];
+          } else {
+            const v = tuple[1];
+            return [undefined, v];
+          }
+        }
+        function assign(...Structs) {
+          const isType = Structs[0].type === 'type';
+          const schemas = Structs.map(s => s.schema);
+          const schema = Object.assign({}, ...schemas);
+          return isType ? type(schema) : object(schema);
+        }
+        function define(name, validator) {
+          return new Struct({
+            type: name,
+            schema: null,
+            validator
+          });
+        }
+        function deprecated(struct, log) {
+          return new Struct({
+            ...struct,
+            refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx),
+            validator(value, ctx) {
+              if (value === undefined) {
+                return true;
+              } else {
+                log(value, ctx);
+                return struct.validator(value, ctx);
+              }
+            }
+          });
+        }
+        function dynamic(fn) {
+          return new Struct({
+            type: 'dynamic',
+            schema: null,
+            *entries(value, ctx) {
+              const struct = fn(value, ctx);
+              yield* struct.entries(value, ctx);
+            },
+            validator(value, ctx) {
+              const struct = fn(value, ctx);
+              return struct.validator(value, ctx);
+            },
+            coercer(value, ctx) {
+              const struct = fn(value, ctx);
+              return struct.coercer(value, ctx);
+            },
+            refiner(value, ctx) {
+              const struct = fn(value, ctx);
+              return struct.refiner(value, ctx);
+            }
+          });
+        }
+        function lazy(fn) {
+          let struct;
+          return new Struct({
+            type: 'lazy',
+            schema: null,
+            *entries(value, ctx) {
+              struct ?? (struct = fn());
+              yield* struct.entries(value, ctx);
+            },
+            validator(value, ctx) {
+              struct ?? (struct = fn());
+              return struct.validator(value, ctx);
+            },
+            coercer(value, ctx) {
+              struct ?? (struct = fn());
+              return struct.coercer(value, ctx);
+            },
+            refiner(value, ctx) {
+              struct ?? (struct = fn());
+              return struct.refiner(value, ctx);
+            }
+          });
+        }
+        function omit(struct, keys) {
+          const {
+            schema
+          } = struct;
+          const subschema = {
+            ...schema
+          };
+          for (const key of keys) {
+            delete subschema[key];
+          }
+          switch (struct.type) {
+            case 'type':
+              return type(subschema);
+            default:
+              return object(subschema);
+          }
+        }
+        function partial(struct) {
+          const schema = struct instanceof Struct ? {
+            ...struct.schema
+          } : {
+            ...struct
+          };
+          for (const key in schema) {
+            schema[key] = optional(schema[key]);
+          }
+          return object(schema);
+        }
+        function pick(struct, keys) {
+          const {
+            schema
+          } = struct;
+          const subschema = {};
+          for (const key of keys) {
+            subschema[key] = schema[key];
+          }
+          return object(subschema);
+        }
+        function struct(name, validator) {
+          console.warn('superstruct@0.11 - The `struct` helper has been renamed to `define`.');
+          return define(name, validator);
+        }
+        function any() {
+          return define('any', () => true);
+        }
+        function array(Element) {
+          return new Struct({
+            type: 'array',
+            schema: Element,
+            *entries(value) {
+              if (Element && Array.isArray(value)) {
+                for (const [i, v] of value.entries()) {
+                  yield [i, v, Element];
+                }
+              }
+            },
+            coercer(value) {
+              return Array.isArray(value) ? value.slice() : value;
+            },
+            validator(value) {
+              return Array.isArray(value) || `Expected an array value, but received: ${print(value)}`;
+            }
+          });
+        }
+        function bigint() {
+          return define('bigint', value => {
+            return typeof value === 'bigint';
+          });
+        }
+        function boolean() {
+          return define('boolean', value => {
+            return typeof value === 'boolean';
+          });
+        }
+        function date() {
+          return define('date', value => {
+            return value instanceof Date && !isNaN(value.getTime()) || `Expected a valid \`Date\` object, but received: ${print(value)}`;
+          });
+        }
+        function enums(values) {
+          const schema = {};
+          const description = values.map(v => print(v)).join();
+          for (const key of values) {
+            schema[key] = key;
+          }
+          return new Struct({
+            type: 'enums',
+            schema,
+            validator(value) {
+              return values.includes(value) || `Expected one of \`${description}\`, but received: ${print(value)}`;
+            }
+          });
+        }
+        function func() {
+          return define('func', value => {
+            return typeof value === 'function' || `Expected a function, but received: ${print(value)}`;
+          });
+        }
+        function instance(Class) {
+          return define('instance', value => {
+            return value instanceof Class || `Expected a \`${Class.name}\` instance, but received: ${print(value)}`;
+          });
+        }
+        function integer() {
+          return define('integer', value => {
+            return typeof value === 'number' && !isNaN(value) && Number.isInteger(value) || `Expected an integer, but received: ${print(value)}`;
+          });
+        }
+        function intersection(Structs) {
+          return new Struct({
+            type: 'intersection',
+            schema: null,
+            *entries(value, ctx) {
+              for (const S of Structs) {
+                yield* S.entries(value, ctx);
+              }
+            },
+            *validator(value, ctx) {
+              for (const S of Structs) {
+                yield* S.validator(value, ctx);
+              }
+            },
+            *refiner(value, ctx) {
+              for (const S of Structs) {
+                yield* S.refiner(value, ctx);
+              }
+            }
+          });
+        }
+        function literal(constant) {
+          const description = print(constant);
+          const t = typeof constant;
+          return new Struct({
+            type: 'literal',
+            schema: t === 'string' || t === 'number' || t === 'boolean' ? constant : null,
+            validator(value) {
+              return value === constant || `Expected the literal \`${description}\`, but received: ${print(value)}`;
+            }
+          });
+        }
+        function map(Key, Value) {
+          return new Struct({
+            type: 'map',
+            schema: null,
+            *entries(value) {
+              if (Key && Value && value instanceof Map) {
+                for (const [k, v] of value.entries()) {
+                  yield [k, k, Key];
+                  yield [k, v, Value];
+                }
+              }
+            },
+            coercer(value) {
+              return value instanceof Map ? new Map(value) : value;
+            },
+            validator(value) {
+              return value instanceof Map || `Expected a \`Map\` object, but received: ${print(value)}`;
+            }
+          });
+        }
+        function never() {
+          return define('never', () => false);
+        }
+        function nullable(struct) {
+          return new Struct({
+            ...struct,
+            validator: (value, ctx) => value === null || struct.validator(value, ctx),
+            refiner: (value, ctx) => value === null || struct.refiner(value, ctx)
+          });
+        }
+        function number() {
+          return define('number', value => {
+            return typeof value === 'number' && !isNaN(value) || `Expected a number, but received: ${print(value)}`;
+          });
+        }
+        function object(schema) {
+          const knowns = schema ? Object.keys(schema) : [];
+          const Never = never();
+          return new Struct({
+            type: 'object',
+            schema: schema ? schema : null,
+            *entries(value) {
+              if (schema && isObject(value)) {
+                const unknowns = new Set(Object.keys(value));
+                for (const key of knowns) {
+                  unknowns.delete(key);
+                  yield [key, value[key], schema[key]];
+                }
+                for (const key of unknowns) {
+                  yield [key, value[key], Never];
+                }
+              }
+            },
+            validator(value) {
+              return isObject(value) || `Expected an object, but received: ${print(value)}`;
+            },
+            coercer(value) {
+              return isObject(value) ? {
+                ...value
+              } : value;
+            }
+          });
+        }
+        function optional(struct) {
+          return new Struct({
+            ...struct,
+            validator: (value, ctx) => value === undefined || struct.validator(value, ctx),
+            refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx)
+          });
+        }
+        function record(Key, Value) {
+          return new Struct({
+            type: 'record',
+            schema: null,
+            *entries(value) {
+              if (isObject(value)) {
+                for (const k in value) {
+                  const v = value[k];
+                  yield [k, k, Key];
+                  yield [k, v, Value];
+                }
+              }
+            },
+            validator(value) {
+              return isObject(value) || `Expected an object, but received: ${print(value)}`;
+            }
+          });
+        }
+        function regexp() {
+          return define('regexp', value => {
+            return value instanceof RegExp;
+          });
+        }
+        function set(Element) {
+          return new Struct({
+            type: 'set',
+            schema: null,
+            *entries(value) {
+              if (Element && value instanceof Set) {
+                for (const v of value) {
+                  yield [v, v, Element];
+                }
+              }
+            },
+            coercer(value) {
+              return value instanceof Set ? new Set(value) : value;
+            },
+            validator(value) {
+              return value instanceof Set || `Expected a \`Set\` object, but received: ${print(value)}`;
+            }
+          });
+        }
+        function string() {
+          return define('string', value => {
+            return typeof value === 'string' || `Expected a string, but received: ${print(value)}`;
+          });
+        }
+        function tuple(Structs) {
+          const Never = never();
+          return new Struct({
+            type: 'tuple',
+            schema: null,
+            *entries(value) {
+              if (Array.isArray(value)) {
+                const length = Math.max(Structs.length, value.length);
+                for (let i = 0; i < length; i++) {
+                  yield [i, value[i], Structs[i] || Never];
+                }
+              }
+            },
+            validator(value) {
+              return Array.isArray(value) || `Expected an array, but received: ${print(value)}`;
+            }
+          });
+        }
+        function type(schema) {
+          const keys = Object.keys(schema);
+          return new Struct({
+            type: 'type',
+            schema,
+            *entries(value) {
+              if (isObject(value)) {
+                for (const k of keys) {
+                  yield [k, value[k], schema[k]];
+                }
+              }
+            },
+            validator(value) {
+              return isObject(value) || `Expected an object, but received: ${print(value)}`;
+            },
+            coercer(value) {
+              return isObject(value) ? {
+                ...value
+              } : value;
+            }
+          });
+        }
+        function union(Structs) {
+          const description = Structs.map(s => s.type).join(' | ');
+          return new Struct({
+            type: 'union',
+            schema: null,
+            coercer(value) {
+              for (const S of Structs) {
+                const [error, coerced] = S.validate(value, {
+                  coerce: true
+                });
+                if (!error) {
+                  return coerced;
+                }
+              }
+              return value;
+            },
+            validator(value, ctx) {
+              const failures = [];
+              for (const S of Structs) {
+                const [...tuples] = run(value, S, ctx);
+                const [first] = tuples;
+                if (!first[0]) {
+                  return [];
+                } else {
+                  for (const [failure] of tuples) {
+                    if (failure) {
+                      failures.push(failure);
+                    }
+                  }
+                }
+              }
+              return [`Expected the value to satisfy a union of \`${description}\`, but received: ${print(value)}`, ...failures];
+            }
+          });
+        }
+        function unknown() {
+          return define('unknown', () => true);
+        }
+        function coerce(struct, condition, coercer) {
+          return new Struct({
+            ...struct,
+            coercer: (value, ctx) => {
+              return is(value, condition) ? struct.coercer(coercer(value, ctx), ctx) : struct.coercer(value, ctx);
+            }
+          });
+        }
+        function defaulted(struct, fallback, options = {}) {
+          return coerce(struct, unknown(), x => {
+            const f = typeof fallback === 'function' ? fallback() : fallback;
+            if (x === undefined) {
+              return f;
+            }
+            if (!options.strict && isPlainObject(x) && isPlainObject(f)) {
+              const ret = {
+                ...x
+              };
+              let changed = false;
+              for (const key in f) {
+                if (ret[key] === undefined) {
+                  ret[key] = f[key];
+                  changed = true;
+                }
+              }
+              if (changed) {
+                return ret;
+              }
+            }
+            return x;
+          });
+        }
+        function trimmed(struct) {
+          return coerce(struct, string(), x => x.trim());
+        }
+        function empty(struct) {
+          return refine(struct, 'empty', value => {
+            const size = getSize(value);
+            return size === 0 || `Expected an empty ${struct.type} but received one with a size of \`${size}\``;
+          });
+        }
+        function getSize(value) {
+          if (value instanceof Map || value instanceof Set) {
+            return value.size;
+          } else {
+            return value.length;
+          }
+        }
+        function max(struct, threshold, options = {}) {
+          const {
+            exclusive
+          } = options;
+          return refine(struct, 'max', value => {
+            return exclusive ? value < threshold : value <= threshold || `Expected a ${struct.type} less than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
+          });
+        }
+        function min(struct, threshold, options = {}) {
+          const {
+            exclusive
+          } = options;
+          return refine(struct, 'min', value => {
+            return exclusive ? value > threshold : value >= threshold || `Expected a ${struct.type} greater than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
+          });
+        }
+        function nonempty(struct) {
+          return refine(struct, 'nonempty', value => {
+            const size = getSize(value);
+            return size > 0 || `Expected a nonempty ${struct.type} but received an empty one`;
+          });
+        }
+        function pattern(struct, regexp) {
+          return refine(struct, 'pattern', value => {
+            return regexp.test(value) || `Expected a ${struct.type} matching \`/${regexp.source}/\` but received "${value}"`;
+          });
+        }
+        function size(struct, min, max = min) {
+          const expected = `Expected a ${struct.type}`;
+          const of = min === max ? `of \`${min}\`` : `between \`${min}\` and \`${max}\``;
+          return refine(struct, 'size', value => {
+            if (typeof value === 'number' || value instanceof Date) {
+              return min <= value && value <= max || `${expected} ${of} but received \`${value}\``;
+            } else if (value instanceof Map || value instanceof Set) {
+              const {
+                size
+              } = value;
+              return min <= size && size <= max || `${expected} with a size ${of} but received one with a size of \`${size}\``;
+            } else {
+              const {
+                length
+              } = value;
+              return min <= length && length <= max || `${expected} with a length ${of} but received one with a length of \`${length}\``;
+            }
+          });
+        }
+        function refine(struct, name, refiner) {
+          return new Struct({
+            ...struct,
+            *refiner(value, ctx) {
+              yield* struct.refiner(value, ctx);
+              const result = refiner(value, ctx);
+              const failures = toFailures(result, ctx, struct, value);
+              for (const failure of failures) {
+                yield {
+                  ...failure,
+                  refinement: name
+                };
+              }
+            }
+          });
+        }
+        exports.Struct = Struct;
+        exports.StructError = StructError;
+        exports.any = any;
+        exports.array = array;
+        exports.assert = assert;
+        exports.assign = assign;
+        exports.bigint = bigint;
+        exports.boolean = boolean;
+        exports.coerce = coerce;
+        exports.create = create;
+        exports.date = date;
+        exports.defaulted = defaulted;
+        exports.define = define;
+        exports.deprecated = deprecated;
+        exports.dynamic = dynamic;
+        exports.empty = empty;
+        exports.enums = enums;
+        exports.func = func;
+        exports.instance = instance;
+        exports.integer = integer;
+        exports.intersection = intersection;
+        exports.is = is;
+        exports.lazy = lazy;
+        exports.literal = literal;
+        exports.map = map;
+        exports.mask = mask;
+        exports.max = max;
+        exports.min = min;
+        exports.never = never;
+        exports.nonempty = nonempty;
+        exports.nullable = nullable;
+        exports.number = number;
+        exports.object = object;
+        exports.omit = omit;
+        exports.optional = optional;
+        exports.partial = partial;
+        exports.pattern = pattern;
+        exports.pick = pick;
+        exports.record = record;
+        exports.refine = refine;
+        exports.regexp = regexp;
+        exports.set = set;
+        exports.size = size;
+        exports.string = string;
+        exports.struct = struct;
+        exports.trimmed = trimmed;
+        exports.tuple = tuple;
+        exports.type = type;
+        exports.union = union;
+        exports.unknown = unknown;
+        exports.validate = validate;
+      });
     }, {}],
-    214: [function (require, module, exports) {
+    280: [function (require, module, exports) {
       (function (nacl) {
         'use strict';
 
@@ -36093,9 +41388,9 @@
         })();
       })(typeof module !== 'undefined' && module.exports ? module.exports : self.nacl = self.nacl || {});
     }, {
-      "crypto": 134
+      "crypto": 198
     }],
-    215: [function (require, module, exports) {
+    281: [function (require, module, exports) {
       (function (global) {
         (function () {
           'use strict';
@@ -36409,10 +41704,388 @@
         }).call(this);
       }).call(this, typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {});
     }, {
-      "querystringify": 204,
-      "requires-port": 205
+      "querystringify": 270,
+      "requires-port": 271
     }],
-    216: [function (require, module, exports) {
+    282: [function (require, module, exports) {
+      'use strict';
+
+      module.exports = function (Yallist) {
+        Yallist.prototype[Symbol.iterator] = function* () {
+          for (let walker = this.head; walker; walker = walker.next) {
+            yield walker.value;
+          }
+        };
+      };
+    }, {}],
+    283: [function (require, module, exports) {
+      'use strict';
+
+      module.exports = Yallist;
+      Yallist.Node = Node;
+      Yallist.create = Yallist;
+      function Yallist(list) {
+        var self = this;
+        if (!(self instanceof Yallist)) {
+          self = new Yallist();
+        }
+        self.tail = null;
+        self.head = null;
+        self.length = 0;
+        if (list && typeof list.forEach === 'function') {
+          list.forEach(function (item) {
+            self.push(item);
+          });
+        } else if (arguments.length > 0) {
+          for (var i = 0, l = arguments.length; i < l; i++) {
+            self.push(arguments[i]);
+          }
+        }
+        return self;
+      }
+      Yallist.prototype.removeNode = function (node) {
+        if (node.list !== this) {
+          throw new Error('removing node which does not belong to this list');
+        }
+        var next = node.next;
+        var prev = node.prev;
+        if (next) {
+          next.prev = prev;
+        }
+        if (prev) {
+          prev.next = next;
+        }
+        if (node === this.head) {
+          this.head = next;
+        }
+        if (node === this.tail) {
+          this.tail = prev;
+        }
+        node.list.length--;
+        node.next = null;
+        node.prev = null;
+        node.list = null;
+        return next;
+      };
+      Yallist.prototype.unshiftNode = function (node) {
+        if (node === this.head) {
+          return;
+        }
+        if (node.list) {
+          node.list.removeNode(node);
+        }
+        var head = this.head;
+        node.list = this;
+        node.next = head;
+        if (head) {
+          head.prev = node;
+        }
+        this.head = node;
+        if (!this.tail) {
+          this.tail = node;
+        }
+        this.length++;
+      };
+      Yallist.prototype.pushNode = function (node) {
+        if (node === this.tail) {
+          return;
+        }
+        if (node.list) {
+          node.list.removeNode(node);
+        }
+        var tail = this.tail;
+        node.list = this;
+        node.prev = tail;
+        if (tail) {
+          tail.next = node;
+        }
+        this.tail = node;
+        if (!this.head) {
+          this.head = node;
+        }
+        this.length++;
+      };
+      Yallist.prototype.push = function () {
+        for (var i = 0, l = arguments.length; i < l; i++) {
+          push(this, arguments[i]);
+        }
+        return this.length;
+      };
+      Yallist.prototype.unshift = function () {
+        for (var i = 0, l = arguments.length; i < l; i++) {
+          unshift(this, arguments[i]);
+        }
+        return this.length;
+      };
+      Yallist.prototype.pop = function () {
+        if (!this.tail) {
+          return undefined;
+        }
+        var res = this.tail.value;
+        this.tail = this.tail.prev;
+        if (this.tail) {
+          this.tail.next = null;
+        } else {
+          this.head = null;
+        }
+        this.length--;
+        return res;
+      };
+      Yallist.prototype.shift = function () {
+        if (!this.head) {
+          return undefined;
+        }
+        var res = this.head.value;
+        this.head = this.head.next;
+        if (this.head) {
+          this.head.prev = null;
+        } else {
+          this.tail = null;
+        }
+        this.length--;
+        return res;
+      };
+      Yallist.prototype.forEach = function (fn, thisp) {
+        thisp = thisp || this;
+        for (var walker = this.head, i = 0; walker !== null; i++) {
+          fn.call(thisp, walker.value, i, this);
+          walker = walker.next;
+        }
+      };
+      Yallist.prototype.forEachReverse = function (fn, thisp) {
+        thisp = thisp || this;
+        for (var walker = this.tail, i = this.length - 1; walker !== null; i--) {
+          fn.call(thisp, walker.value, i, this);
+          walker = walker.prev;
+        }
+      };
+      Yallist.prototype.get = function (n) {
+        for (var i = 0, walker = this.head; walker !== null && i < n; i++) {
+          walker = walker.next;
+        }
+        if (i === n && walker !== null) {
+          return walker.value;
+        }
+      };
+      Yallist.prototype.getReverse = function (n) {
+        for (var i = 0, walker = this.tail; walker !== null && i < n; i++) {
+          walker = walker.prev;
+        }
+        if (i === n && walker !== null) {
+          return walker.value;
+        }
+      };
+      Yallist.prototype.map = function (fn, thisp) {
+        thisp = thisp || this;
+        var res = new Yallist();
+        for (var walker = this.head; walker !== null;) {
+          res.push(fn.call(thisp, walker.value, this));
+          walker = walker.next;
+        }
+        return res;
+      };
+      Yallist.prototype.mapReverse = function (fn, thisp) {
+        thisp = thisp || this;
+        var res = new Yallist();
+        for (var walker = this.tail; walker !== null;) {
+          res.push(fn.call(thisp, walker.value, this));
+          walker = walker.prev;
+        }
+        return res;
+      };
+      Yallist.prototype.reduce = function (fn, initial) {
+        var acc;
+        var walker = this.head;
+        if (arguments.length > 1) {
+          acc = initial;
+        } else if (this.head) {
+          walker = this.head.next;
+          acc = this.head.value;
+        } else {
+          throw new TypeError('Reduce of empty list with no initial value');
+        }
+        for (var i = 0; walker !== null; i++) {
+          acc = fn(acc, walker.value, i);
+          walker = walker.next;
+        }
+        return acc;
+      };
+      Yallist.prototype.reduceReverse = function (fn, initial) {
+        var acc;
+        var walker = this.tail;
+        if (arguments.length > 1) {
+          acc = initial;
+        } else if (this.tail) {
+          walker = this.tail.prev;
+          acc = this.tail.value;
+        } else {
+          throw new TypeError('Reduce of empty list with no initial value');
+        }
+        for (var i = this.length - 1; walker !== null; i--) {
+          acc = fn(acc, walker.value, i);
+          walker = walker.prev;
+        }
+        return acc;
+      };
+      Yallist.prototype.toArray = function () {
+        var arr = new Array(this.length);
+        for (var i = 0, walker = this.head; walker !== null; i++) {
+          arr[i] = walker.value;
+          walker = walker.next;
+        }
+        return arr;
+      };
+      Yallist.prototype.toArrayReverse = function () {
+        var arr = new Array(this.length);
+        for (var i = 0, walker = this.tail; walker !== null; i++) {
+          arr[i] = walker.value;
+          walker = walker.prev;
+        }
+        return arr;
+      };
+      Yallist.prototype.slice = function (from, to) {
+        to = to || this.length;
+        if (to < 0) {
+          to += this.length;
+        }
+        from = from || 0;
+        if (from < 0) {
+          from += this.length;
+        }
+        var ret = new Yallist();
+        if (to < from || to < 0) {
+          return ret;
+        }
+        if (from < 0) {
+          from = 0;
+        }
+        if (to > this.length) {
+          to = this.length;
+        }
+        for (var i = 0, walker = this.head; walker !== null && i < from; i++) {
+          walker = walker.next;
+        }
+        for (; walker !== null && i < to; i++, walker = walker.next) {
+          ret.push(walker.value);
+        }
+        return ret;
+      };
+      Yallist.prototype.sliceReverse = function (from, to) {
+        to = to || this.length;
+        if (to < 0) {
+          to += this.length;
+        }
+        from = from || 0;
+        if (from < 0) {
+          from += this.length;
+        }
+        var ret = new Yallist();
+        if (to < from || to < 0) {
+          return ret;
+        }
+        if (from < 0) {
+          from = 0;
+        }
+        if (to > this.length) {
+          to = this.length;
+        }
+        for (var i = this.length, walker = this.tail; walker !== null && i > to; i--) {
+          walker = walker.prev;
+        }
+        for (; walker !== null && i > from; i--, walker = walker.prev) {
+          ret.push(walker.value);
+        }
+        return ret;
+      };
+      Yallist.prototype.splice = function (start, deleteCount, ...nodes) {
+        if (start > this.length) {
+          start = this.length - 1;
+        }
+        if (start < 0) {
+          start = this.length + start;
+        }
+        for (var i = 0, walker = this.head; walker !== null && i < start; i++) {
+          walker = walker.next;
+        }
+        var ret = [];
+        for (var i = 0; walker && i < deleteCount; i++) {
+          ret.push(walker.value);
+          walker = this.removeNode(walker);
+        }
+        if (walker === null) {
+          walker = this.tail;
+        }
+        if (walker !== this.head && walker !== this.tail) {
+          walker = walker.prev;
+        }
+        for (var i = 0; i < nodes.length; i++) {
+          walker = insert(this, walker, nodes[i]);
+        }
+        return ret;
+      };
+      Yallist.prototype.reverse = function () {
+        var head = this.head;
+        var tail = this.tail;
+        for (var walker = head; walker !== null; walker = walker.prev) {
+          var p = walker.prev;
+          walker.prev = walker.next;
+          walker.next = p;
+        }
+        this.head = tail;
+        this.tail = head;
+        return this;
+      };
+      function insert(self, node, value) {
+        var inserted = node === self.head ? new Node(value, null, node, self) : new Node(value, node, node.next, self);
+        if (inserted.next === null) {
+          self.tail = inserted;
+        }
+        if (inserted.prev === null) {
+          self.head = inserted;
+        }
+        self.length++;
+        return inserted;
+      }
+      function push(self, item) {
+        self.tail = new Node(item, self.tail, null, self);
+        if (!self.head) {
+          self.head = self.tail;
+        }
+        self.length++;
+      }
+      function unshift(self, item) {
+        self.head = new Node(item, null, self.head, self);
+        if (!self.tail) {
+          self.tail = self.head;
+        }
+        self.length++;
+      }
+      function Node(value, prev, next, list) {
+        if (!(this instanceof Node)) {
+          return new Node(value, prev, next, list);
+        }
+        this.list = list;
+        this.value = value;
+        if (prev) {
+          prev.next = this;
+          this.prev = prev;
+        } else {
+          this.prev = null;
+        }
+        if (next) {
+          next.prev = this;
+          this.next = next;
+        } else {
+          this.next = null;
+        }
+      }
+      try {
+        require('./iterator.js')(Yallist);
+      } catch (er) {}
+    }, {
+      "./iterator.js": 282
+    }],
+    284: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -36457,7 +42130,9 @@
             async init() {
               const storedAccounts = await this.wallet.request({
                 method: 'snap_manageState',
-                params: ['get']
+                params: {
+                  operation: 'get'
+                }
               });
               if (storedAccounts === null || Object.keys(storedAccounts).length === 0) {
                 const Account = await _classPrivateMethodGet(this, _generateAccount, _generateAccount2).call(this, 2);
@@ -36472,10 +42147,13 @@
                 accounts[address] = extendedAccount;
                 await this.wallet.request({
                   method: 'snap_manageState',
-                  params: ['update', {
-                    "currentAccountId": address,
-                    "Accounts": accounts
-                  }]
+                  params: {
+                    operation: 'update',
+                    newState: {
+                      "currentAccountId": address,
+                      "Accounts": accounts
+                    }
+                  }
                 });
                 this.currentAccountId = address;
                 this.accounts = accounts;
@@ -36495,6 +42173,7 @@
                 const tempAccount = this.accounts[addr];
                 if (tempAccount.type === 'generated') {
                   const Account = await _classPrivateMethodGet(this, _generateAccount, _generateAccount2).call(this, tempAccount.path);
+                  Account.name = tempAccount.name;
                   return Account;
                 } else if (tempAccount.type === 'imported') {
                   const key = await _classPrivateMethodGet(this, _getencryptionKey, _getencryptionKey2).call(this);
@@ -36505,6 +42184,7 @@
                   const Account = {};
                   Account.addr = algo.encodeAddress(keys.publicKey);
                   Account.sk = keys.secretKey;
+                  Account.name = tempAccount.name;
                   return Account;
                 }
               }
@@ -36549,10 +42229,13 @@
                 this.currentAccount = await this.unlockAccount(addr);
                 await this.wallet.request({
                   method: 'snap_manageState',
-                  params: ['update', {
-                    "currentAccountId": addr,
-                    "Accounts": this.accounts
-                  }]
+                  params: {
+                    operation: 'update',
+                    newState: {
+                      "currentAccountId": addr,
+                      "Accounts": this.accounts
+                    }
+                  }
                 });
                 return true;
               } else {
@@ -36565,7 +42248,9 @@
             async clearAccounts() {
               await this.wallet.request({
                 method: 'snap_manageState',
-                params: ['update', {}]
+                params: {
+                  operation: 'clear'
+                }
               });
               return true;
             }
@@ -36586,10 +42271,13 @@
               };
               await this.wallet.request({
                 method: 'snap_manageState',
-                params: ['update', {
-                  "currentAccountId": this.currentAccountId,
-                  "Accounts": this.accounts
-                }]
+                params: {
+                  operation: 'update',
+                  newState: {
+                    "currentAccountId": this.currentAccountId,
+                    "Accounts": this.accounts
+                  }
+                }
               });
               return {
                 "currentAccountId": address,
@@ -36616,10 +42304,13 @@
               };
               await this.wallet.request({
                 method: 'snap_manageState',
-                params: ['update', {
-                  "currentAccountId": this.currentAccountId,
-                  "Accounts": this.accounts
-                }]
+                params: {
+                  operation: 'update',
+                  newState: {
+                    "currentAccountId": this.currentAccountId,
+                    "Accounts": this.accounts
+                  }
+                }
               });
               return {
                 "currentAccountId": address,
@@ -36662,15 +42353,15 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./Utils": 223,
+      "./Utils": 291,
       "@babel/runtime/helpers/interopRequireDefault": 2,
       "@metamask/key-tree": 16,
-      "algosdk/dist/cjs": 45,
-      "buffer": 135,
-      "crypto-js": 149,
-      "tweetnacl": 214
+      "algosdk/dist/cjs": 109,
+      "buffer": 199,
+      "crypto-js": 213,
+      "tweetnacl": 280
     }],
-    217: [function (require, module, exports) {
+    285: [function (require, module, exports) {
       "use strict";
 
       var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -36709,6 +42400,9 @@
         }
         getAddress() {
           return this.Account.addr;
+        }
+        getName() {
+          return this.Account.name;
         }
         getSK() {
           return this.Account.sk;
@@ -36756,12 +42450,12 @@
       }
       exports.default = AlgoWallet;
     }, {
-      "./HTTPClient": 219,
-      "./Utils": 223,
+      "./HTTPClient": 287,
+      "./Utils": 291,
       "@babel/runtime/helpers/interopRequireDefault": 2,
-      "algosdk/dist/cjs": 45
+      "algosdk/dist/cjs": 109
     }],
-    218: [function (require, module, exports) {
+    286: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -36898,14 +42592,14 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./TxnVerifier": 222,
-      "./Utils": 223,
-      "./verifyArgs": 226,
+      "./TxnVerifier": 290,
+      "./Utils": 291,
+      "./verifyArgs": 294,
       "@babel/runtime/helpers/interopRequireDefault": 2,
-      "algosdk/dist/cjs": 45,
-      "buffer": 135
+      "algosdk/dist/cjs": 109,
+      "buffer": 199
     }],
-    219: [function (require, module, exports) {
+    287: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -36985,9 +42679,9 @@
       }
       exports.default = HTTPClient;
     }, {
-      "querystring": 203
+      "querystring": 269
     }],
-    220: [function (require, module, exports) {
+    288: [function (require, module, exports) {
       "use strict";
 
       var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -37038,11 +42732,11 @@
         return actions.useable;
       }
     }, {
-      "./Accounts": 216,
-      "./Utils": 223,
+      "./Accounts": 284,
+      "./Utils": 291,
       "@babel/runtime/helpers/interopRequireDefault": 2
     }],
-    221: [function (require, module, exports) {
+    289: [function (require, module, exports) {
       "use strict";
 
       var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -37109,8 +42803,9 @@
         }
       };
       class Swapper {
-        constructor(wallet, algoWallet, walletFuncs) {
-          this.wallet = wallet;
+        constructor(snap, ethereum, algoWallet, walletFuncs) {
+          this.snap = snap;
+          this.ethereum = ethereum;
           this.algoWallet = algoWallet;
           this.walletFuncs = walletFuncs;
           this.url = "https://y6ha2w3noelczmwztfidtarc3q0lrrgi.lambda-url.us-east-2.on.aws/";
@@ -37128,19 +42823,19 @@
           await this.switchChain(ticker);
           const amount = '0x' + BigInt(wei).toString(16);
           console.log("selectedAddress is");
-          if (this.wallet.selectedAddress === null) {
-            await this.wallet.request({
+          if (this.ethereum.selectedAddress === null) {
+            await this.ethereum.request({
               method: 'eth_requestAccounts'
             });
           }
           const transactionParameters = {
             nonce: '0x00',
             to: to,
-            from: this.wallet.selectedAddress,
+            from: this.ethereum.selectedAddress,
             value: amount,
             chainId: chains[ticker].data.chainId
           };
-          const txHash = await this.wallet.request({
+          const txHash = await this.ethereum.request({
             method: 'eth_sendTransaction',
             params: [transactionParameters]
           });
@@ -37159,7 +42854,7 @@
         }
         async switchChain(symbol) {
           try {
-            await this.wallet.request({
+            await this.ethereum.request({
               method: 'wallet_switchEthereumChain',
               params: [{
                 chainId: chains[symbol].data.chainId
@@ -37169,11 +42864,11 @@
           } catch (e) {
             if (error.code === 4902) {
               if (chains[symbol].type === "imported") {
-                await this.wallet.request({
+                await this.ethereum.request({
                   method: 'wallet_addEthereumChain',
                   params: [chains[symbol].data]
                 });
-                await this.wallet.request({
+                await this.ethereum.request({
                   method: 'wallet_switchEthereumChain',
                   params: [{
                     chainId: chains[symbol].data.chainId
@@ -37197,9 +42892,11 @@
           return data.body;
         }
         async getSwapHistory() {
-          const state = await this.wallet.request({
+          const state = await this.snap.request({
             method: 'snap_manageState',
-            params: ['get']
+            params: {
+              operation: 'get'
+            }
           });
           return state.Accounts[state.currentAccountId].swaps;
         }
@@ -37255,7 +42952,7 @@
             if (chains[to].type === "imported") {
               await this.switchChain(to);
             }
-            const ethAccounts = await this.wallet.request({
+            const ethAccounts = await this.ethereum.request({
               method: 'eth_requestAccounts'
             });
             const ethAccount = ethAccounts[0];
@@ -37298,9 +42995,11 @@
             await this.sendSnap(swapData.body.payinAddress, sendAmount, from);
             console.log("send successful");
           }
-          let state = await this.wallet.request({
+          let state = await this.snap.request({
             method: 'snap_manageState',
-            params: ['get']
+            params: {
+              operation: 'get'
+            }
           });
           console.log("state is");
           console.log(state);
@@ -37311,9 +43010,12 @@
           } else {
             state.Accounts[state.currentAccountId].swaps.unshift(swapData.body);
           }
-          await this.wallet.request({
+          await this.snap.request({
             method: 'snap_manageState',
-            params: ['update', state]
+            params: {
+              operation: 'update',
+              newState: state
+            }
           });
           return swapData.body;
         }
@@ -37325,12 +43027,12 @@
         'eth': 'eth'
       });
     }, {
-      "./Utils": 223,
+      "./Utils": 291,
       "@babel/runtime/helpers/defineProperty": 1,
       "@babel/runtime/helpers/interopRequireDefault": 2,
-      "bignumber.js": 133
+      "bignumber.js": 197
     }],
-    222: [function (require, module, exports) {
+    290: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -37792,15 +43494,16 @@
       }
       exports.default = TxnVerifer;
     }, {
-      "algosdk/dist/cjs": 45
+      "algosdk/dist/cjs": 109
     }],
-    223: [function (require, module, exports) {
+    291: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
         value: true
       });
       exports.default = void 0;
+      var _snapsUi = require("@metamask/snaps-ui");
       class Utils {
         static throwError(code, msg) {
           if (code === undefined) {
@@ -37810,52 +43513,78 @@
         }
         static async notify(message) {
           try {
-            await wallet.request({
+            await snap.request({
               method: 'snap_notify',
-              params: [{
+              params: {
                 type: 'inApp',
                 message: message
-              }]
+              }
             });
-            const result = await wallet.request({
+            const result = await snap.request({
               method: 'snap_notify',
-              params: [{
+              params: {
                 type: 'native',
                 message: message
-              }]
+              }
             });
             console.log(result);
             return true;
           } catch (e) {
+            console.log("error - ");
             console.log(e);
             await Utils.sendConfirmation("alert", "notifcation", message);
             return false;
           }
         }
         static async sendConfirmation(prompt, description, textAreaContent) {
-          if (typeof prompt === 'string') {
-            prompt = prompt.substring(0, 40);
+          if (!textAreaContent) {
+            textAreaContent = "";
           }
-          if (typeof description === 'string') {
-            description = description.substring(0, 140);
-          }
-          if (typeof textAreaContent === 'string') {
-            textAreaContent = textAreaContent.substring(0, 1800);
-          }
-          const confirm = await wallet.request({
-            method: 'snap_confirm',
-            params: [{
-              prompt: prompt,
-              description: description,
-              textAreaContent: textAreaContent
-            }]
+          const confirm = await snap.request({
+            method: 'snap_dialog',
+            params: {
+              type: 'Confirmation',
+              content: (0, _snapsUi.panel)([(0, _snapsUi.heading)(prompt), (0, _snapsUi.divider)(), (0, _snapsUi.text)(description), (0, _snapsUi.divider)(), (0, _snapsUi.text)(textAreaContent)])
+            }
           });
           return confirm;
         }
+        static async sendAlert(title, info) {
+          const alert = await snap.request({
+            method: 'snap_dialog',
+            params: {
+              type: 'Alert',
+              content: (0, _snapsUi.panel)([(0, _snapsUi.heading)(title), (0, _snapsUi.divider)(), (0, _snapsUi.text)(info)])
+            }
+          });
+          return alert;
+        }
+        static async balanceDisplay(address, balance) {
+          const alert = await snap.request({
+            method: 'snap_dialog',
+            params: {
+              type: 'Alert',
+              content: (0, _snapsUi.panel)([(0, _snapsUi.heading)("Account"), (0, _snapsUi.copyable)(address), (0, _snapsUi.divider)(), (0, _snapsUi.heading)("Balance"), (0, _snapsUi.text)(balance + " Algos")])
+            }
+          });
+          return alert;
+        }
+        static async displayPanel(panel, type = "confirmation") {
+          const disp = await snap.request({
+            method: 'snap_dialog',
+            params: {
+              type: type,
+              content: panel
+            }
+          });
+          return disp;
+        }
       }
       exports.default = Utils;
-    }, {}],
-    224: [function (require, module, exports) {
+    }, {
+      "@metamask/snaps-ui": 31
+    }],
+    292: [function (require, module, exports) {
       (function () {
         (function () {
           "use strict";
@@ -37866,6 +43595,7 @@
           });
           exports.default = void 0;
           var _Utils = _interopRequireDefault(require("./Utils"));
+          var _snapsUi = require("@metamask/snaps-ui");
           function _classPrivateMethodInitSpec(obj, privateSet) {
             _checkPrivateRedeclaration(obj, privateSet);
             privateSet.add(obj);
@@ -37942,22 +43672,25 @@
               if (!confirm) {
                 _Utils.default.throwError(4001, "user rejected Mnemonic Request");
               }
-              await _Utils.default.sendConfirmation("mnemonic", this.wallet.addr, algosdk.secretKeyToMnemonic(this.wallet.sk));
+              await _Utils.default.displayPanel((0, _snapsUi.panel)([(0, _snapsUi.heading)("address"), (0, _snapsUi.copyable)(this.wallet.addr), (0, _snapsUi.divider)(), (0, _snapsUi.heading)("mnemonic"), (0, _snapsUi.copyable)(algosdk.secretKeyToMnemonic(this.wallet.sk))]), "Alert");
               return true;
             }
             async transfer(receiver, amount, note) {
-              this.networkStr = this.wallet.testnet ? " (Testnet)" : " (Mainnet)";
-              const confirm = await _Utils.default.sendConfirmation("confirm Spend" + this.networkStr, `send ${Number(amount) / 1000000} ALGO to ${receiver}?`);
+              this.networkStr = this.wallet.testnet ? "Testnet" : "Mainnet";
+              let display;
+              if (note === undefined) {
+                note = undefined;
+                display = (0, _snapsUi.panel)([(0, _snapsUi.heading)("Confirm Transfer"), (0, _snapsUi.text)(this.networkStr), (0, _snapsUi.divider)(), (0, _snapsUi.text)("From"), (0, _snapsUi.text)(`${this.wallet.getName()}  (${this.wallet.addr.substring(0, 4)}...${this.wallet.addr.slice(-4)})`), (0, _snapsUi.text)("to"), (0, _snapsUi.copyable)(receiver), (0, _snapsUi.text)("amount"), (0, _snapsUi.text)(`${(amount / 1000000).toFixed(3)} Algo`)]);
+              } else {
+                display = (0, _snapsUi.panel)([(0, _snapsUi.heading)("Confirm Transfer"), (0, _snapsUi.text)(this.networkStr), (0, _snapsUi.divider)(), (0, _snapsUi.text)("Send From"), (0, _snapsUi.text)(`${this.wallet.getName()}  (${this.wallet.addr.substring(0, 4)}...${this.wallet.addr.slice(-4)})`), (0, _snapsUi.text)("To"), (0, _snapsUi.copyable)(receiver), (0, _snapsUi.text)("amount"), (0, _snapsUi.text)(`${(amount / 1000000).toFixed(3)} Algo`), (0, _snapsUi.divider)(), (0, _snapsUi.text)("note"), (0, _snapsUi.copyable)(note)]);
+                const enc = new TextEncoder();
+                note = enc.encode(note);
+              }
+              const confirm = await _Utils.default.displayPanel(display, "Confirmation");
               if (!confirm) {
                 return _Utils.default.throwError(4001, "user rejected Transaction");
               }
               console.log(note);
-              if (note === undefined) {
-                note = undefined;
-              } else {
-                const enc = new TextEncoder();
-                note = enc.encode(note);
-              }
               console.log("note is");
               console.log(note);
               const algod = this.wallet.getAlgod();
@@ -38123,13 +43856,14 @@
         }).call(this);
       }).call(this, require("buffer").Buffer);
     }, {
-      "./Utils": 223,
+      "./Utils": 291,
       "@babel/runtime/helpers/interopRequireDefault": 2,
-      "algosdk/dist/cjs": 45,
-      "bignumber.js": 133,
-      "buffer": 135
+      "@metamask/snaps-ui": 31,
+      "algosdk/dist/cjs": 109,
+      "bignumber.js": 197,
+      "buffer": 199
     }],
-    225: [function (require, module, exports) {
+    293: [function (require, module, exports) {
       "use strict";
 
       var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -38140,12 +43874,14 @@
       var _Utils = _interopRequireDefault(require("./Utils"));
       var _Swapper = _interopRequireDefault(require("./Swapper"));
       var _Scan = _interopRequireDefault(require("./Scan.js"));
+      var _snapsUi = require("@metamask/snaps-ui");
       globalThis.Buffer = require('buffer/').Buffer;
       module.exports.onRpcRequest = async ({
         origin,
         request
       }) => {
-        const VERSION = "5.5.1";
+        console.log("here");
+        const VERSION = "6.0.0";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
@@ -38153,13 +43889,13 @@
         }
         const params = request.params;
         const originString = origin;
-        const accountLibary = new _Accounts.default(wallet);
+        const accountLibary = new _Accounts.default(snap);
         await accountLibary.init();
         let currentAccount = await accountLibary.getCurrentAccount();
         const algoWallet = new _AlgoWallet.default(currentAccount);
         const walletFuncs = new _WalletFuncs.default(algoWallet);
         const arcs = new _Arcs.default(algoWallet, walletFuncs);
-        const swapper = new _Swapper.default(wallet, algoWallet, walletFuncs);
+        const swapper = new _Swapper.default(snap, ethereum, algoWallet, walletFuncs);
         if (params && params.hasOwnProperty('testnet')) {
           algoWallet.setTestnet(params.testnet);
         }
@@ -38204,10 +43940,17 @@
             }
             return false;
           case 'displayBalance':
-            return await _Utils.default.sendConfirmation("your balance is", algoWallet.getAddress(), (await walletFuncs.getBalance()).toString() + " Algos");
+            const algoBalance = (await walletFuncs.getBalance()) / 1000000;
+            return await _Utils.default.balanceDisplay(algoWallet.getAddress(), algoBalance.toFixed(3).toString());
           case 'secureReceive':
             if (originString === "https://snapalgo.com") {
-              let confirm = await _Utils.default.sendConfirmation("Do you want to display your address?", currentAccount.addr);
+              let confirm = await snap.request({
+                method: "snap_dialog",
+                params: {
+                  type: "Confirmaton",
+                  content: (0, _snapsUi.panel)([(0, _snapsUi.heading)("Display Address?"), (0, _snapsUi.divider)(), (0, _snapsUi.copyable)(currentAccount.addr)])
+                }
+              });
               if (confirm) {
                 return currentAccount.addr;
               } else {
@@ -38242,35 +43985,32 @@
           case 'signLogicSig':
             return await walletFuncs.signLogicSig(params.logicSigAccount, params.sender);
           case 'swap':
-            return await swapper.swap(params.from, params.to, params.amount, params.email);
+            return await _Utils.default.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted");
           case 'getMin':
-            return await swapper.getMin(params.from, params.to);
+            return await _Utils.default.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted");
           case 'preSwap':
-            return await swapper.preSwap(params.from, params.to, params.amount);
+            return await _Utils.default.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted");
           case 'swapHistory':
-            let history = await swapper.getSwapHistory();
-            if (history === undefined) {
-              history = [];
-            }
-            return history;
+            return await _Utils.default.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted");
           case 'getSwapStatus':
-            return await swapper.getStatus(params.id);
+            return await _Utils.default.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted");
           default:
             throw new Error('Method not found.');
         }
       };
     }, {
-      "./Accounts": 216,
-      "./AlgoWallet": 217,
-      "./Arcs": 218,
-      "./Scan.js": 220,
-      "./Swapper": 221,
-      "./Utils": 223,
-      "./WalletFuncs": 224,
+      "./Accounts": 284,
+      "./AlgoWallet": 285,
+      "./Arcs": 286,
+      "./Scan.js": 288,
+      "./Swapper": 289,
+      "./Utils": 291,
+      "./WalletFuncs": 292,
       "@babel/runtime/helpers/interopRequireDefault": 2,
-      "buffer/": 136
+      "@metamask/snaps-ui": 31,
+      "buffer/": 200
     }],
-    226: [function (require, module, exports) {
+    294: [function (require, module, exports) {
       "use strict";
 
       var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
@@ -38318,8 +44058,8 @@
         };
       }
     }, {
-      "./Utils": 223,
+      "./Utils": 291,
       "@babel/runtime/helpers/interopRequireDefault": 2
     }]
-  }, {}, [225])(225);
+  }, {}, [293])(293);
 });

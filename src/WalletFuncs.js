@@ -1,7 +1,7 @@
 const algosdk =  require('algosdk/dist/cjs');
 import Utils from './Utils';
 const BigNumber = require('bignumber.js');
-
+import { panel,  copyable, heading, text, divider } from '@metamask/snaps-ui';
 export default class WalletFuncs{
     
     //takes an instance of algowallet on construction
@@ -87,10 +87,14 @@ export default class WalletFuncs{
             Utils.throwError(4001, "user rejected Mnemonic Request");
         }
 
-        await Utils.sendConfirmation(
-            "mnemonic",
-            this.wallet.addr,
-            algosdk.secretKeyToMnemonic(this.wallet.sk)
+        await Utils.displayPanel(
+            panel([
+                heading("address"),
+                copyable(this.wallet.addr),
+                divider(),
+                heading("mnemonic"),
+                copyable(algosdk.secretKeyToMnemonic(this.wallet.sk))
+            ]), "Alert"
         )
         
         //metamask requires a value to be returned
@@ -103,21 +107,48 @@ export default class WalletFuncs{
     
     async transfer(receiver, amount, note){
         //user confirmation
-        this.networkStr = this.wallet.testnet?" (Testnet)":" (Mainnet)"
-        const confirm = await Utils.sendConfirmation(
-            "confirm Spend"+this.networkStr, 
-            `send ${Number(amount)/1000000} ALGO to ${receiver}?`);
+        this.networkStr = this.wallet.testnet?"Testnet":"Mainnet"
+        let display;
+        if(note===undefined){
+            note = undefined
+            display =  panel([
+                heading("Confirm Transfer"),
+                text(this.networkStr),
+                divider(),
+                text("From"),
+                text(`${this.wallet.getName()}  (${this.wallet.addr.substring(0,4)}...${this.wallet.addr.slice(-4)})`),
+                text("to"),
+                copyable(receiver),
+                text("amount"),
+                text(`${(amount/1000000).toFixed(3)} Algo`),
+                ]
+            )
+        }
+        else{
+            display =  panel([
+                heading("Confirm Transfer"),
+                text(this.networkStr),
+                divider(),
+                text("Send From"),
+                text(`${this.wallet.getName()}  (${this.wallet.addr.substring(0,4)}...${this.wallet.addr.slice(-4)})`),
+                text("To"),
+                copyable(receiver),
+                text("amount"),
+                text(`${(amount/1000000).toFixed(3)} Algo`),
+                divider(),
+                text("note"),
+                copyable(note)
+                ]
+            )
+            const enc = new TextEncoder();
+            note = enc.encode(note);
+        }
+        const confirm = await Utils.displayPanel(display, "Confirmation");
         if(!confirm){
             return Utils.throwError(4001, "user rejected Transaction");
         }
         console.log(note)
-        if(note===undefined){
-            note = undefined
-        }
-        else{
-            const enc = new TextEncoder();
-            note = enc.encode(note);
-        }
+
         console.log("note is");
         console.log(note);
 

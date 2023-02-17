@@ -46,7 +46,7 @@ export default class Accounts{
         //load acount Data
         const storedAccounts = await this.wallet.request({
             method: 'snap_manageState',
-            params: ['get'],
+            params: {operation: 'get'},
         });
         
         //checks to see if accounts already exists and if this is not the case
@@ -65,7 +65,7 @@ export default class Accounts{
             accounts[address] = extendedAccount;
             await this.wallet.request({
               method: 'snap_manageState',
-              params: ['update', {"currentAccountId": address, "Accounts": accounts}],
+              params: {operation:'update', newState:{"currentAccountId": address, "Accounts": accounts}},
             })
             this.currentAccountId = address;
             this.accounts = accounts;
@@ -88,7 +88,7 @@ export default class Accounts{
             const tempAccount = this.accounts[addr];
             if(tempAccount.type === 'generated'){
                 const Account = await this.#generateAccount(tempAccount.path);
-                
+                Account.name = tempAccount.name
                 return Account;
             }
             else if(tempAccount.type === 'imported'){
@@ -100,6 +100,7 @@ export default class Accounts{
                 const Account = {}
                 Account.addr = algo.encodeAddress(keys.publicKey);
                 Account.sk = keys.secretKey;
+                Account.name = tempAccount.name;
                 return Account
             }
         }
@@ -150,7 +151,7 @@ export default class Accounts{
             this.currentAccount = await this.unlockAccount(addr);
             await this.wallet.request({
                 method: 'snap_manageState',
-                params: ['update', {"currentAccountId": addr, "Accounts": this.accounts}],
+                params: {operation:'update', newState:{"currentAccountId": addr, "Accounts": this.accounts}},
             })
             return true;
         }
@@ -169,7 +170,7 @@ export default class Accounts{
         
         await this.wallet.request({
             method: 'snap_manageState',
-            params: ['update', {}],
+            params: {operation:'clear'},
           });  
         
         return true
@@ -189,7 +190,7 @@ export default class Accounts{
         this.accounts[address] = {type: 'generated', path: path, name: name, addr: address, swaps: []};
         await this.wallet.request({
             method: 'snap_manageState',
-            params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
+            params: {operation:'update', newState:{"currentAccountId": this.currentAccountId, "Accounts": this.accounts}},
         })
         return {"currentAccountId": address, "Accounts": this.accounts, "Account": Account};
     }
@@ -234,7 +235,7 @@ export default class Accounts{
         this.accounts[address] = {type: 'imported', seed:encryptedSeed, name:name, addr: address, swaps: []};
         await this.wallet.request({
             method: 'snap_manageState',
-            params: ['update', {"currentAccountId": this.currentAccountId, "Accounts": this.accounts}],
+            params: {operation:'update', newState:{"currentAccountId": this.currentAccountId, "Accounts": this.accounts}}
         })
         return {"currentAccountId": address, "Accounts": this.accounts};
     }

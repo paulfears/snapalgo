@@ -165,38 +165,38 @@
 
     async function connect () {
       result = await ethereum.request({
-      method: 'wallet_enable',
-      params: [
-        {
-          wallet_snap: {
-            [snapId]: {}
-          }
+      method: 'wallet_requestSnaps',
+      params: {
+        [snapId]: {}
         }
-        ]
       })
-      await window.algorand.enable();
+      
     }
     
     async function getAssetInfo () {
       result = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'getAssetById',
-          params:{
-            assetIndex: 312769
+        params: {
+          snapId: snapId,
+          request: { 
+            method: 'getAssetById',
+            params:{
+              assetIndex: 312769
+            }
           }
-        }]  
+        }  
       })
       console.log(result)   
     }
     async function getSwapHistory(){
       const result = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [
-          snapId, {
+        params: {
+          snapId: snapId, 
+          request: {
             method: 'swapHistory'
           }
-        ]
+        }
       })
       console.log(result);
     }
@@ -204,14 +204,15 @@
     async function getTransactionStatus(){
       result = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [
-          snapId, {
+        params: {
+          snapId: snapId, 
+          request: {
             method: 'getSwapStatus',
             params:{
               id: transactionStatusInput.value
             }
           }
-        ]
+        }
       })
       console.log(result);
     }
@@ -219,14 +220,15 @@
     async function createNewAccount(){
       result = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [
-          snapId, {
+        params: {
+          snapId: snapId, 
+          request: {
             method: 'createAccount',
             params:{
               name: document.getElementById("Account_name").value
             }
           }
-        ]
+        }
       })
     }
 
@@ -235,8 +237,9 @@
     async function swap(){
       result = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [
-          snapId, {
+        params: {
+          snapId:snapId, 
+          request: {
             method: 'swap',
             params:{
               from: fromTicker.value,
@@ -245,7 +248,7 @@
               email: email.value
             }
           }
-        ]
+        }
       })
       console.log(result);
     }
@@ -253,8 +256,9 @@
     async function preSwap(){
       const result = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [
-          snapId, {
+        params: {
+          snapId: snapId, 
+          request: {
             method: 'preSwap',
             params:{
               from: fromTicker.value,
@@ -262,7 +266,7 @@
               amount: swapAmount.value
             }
           }
-        ]
+        }
       })
       console.log(result);
     }
@@ -270,15 +274,16 @@
     async function getMin(){
       const result = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [
-          snapId, {
+        params: {
+          snapId: snapId, 
+          request: {
             method: 'getMin',
             params:{
               from: fromTicker.value,
               to: toTicker.value,
             }
           }
-        ]
+        }
       })
       console.log(result);
       return result;
@@ -290,12 +295,15 @@
       console.log(thing)
       let sig = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'signData',
-          params:{
-            data: thing
+        params: {
+          snapId: snapId, 
+          request: {
+            method: 'signData',
+            params:{
+              data: thing
+            }
           }
-        }]        
+        }        
       })
       console.log(sig)
       document.getElementById('signature').innerHTML = JSON.stringify(sig);
@@ -304,12 +312,14 @@
     async function toBase64(){
       let b64 = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
+        params: {
+          snapId: snapId, 
+          request:{
           method: 'Uint8ArrayToBase64',
           params:{
             data: new Uint8Array(new TextEncoder().encode("hello"))
           }
-        }]        
+        }}
       })
       console.log(b64);
       console.log(b64[0]);
@@ -334,13 +344,15 @@
       let txns = [{txn: encodedTxn, message: "this transaction is a test of sign transaction"}]
       const signed = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'signTxns',
-          params:{
-            txns: encodedTxn,
-            testnet: checkbox.checked
-          }
-        }]
+        params: {
+          snapId: snapId, 
+          request:{
+            method: 'signTxns',
+            params:{
+              txns: encodedTxn,
+              testnet: checkbox.checked
+            }
+        }}
       })
       console.log(signed);
     }
@@ -363,13 +375,16 @@
       let txns = [{txn: encodedTxn, message: "this transaction is a test of sign and post transaction"}]
       const out = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'signAndPostTxns',
-          params:{
-            txns: txns,
-            testnet: checkbox.checked
+        params: {
+          snapId: snapId, 
+          request: {
+            method: 'signAndPostTxns',
+            params:{
+              txns: txns,
+              testnet: checkbox.checked
+            }
           }
-        }]
+        }
       })
       console.log(out);
 
@@ -379,12 +394,15 @@
       // assetIndex = 31566704
       await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'assetOptIn',
-          params:{
-            assetIndex: 31566704
+        params: {
+          snapId: snapId, 
+          request:{
+            method: 'assetOptIn',
+            params:{
+              assetIndex: 31566704
+            }
           }
-        }]        
+        }        
       })
     }
 
@@ -392,21 +410,26 @@
       // assetIndex = 31566704
       await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'assetOptOut',
-          params:{
-            assetIndex: 31566704
-          }
-        }]        
+        params: {
+          snapId: snapId, 
+          request:{
+            method: 'assetOptOut',
+            params:{
+              assetIndex: 31566704
+            }
+        }
+      }        
       })
     }
 
     async function getAssets(){
       let assets = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'getAssets'
-        }]        
+        params: {snapId:snapId, 
+          request:{
+            method: 'getAssets'
+          }
+        }       
       })
       document.getElementById('transactionOutput').innerHTML = JSON.stringify(assets);
     }
@@ -417,14 +440,16 @@
       let asset = 31566704
       let txn = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'TransferAsset',
-          params:{
-            to: to,
-            amount: amount,
-            assetIndex: asset
-          }
-        }]        
+        params: {
+          snapId:snapId, 
+          request:{
+            method: 'TransferAsset',
+            params:{
+              to: to,
+              amount: amount,
+              assetIndex: asset
+            }
+        }}     
       })
     }
 
@@ -465,10 +490,13 @@
       let txns = [{txn: encodedTxn, message: "this transaction is a test"}]
       const out = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'signTxns',
-          txns: txns
-        }]
+        params: {
+          snapId: snapId, 
+          request: {
+            method: 'signTxns',
+            txns: txns
+          }
+      }
       })
       /*
       await ethereum.request({
@@ -487,13 +515,14 @@
     async function getIndexServer(){
       const server = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method:"GetIndexerClientFunction",
-          snapId: snapId
+        params: {
+          snapId: snapId,
+          request:{
+            method:"GetIndexerClientFunction",
+            snapId: snapId
+          }
 
         }
-
-        ]
       })
       console.log(server);
       return server;
@@ -501,9 +530,12 @@
     async function clearAccounts(){
       await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
+        params: {
+          snapId:snapId, 
+          request: {
           method: 'clearAccounts',
-        }]        
+        }
+      }        
       })
     }
 
@@ -572,9 +604,11 @@
     let algodClient = new algosdk.Algodv2(algodClientParams);
     deployParams.from = await window.ethereum.request({
       method: 'wallet_invokeSnap',
-      params:['npm:algorand',{
+      params:{ 
+      snapId:'npm:algorand',
+      request:{
         method: 'getAddress'
-      }]
+      }}
     });
     deployParams.suggestedParams = await algodClient.getTransactionParams().do();
     const signedTxn = await window.algorand.EZsign(txn);
@@ -591,25 +625,28 @@
       const address = document.getElementById('SendTo').value
       const isValid = await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'isValidAddress',
-          params:{
-            address: document.getElementById('SendTo').value
-          }
-        }]
+        params: {
+          snapId: snapId, 
+          snapId:{
+            method: 'isValidAddress',
+            params:{
+              address: document.getElementById('SendTo').value
+            }
+        }}
       })
       alert("adress is valid : " + isValid)
     }
 
     async function getAddress(){
+      console.log("here in get Address")
       let address = await ethereum.request({
           method: 'wallet_invokeSnap',
-          params: [snapId, {
-            method: 'getAddress',
-            params:{
-            testnet: checkbox.checked
+          params: {
+            snapId: snapId,
+            request: {
+              method: 'getAddress',
             }
-          }]
+          }
         })
       document.getElementById('address').innerHTML = address
     }
@@ -619,12 +656,15 @@
       try{
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
-          params: [snapId, {
-            method: 'displayBalance',
-            params:{
-              testnet: checkbox.checked
+          params: {
+            snapId: snapId, 
+            request: {
+              method: 'displayBalance',
+              params:{
+                testnet: checkbox.checked
+              }
             }
-          }]
+          }
         })
       }catch(e){
         console.error(e)
@@ -635,12 +675,15 @@
       try{
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
-          params: [snapId, {
-            method: 'getSpendable',
-            params: {
-              testnet: checkbox.checked
+          params: {
+            snapId:snapId, 
+            request:{
+              method: 'getSpendable',
+              params: {
+                testnet: checkbox.checked
+              }
             }
-          }]
+          }
         })
         alert(response)
       }catch(e){
@@ -652,12 +695,14 @@
       try{
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
-          params: [snapId, {
-            method: 'getTransactions',
-            params: {
-              testnet: checkbox.checked
+          params: {snapId: snapId, 
+            request:{
+              method: 'getTransactions',
+              params: {
+                testnet: checkbox.checked
+              }
             }
-          }]
+          }
         })
         document.getElementById('transactionOutput').innerHTML = JSON.stringify(response);
       }catch(e){
@@ -688,13 +733,15 @@
       console.log(algorand.base64Encode(logicSigAccount.toByte()));
       const response = await ethereum.request({
           method: 'wallet_invokeSnap',
-          params: [snapId, {
-            method: 'signLogicSig',
-            params:{
-              logicSigAccount: algorand.base64Encode(logicSigAccount.toByte()),
-              sender: 'info About the signature'
+          params: {snapId: snapId,
+            request:{
+              method: 'signLogicSig',
+              params:{
+                logicSigAccount: algorand.base64Encode(logicSigAccount.toByte()),
+                sender: 'info About the signature'
+              }
             }
-          }]
+        }
       })
       let msgpack = algorand.base64Decode(response);
       let signedLogicSigAccount = algosdk.LogicSigAccount.fromByte(msgpack);
@@ -707,9 +754,11 @@
     async function getAccounts(){
       const response = await ethereum.request({
           method: 'wallet_invokeSnap',
-          params: [snapId, {
-            method: 'getAccounts'
-          }]
+          params: {snapId: snapId, 
+            request:{
+              method: 'getAccounts'
+            }
+          }
         })
       console.log(response);
 
@@ -721,16 +770,17 @@
         console.log(testnet);
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
-          params: [snapId, {
-            method: 'transfer',
-            params:{
-              testnet: checkbox.checked,
-              to: document.querySelector('#SendTo').value,
-              amount: document.querySelector('#Amount').value,
-              note: document.getElementById('note').value,
-              testnet: testnet
-            }
-          }]
+          params: {snapId: snapId, 
+            request:{
+              method: 'transfer',
+              params:{
+                testnet: checkbox.checked,
+                to: document.querySelector('#SendTo').value,
+                amount: document.querySelector('#Amount').value,
+                note: document.getElementById('note').value,
+                testnet: testnet
+              }
+            }}
         })
         console.log("transaction returned");
         console.log(response);
@@ -744,13 +794,15 @@
     async function import_account(){
       await ethereum.request({
         method: 'wallet_invokeSnap',
-        params: [snapId, {
-          method: 'importAccount',
-          params:{
-            name: "imported",
-            mnemonic:'gallery hood dizzy coin puppy time hazard subway they woman step syrup guard elite rookie avoid hip isolate left play gain pave blind abandon category'
+        params: {snapId: snapId, 
+          request: {
+            method: 'importAccount',
+            params:{
+              name: "imported",
+              mnemonic:'gallery hood dizzy coin puppy time hazard subway they woman step syrup guard elite rookie avoid hip isolate left play gain pave blind abandon category'
+            }
           }
-        }]
+      }
       })
     }
     
@@ -760,9 +812,13 @@
       try {
         const response = await ethereum.request({
           method: 'wallet_invokeSnap',
-          params: [snapId, {
-            method: 'displayMnemonic'
-          }]
+          params: {
+            snapId: snapId, 
+            request:{
+              method: 'displayMnemonic',
+            }
+            
+          }
         })
       } catch (err) {
         console.error(err)
