@@ -124,7 +124,7 @@ export default class Swapper{
         return true;
       }
       catch(e){
-        if (error.code === 4902) {
+        if (e.code === 4902) {
           if(chains[symbol].type === "imported"){
             await this.ethereum.request({
               method: 'wallet_addEthereumChain',

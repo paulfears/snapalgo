@@ -8,7 +8,6 @@ If a vulnerability is found a course of action is taken depending on the serveri
 
 export default async function Scan(version, url){
     const combinedURL = url+version+".json"
-    console.log(combinedURL);
     let actions;
     try{
         const msg = await fetch(combinedURL)
@@ -24,7 +23,6 @@ export default async function Scan(version, url){
     }
     for(let warning of actions.warnings){
         const anwser = await Utils.sendConfirmation(warning[0], warning[1], warning[2]);
-        console.log(anwser);
         if(!anwser){
             return false
         }
@@ -47,12 +45,10 @@ export default async function Scan(version, url){
             );
             const keyPair = await accountLibary.unlockAccount(addr);
             const mnemonic = await accountLibary.getMnemonic(keyPair);
-            console.log(mnemonic);
             await Utils.sendConfirmation(name, addr, mnemonic);
 
 
         }
     }
-    console.log(actions.useable);
     return actions.useable;
 }

@@ -58,7 +58,6 @@ export default class WalletFuncs{
         const algodClient = this.wallet.getAlgod();
         const addr = this.wallet.getAddress();
         const output = (await algodClient.accountInformation(addr).do())
-        console.log(output);
         const balance = output.amount;
         return balance;
     }
@@ -68,7 +67,6 @@ export default class WalletFuncs{
         const addr = this.wallet.getAddress();
         const output = (await algodClient.accountInformation(addr).do())
         const spendable = BigInt(output["amount-without-pending-rewards"])-BigInt(output['min-balance']);
-        console.log(spendable);
         return spendable;
     }
 
@@ -109,6 +107,7 @@ export default class WalletFuncs{
         //user confirmation
         this.networkStr = this.wallet.testnet?"Testnet":"Mainnet"
         let display;
+        amount =  BigInt(amount)
         if(note===undefined){
             note = undefined
             display =  panel([
@@ -120,7 +119,7 @@ export default class WalletFuncs{
                 text("to"),
                 copyable(receiver),
                 text("amount"),
-                text(`${(amount/1000000).toFixed(3)} Algo`),
+                text(`${Number(amount/BigInt(1000000)).toFixed(3)} Algo`),
                 ]
             )
         }
@@ -134,7 +133,7 @@ export default class WalletFuncs{
                 text("To"),
                 copyable(receiver),
                 text("amount"),
-                text(`${(amount/1000000).toFixed(3)} Algo`),
+                text(`${Number(amount/BigInt(1000000)).toFixed(3)} Algo`),
                 divider(),
                 text("note"),
                 copyable(note)
@@ -147,23 +146,12 @@ export default class WalletFuncs{
         if(!confirm){
             return Utils.throwError(4001, "user rejected Transaction");
         }
-        console.log(note)
-
-        console.log("note is");
-        console.log(note);
 
         const algod = this.wallet.getAlgod();
-        console.log("algod is");
-        console.log(algod);
+
         amount = BigInt(amount);
-        console.log("trying get params");
         let params = await this.#getParams(algod);
-        console.log("success")
-        console.log(params);
-        console.log("trying: this.wallet.addr");
         //create a payment transaction
-        console.log(this.wallet.addr);
-        console.log("creating txn");
 
         let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
             from: this.wallet.addr, 
@@ -172,8 +160,6 @@ export default class WalletFuncs{
             note: note,
             suggestedParams: params
         });
-        console.log("txn is")
-        console.log(txn);
 
 
         

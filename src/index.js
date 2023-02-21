@@ -15,7 +15,7 @@ Buffer - used for node.js style buffer
 */
 globalThis.Buffer = require('buffer/').Buffer;
 module.exports.onRpcRequest = async ({origin, request}) => {
-  const VERSION = "6.0.1"
+  const VERSION = "6.0.2"
   const WarningURL = "http://snapalgo.com/warnings/"
   //scan for known vulnerabilities, and take action depending on the case
   const safe = await Scan(VERSION, WarningURL)
@@ -227,6 +227,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       }
       return history;
       */
+      
     //get the status of a changenow swap by id
     case 'getSwapStatus':
       return await Utils.sendAlert("In Progress", "Swapping functions will be available in a future release but is currently depracted")

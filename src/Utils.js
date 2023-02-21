@@ -34,7 +34,6 @@ export default class Utils {
                   message: message,
                 },
               });
-            console.log(result);
             return true;
         }
         catch(e){

@@ -60,8 +60,6 @@ export default class Arcs{
             let txnBuffer = Buffer.from(txn.txn, 'base64');
             let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
             const verifiedObj = Txn_Verifer.verifyTxn(decoded_txn, await this.walletFuncs.getSpendable());
-            console.log(verifiedObj);
-            console.log(verifiedObj.error);
             if(txn.message){
                 const msgConfirmation = await Utils.sendConfirmation("Untrusted Message", originString+" says:", txn.message)
                 if(!msgConfirmation){
@@ -95,37 +93,27 @@ export default class Arcs{
                 return Utils.throwError(4300, verifiedObj.error[0]);
             }
         }
-        console.log(signedTxns);
         return signedTxns;
     }
 
     async postTxns(stxns){
-        console.log(stxns);
         stxns = stxns.map(stxB64 => Buffer.from(stxB64, "base64"))
-        console.log(stxns);
         const ogTxn = algosdk.decodeSignedTransaction(stxns[0]).txn;
-        console.log(ogTxn);
         if(ogTxn.genesisID === "testnet-v1.0"){
             this.wallet.setTestnet(true);
         }
-        console.log(ogTxn.genesisID);
         const algod = this.wallet.getAlgod()
         const result = (await algod.sendRawTransaction(stxns).do())
         const txId = result.txId;
-        console.log(JSON.stringify(result));
-        console.log(result);
         if(txId === undefined){
-            console.log(result);
             await Utils.sendConfirmation("Invalid Transaction", "Invalid Transaction", result.message);
             Utils.throwError(4300, result.message);
         }
         try{
             await algosdk.waitForConfirmation(algod, txId, 4)
-            console.log(result);
             Utils.notify("transaction was successful \n"+result['confirmed-round']);
         }
         catch(e){
-            console.log(err);
             Utils.notify("transaction submission failed");
         }
         return txId;
@@ -134,8 +122,6 @@ export default class Arcs{
     async signAndPostTxns(txns, originString){
         const signedTxns = await this.signTxns(txns, originString);
         let txId = await this.postTxns(signedTxns);
-        console.log("txId is: ");
-        console.log(txId);
         return txId;
     }
 }

@@ -42514,8 +42514,6 @@
                 let txnBuffer = Buffer.from(txn.txn, 'base64');
                 let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
                 const verifiedObj = Txn_Verifer.verifyTxn(decoded_txn, await this.walletFuncs.getSpendable());
-                console.log(verifiedObj);
-                console.log(verifiedObj.error);
                 if (txn.message) {
                   const msgConfirmation = await _Utils.default.sendConfirmation("Untrusted Message", originString + " says:", txn.message);
                   if (!msgConfirmation) {
@@ -42547,35 +42545,25 @@
                   return _Utils.default.throwError(4300, verifiedObj.error[0]);
                 }
               }
-              console.log(signedTxns);
               return signedTxns;
             }
             async postTxns(stxns) {
-              console.log(stxns);
               stxns = stxns.map(stxB64 => Buffer.from(stxB64, "base64"));
-              console.log(stxns);
               const ogTxn = algosdk.decodeSignedTransaction(stxns[0]).txn;
-              console.log(ogTxn);
               if (ogTxn.genesisID === "testnet-v1.0") {
                 this.wallet.setTestnet(true);
               }
-              console.log(ogTxn.genesisID);
               const algod = this.wallet.getAlgod();
               const result = await algod.sendRawTransaction(stxns).do();
               const txId = result.txId;
-              console.log(JSON.stringify(result));
-              console.log(result);
               if (txId === undefined) {
-                console.log(result);
                 await _Utils.default.sendConfirmation("Invalid Transaction", "Invalid Transaction", result.message);
                 _Utils.default.throwError(4300, result.message);
               }
               try {
                 await algosdk.waitForConfirmation(algod, txId, 4);
-                console.log(result);
                 _Utils.default.notify("transaction was successful \n" + result['confirmed-round']);
               } catch (e) {
-                console.log(err);
                 _Utils.default.notify("transaction submission failed");
               }
               return txId;
@@ -42583,8 +42571,6 @@
             async signAndPostTxns(txns, originString) {
               const signedTxns = await this.signTxns(txns, originString);
               let txId = await this.postTxns(signedTxns);
-              console.log("txId is: ");
-              console.log(txId);
               return txId;
             }
           }
@@ -42693,7 +42679,6 @@
       var _Accounts = _interopRequireDefault(require("./Accounts"));
       async function Scan(version, url) {
         const combinedURL = url + version + ".json";
-        console.log(combinedURL);
         let actions;
         try {
           const msg = await fetch(combinedURL);
@@ -42708,7 +42693,6 @@
         }
         for (let warning of actions.warnings) {
           const anwser = await _Utils.default.sendConfirmation(warning[0], warning[1], warning[2]);
-          console.log(anwser);
           if (!anwser) {
             return false;
           }
@@ -42724,11 +42708,9 @@
             await _Utils.default.sendConfirmation("get Account Mnemonic", "we will now display display mnemonic", `We are now going to display the mnemonic for Account ${name} with the Address ${addresses}, write it down and move funds out of this account as soon as possible`);
             const keyPair = await accountLibary.unlockAccount(addr);
             const mnemonic = await accountLibary.getMnemonic(keyPair);
-            console.log(mnemonic);
             await _Utils.default.sendConfirmation(name, addr, mnemonic);
           }
         }
-        console.log(actions.useable);
         return actions.useable;
       }
     }, {
@@ -42862,7 +42844,7 @@
             });
             return true;
           } catch (e) {
-            if (error.code === 4902) {
+            if (e.code === 4902) {
               if (chains[symbol].type === "imported") {
                 await this.ethereum.request({
                   method: 'wallet_addEthereumChain',
@@ -43527,7 +43509,6 @@
                 message: message
               }
             });
-            console.log(result);
             return true;
           } catch (e) {
             console.log("error - ");
@@ -43652,7 +43633,6 @@
               const algodClient = this.wallet.getAlgod();
               const addr = this.wallet.getAddress();
               const output = await algodClient.accountInformation(addr).do();
-              console.log(output);
               const balance = output.amount;
               return balance;
             }
@@ -43661,7 +43641,6 @@
               const addr = this.wallet.getAddress();
               const output = await algodClient.accountInformation(addr).do();
               const spendable = BigInt(output["amount-without-pending-rewards"]) - BigInt(output['min-balance']);
-              console.log(spendable);
               return spendable;
             }
             isValidAddress(address) {
@@ -43678,11 +43657,12 @@
             async transfer(receiver, amount, note) {
               this.networkStr = this.wallet.testnet ? "Testnet" : "Mainnet";
               let display;
+              amount = BigInt(amount);
               if (note === undefined) {
                 note = undefined;
-                display = (0, _snapsUi.panel)([(0, _snapsUi.heading)("Confirm Transfer"), (0, _snapsUi.text)(this.networkStr), (0, _snapsUi.divider)(), (0, _snapsUi.text)("From"), (0, _snapsUi.text)(`${this.wallet.getName()}  (${this.wallet.addr.substring(0, 4)}...${this.wallet.addr.slice(-4)})`), (0, _snapsUi.text)("to"), (0, _snapsUi.copyable)(receiver), (0, _snapsUi.text)("amount"), (0, _snapsUi.text)(`${(amount / 1000000).toFixed(3)} Algo`)]);
+                display = (0, _snapsUi.panel)([(0, _snapsUi.heading)("Confirm Transfer"), (0, _snapsUi.text)(this.networkStr), (0, _snapsUi.divider)(), (0, _snapsUi.text)("From"), (0, _snapsUi.text)(`${this.wallet.getName()}  (${this.wallet.addr.substring(0, 4)}...${this.wallet.addr.slice(-4)})`), (0, _snapsUi.text)("to"), (0, _snapsUi.copyable)(receiver), (0, _snapsUi.text)("amount"), (0, _snapsUi.text)(`${Number(amount / BigInt(1000000)).toFixed(3)} Algo`)]);
               } else {
-                display = (0, _snapsUi.panel)([(0, _snapsUi.heading)("Confirm Transfer"), (0, _snapsUi.text)(this.networkStr), (0, _snapsUi.divider)(), (0, _snapsUi.text)("Send From"), (0, _snapsUi.text)(`${this.wallet.getName()}  (${this.wallet.addr.substring(0, 4)}...${this.wallet.addr.slice(-4)})`), (0, _snapsUi.text)("To"), (0, _snapsUi.copyable)(receiver), (0, _snapsUi.text)("amount"), (0, _snapsUi.text)(`${(amount / 1000000).toFixed(3)} Algo`), (0, _snapsUi.divider)(), (0, _snapsUi.text)("note"), (0, _snapsUi.copyable)(note)]);
+                display = (0, _snapsUi.panel)([(0, _snapsUi.heading)("Confirm Transfer"), (0, _snapsUi.text)(this.networkStr), (0, _snapsUi.divider)(), (0, _snapsUi.text)("Send From"), (0, _snapsUi.text)(`${this.wallet.getName()}  (${this.wallet.addr.substring(0, 4)}...${this.wallet.addr.slice(-4)})`), (0, _snapsUi.text)("To"), (0, _snapsUi.copyable)(receiver), (0, _snapsUi.text)("amount"), (0, _snapsUi.text)(`${Number(amount / BigInt(1000000)).toFixed(3)} Algo`), (0, _snapsUi.divider)(), (0, _snapsUi.text)("note"), (0, _snapsUi.copyable)(note)]);
                 const enc = new TextEncoder();
                 note = enc.encode(note);
               }
@@ -43690,20 +43670,9 @@
               if (!confirm) {
                 return _Utils.default.throwError(4001, "user rejected Transaction");
               }
-              console.log(note);
-              console.log("note is");
-              console.log(note);
               const algod = this.wallet.getAlgod();
-              console.log("algod is");
-              console.log(algod);
               amount = BigInt(amount);
-              console.log("trying get params");
               let params = await _classPrivateMethodGet(this, _getParams, _getParams2).call(this, algod);
-              console.log("success");
-              console.log(params);
-              console.log("trying: this.wallet.addr");
-              console.log(this.wallet.addr);
-              console.log("creating txn");
               let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
                 from: this.wallet.addr,
                 to: receiver,
@@ -43711,8 +43680,6 @@
                 note: note,
                 suggestedParams: params
               });
-              console.log("txn is");
-              console.log(txn);
               let txId;
               try {
                 txId = _classPrivateMethodGet(this, _signAndPost, _signAndPost2).call(this, txn, algod);
@@ -43880,7 +43847,7 @@
         origin,
         request
       }) => {
-        const VERSION = "6.0.1";
+        const VERSION = "6.0.2";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
