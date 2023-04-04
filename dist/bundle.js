@@ -43847,7 +43847,7 @@
         origin,
         request
       }) => {
-        const VERSION = "7.0.0";
+        const VERSION = "7.0.1";
         const WarningURL = "http://snapalgo.com/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
@@ -43913,7 +43913,7 @@
               let confirm = await snap.request({
                 method: "snap_dialog",
                 params: {
-                  type: "Confirmation",
+                  type: "confirmation",
                   content: (0, _snapsUi.panel)([(0, _snapsUi.heading)("Display Address?"), (0, _snapsUi.divider)(), (0, _snapsUi.copyable)(currentAccount.addr)])
                 }
               });
