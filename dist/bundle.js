@@ -770,7 +770,7 @@
     }, {
       "./ed25519": 8,
       "./secp256k1": 10,
-      "@noble/secp256k1": 105
+      "@noble/secp256k1": 40
     }],
     8: [function (require, module, exports) {
       "use strict";
@@ -813,7 +813,7 @@
       exports.decompressPublicKey = decompressPublicKey;
     }, {
       "@metamask/utils": 23,
-      "@noble/ed25519": 93
+      "@noble/ed25519": 106
     }],
     9: [function (require, module, exports) {
       "use strict";
@@ -909,7 +909,7 @@
       exports.decompressPublicKey = decompressPublicKey;
     }, {
       "@metamask/utils": 23,
-      "@noble/secp256k1": 105
+      "@noble/secp256k1": 40
     }],
     11: [function (require, module, exports) {
       "use strict";
@@ -1176,9 +1176,9 @@
       "../curves": 9,
       "../utils": 17,
       "@metamask/utils": 23,
-      "@noble/hashes/hmac": 98,
-      "@noble/hashes/sha3": 102,
-      "@noble/hashes/sha512": 103
+      "@noble/hashes/hmac": 33,
+      "@noble/hashes/sha3": 37,
+      "@noble/hashes/sha512": 38
     }],
     13: [function (require, module, exports) {
       "use strict";
@@ -1224,9 +1224,9 @@
       "../SLIP10Node": 5,
       "../curves": 9,
       "../utils": 17,
-      "@noble/hashes/hmac": 98,
-      "@noble/hashes/sha512": 103,
-      "@scure/bip39": 107
+      "@noble/hashes/hmac": 33,
+      "@noble/hashes/sha512": 38,
+      "@scure/bip39": 41
     }],
     14: [function (require, module, exports) {
       "use strict";
@@ -1600,9 +1600,9 @@
     }, {
       "./constants": 6,
       "@metamask/utils": 23,
-      "@noble/hashes/ripemd160": 100,
-      "@noble/hashes/sha256": 101,
-      "@scure/base": 106
+      "@noble/hashes/ripemd160": 35,
+      "@noble/hashes/sha256": 36,
+      "@scure/base": 107
     }],
     18: [function (require, module, exports) {
       "use strict";
@@ -1665,7 +1665,7 @@
       }
       exports.assertExhaustive = assertExhaustive;
     }, {
-      "superstruct": 29
+      "superstruct": 42
     }],
     19: [function (require, module, exports) {
       (function () {
@@ -1922,7 +1922,7 @@
       "./assert": 18,
       "./bytes": 19,
       "./hex": 22,
-      "superstruct": 29
+      "superstruct": 42
     }],
     21: [function (require, module, exports) {
       "use strict";
@@ -2061,7 +2061,7 @@
       exports.remove0x = remove0x;
     }, {
       "./assert": 18,
-      "superstruct": 29
+      "superstruct": 42
     }],
     23: [function (require, module, exports) {
       "use strict";
@@ -2301,7 +2301,7 @@
     }, {
       "./assert": 18,
       "./misc": 26,
-      "superstruct": 29
+      "superstruct": 42
     }],
     25: [function (require, module, exports) {
       "use strict";
@@ -2469,4513 +2469,6 @@
       exports.timeSince = timeSince;
     }, {}],
     29: [function (require, module, exports) {
-      'use strict';
-
-      Object.defineProperty(exports, '__esModule', {
-        value: true
-      });
-      class StructError extends TypeError {
-        constructor(failure, failures) {
-          let cached;
-          const {
-            message,
-            ...rest
-          } = failure;
-          const {
-            path
-          } = failure;
-          const msg = path.length === 0 ? message : `At path: ${path.join('.')} -- ${message}`;
-          super(msg);
-          this.value = void 0;
-          this.key = void 0;
-          this.type = void 0;
-          this.refinement = void 0;
-          this.path = void 0;
-          this.branch = void 0;
-          this.failures = void 0;
-          Object.assign(this, rest);
-          this.name = this.constructor.name;
-          this.failures = () => {
-            return cached ?? (cached = [failure, ...failures()]);
-          };
-        }
-      }
-      function isIterable(x) {
-        return isObject(x) && typeof x[Symbol.iterator] === 'function';
-      }
-      function isObject(x) {
-        return typeof x === 'object' && x != null;
-      }
-      function isPlainObject(x) {
-        if (Object.prototype.toString.call(x) !== '[object Object]') {
-          return false;
-        }
-        const prototype = Object.getPrototypeOf(x);
-        return prototype === null || prototype === Object.prototype;
-      }
-      function print(value) {
-        if (typeof value === 'symbol') {
-          return value.toString();
-        }
-        return typeof value === 'string' ? JSON.stringify(value) : `${value}`;
-      }
-      function shiftIterator(input) {
-        const {
-          done,
-          value
-        } = input.next();
-        return done ? undefined : value;
-      }
-      function toFailure(result, context, struct, value) {
-        if (result === true) {
-          return;
-        } else if (result === false) {
-          result = {};
-        } else if (typeof result === 'string') {
-          result = {
-            message: result
-          };
-        }
-        const {
-          path,
-          branch
-        } = context;
-        const {
-          type
-        } = struct;
-        const {
-          refinement,
-          message = `Expected a value of type \`${type}\`${refinement ? ` with refinement \`${refinement}\`` : ''}, but received: \`${print(value)}\``
-        } = result;
-        return {
-          value,
-          type,
-          refinement,
-          key: path[path.length - 1],
-          path,
-          branch,
-          ...result,
-          message
-        };
-      }
-      function* toFailures(result, context, struct, value) {
-        if (!isIterable(result)) {
-          result = [result];
-        }
-        for (const r of result) {
-          const failure = toFailure(r, context, struct, value);
-          if (failure) {
-            yield failure;
-          }
-        }
-      }
-      function* run(value, struct, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        const {
-          path = [],
-          branch = [value],
-          coerce = false,
-          mask = false
-        } = options;
-        const ctx = {
-          path,
-          branch
-        };
-        if (coerce) {
-          value = struct.coercer(value, ctx);
-          if (mask && struct.type !== 'type' && isObject(struct.schema) && isObject(value) && !Array.isArray(value)) {
-            for (const key in value) {
-              if (struct.schema[key] === undefined) {
-                delete value[key];
-              }
-            }
-          }
-        }
-        let status = 'valid';
-        for (const failure of struct.validator(value, ctx)) {
-          status = 'not_valid';
-          yield [failure, undefined];
-        }
-        for (let [k, v, s] of struct.entries(value, ctx)) {
-          const ts = run(v, s, {
-            path: k === undefined ? path : [...path, k],
-            branch: k === undefined ? branch : [...branch, v],
-            coerce,
-            mask
-          });
-          for (const t of ts) {
-            if (t[0]) {
-              status = t[0].refinement != null ? 'not_refined' : 'not_valid';
-              yield [t[0], undefined];
-            } else if (coerce) {
-              v = t[1];
-              if (k === undefined) {
-                value = v;
-              } else if (value instanceof Map) {
-                value.set(k, v);
-              } else if (value instanceof Set) {
-                value.add(v);
-              } else if (isObject(value)) {
-                if (v !== undefined || k in value) value[k] = v;
-              }
-            }
-          }
-        }
-        if (status !== 'not_valid') {
-          for (const failure of struct.refiner(value, ctx)) {
-            status = 'not_refined';
-            yield [failure, undefined];
-          }
-        }
-        if (status === 'valid') {
-          yield [undefined, value];
-        }
-      }
-      class Struct {
-        constructor(props) {
-          this.TYPE = void 0;
-          this.type = void 0;
-          this.schema = void 0;
-          this.coercer = void 0;
-          this.validator = void 0;
-          this.refiner = void 0;
-          this.entries = void 0;
-          const {
-            type,
-            schema,
-            validator,
-            refiner,
-            coercer = value => value,
-            entries = function* () {}
-          } = props;
-          this.type = type;
-          this.schema = schema;
-          this.entries = entries;
-          this.coercer = coercer;
-          if (validator) {
-            this.validator = (value, context) => {
-              const result = validator(value, context);
-              return toFailures(result, context, this, value);
-            };
-          } else {
-            this.validator = () => [];
-          }
-          if (refiner) {
-            this.refiner = (value, context) => {
-              const result = refiner(value, context);
-              return toFailures(result, context, this, value);
-            };
-          } else {
-            this.refiner = () => [];
-          }
-        }
-        assert(value) {
-          return assert(value, this);
-        }
-        create(value) {
-          return create(value, this);
-        }
-        is(value) {
-          return is(value, this);
-        }
-        mask(value) {
-          return mask(value, this);
-        }
-        validate(value, options) {
-          if (options === void 0) {
-            options = {};
-          }
-          return validate(value, this, options);
-        }
-      }
-      function assert(value, struct) {
-        const result = validate(value, struct);
-        if (result[0]) {
-          throw result[0];
-        }
-      }
-      function create(value, struct) {
-        const result = validate(value, struct, {
-          coerce: true
-        });
-        if (result[0]) {
-          throw result[0];
-        } else {
-          return result[1];
-        }
-      }
-      function mask(value, struct) {
-        const result = validate(value, struct, {
-          coerce: true,
-          mask: true
-        });
-        if (result[0]) {
-          throw result[0];
-        } else {
-          return result[1];
-        }
-      }
-      function is(value, struct) {
-        const result = validate(value, struct);
-        return !result[0];
-      }
-      function validate(value, struct, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        const tuples = run(value, struct, options);
-        const tuple = shiftIterator(tuples);
-        if (tuple[0]) {
-          const error = new StructError(tuple[0], function* () {
-            for (const t of tuples) {
-              if (t[0]) {
-                yield t[0];
-              }
-            }
-          });
-          return [error, undefined];
-        } else {
-          const v = tuple[1];
-          return [undefined, v];
-        }
-      }
-      function assign() {
-        for (var _len = arguments.length, Structs = new Array(_len), _key = 0; _key < _len; _key++) {
-          Structs[_key] = arguments[_key];
-        }
-        const isType = Structs[0].type === 'type';
-        const schemas = Structs.map(s => s.schema);
-        const schema = Object.assign({}, ...schemas);
-        return isType ? type(schema) : object(schema);
-      }
-      function define(name, validator) {
-        return new Struct({
-          type: name,
-          schema: null,
-          validator
-        });
-      }
-      function deprecated(struct, log) {
-        return new Struct({
-          ...struct,
-          refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx),
-          validator(value, ctx) {
-            if (value === undefined) {
-              return true;
-            } else {
-              log(value, ctx);
-              return struct.validator(value, ctx);
-            }
-          }
-        });
-      }
-      function dynamic(fn) {
-        return new Struct({
-          type: 'dynamic',
-          schema: null,
-          *entries(value, ctx) {
-            const struct = fn(value, ctx);
-            yield* struct.entries(value, ctx);
-          },
-          validator(value, ctx) {
-            const struct = fn(value, ctx);
-            return struct.validator(value, ctx);
-          },
-          coercer(value, ctx) {
-            const struct = fn(value, ctx);
-            return struct.coercer(value, ctx);
-          },
-          refiner(value, ctx) {
-            const struct = fn(value, ctx);
-            return struct.refiner(value, ctx);
-          }
-        });
-      }
-      function lazy(fn) {
-        let struct;
-        return new Struct({
-          type: 'lazy',
-          schema: null,
-          *entries(value, ctx) {
-            struct ?? (struct = fn());
-            yield* struct.entries(value, ctx);
-          },
-          validator(value, ctx) {
-            struct ?? (struct = fn());
-            return struct.validator(value, ctx);
-          },
-          coercer(value, ctx) {
-            struct ?? (struct = fn());
-            return struct.coercer(value, ctx);
-          },
-          refiner(value, ctx) {
-            struct ?? (struct = fn());
-            return struct.refiner(value, ctx);
-          }
-        });
-      }
-      function omit(struct, keys) {
-        const {
-          schema
-        } = struct;
-        const subschema = {
-          ...schema
-        };
-        for (const key of keys) {
-          delete subschema[key];
-        }
-        switch (struct.type) {
-          case 'type':
-            return type(subschema);
-          default:
-            return object(subschema);
-        }
-      }
-      function partial(struct) {
-        const schema = struct instanceof Struct ? {
-          ...struct.schema
-        } : {
-          ...struct
-        };
-        for (const key in schema) {
-          schema[key] = optional(schema[key]);
-        }
-        return object(schema);
-      }
-      function pick(struct, keys) {
-        const {
-          schema
-        } = struct;
-        const subschema = {};
-        for (const key of keys) {
-          subschema[key] = schema[key];
-        }
-        return object(subschema);
-      }
-      function struct(name, validator) {
-        console.warn('superstruct@0.11 - The `struct` helper has been renamed to `define`.');
-        return define(name, validator);
-      }
-      function any() {
-        return define('any', () => true);
-      }
-      function array(Element) {
-        return new Struct({
-          type: 'array',
-          schema: Element,
-          *entries(value) {
-            if (Element && Array.isArray(value)) {
-              for (const [i, v] of value.entries()) {
-                yield [i, v, Element];
-              }
-            }
-          },
-          coercer(value) {
-            return Array.isArray(value) ? value.slice() : value;
-          },
-          validator(value) {
-            return Array.isArray(value) || `Expected an array value, but received: ${print(value)}`;
-          }
-        });
-      }
-      function bigint() {
-        return define('bigint', value => {
-          return typeof value === 'bigint';
-        });
-      }
-      function boolean() {
-        return define('boolean', value => {
-          return typeof value === 'boolean';
-        });
-      }
-      function date() {
-        return define('date', value => {
-          return value instanceof Date && !isNaN(value.getTime()) || `Expected a valid \`Date\` object, but received: ${print(value)}`;
-        });
-      }
-      function enums(values) {
-        const schema = {};
-        const description = values.map(v => print(v)).join();
-        for (const key of values) {
-          schema[key] = key;
-        }
-        return new Struct({
-          type: 'enums',
-          schema,
-          validator(value) {
-            return values.includes(value) || `Expected one of \`${description}\`, but received: ${print(value)}`;
-          }
-        });
-      }
-      function func() {
-        return define('func', value => {
-          return typeof value === 'function' || `Expected a function, but received: ${print(value)}`;
-        });
-      }
-      function instance(Class) {
-        return define('instance', value => {
-          return value instanceof Class || `Expected a \`${Class.name}\` instance, but received: ${print(value)}`;
-        });
-      }
-      function integer() {
-        return define('integer', value => {
-          return typeof value === 'number' && !isNaN(value) && Number.isInteger(value) || `Expected an integer, but received: ${print(value)}`;
-        });
-      }
-      function intersection(Structs) {
-        return new Struct({
-          type: 'intersection',
-          schema: null,
-          *entries(value, ctx) {
-            for (const S of Structs) {
-              yield* S.entries(value, ctx);
-            }
-          },
-          *validator(value, ctx) {
-            for (const S of Structs) {
-              yield* S.validator(value, ctx);
-            }
-          },
-          *refiner(value, ctx) {
-            for (const S of Structs) {
-              yield* S.refiner(value, ctx);
-            }
-          }
-        });
-      }
-      function literal(constant) {
-        const description = print(constant);
-        const t = typeof constant;
-        return new Struct({
-          type: 'literal',
-          schema: t === 'string' || t === 'number' || t === 'boolean' ? constant : null,
-          validator(value) {
-            return value === constant || `Expected the literal \`${description}\`, but received: ${print(value)}`;
-          }
-        });
-      }
-      function map(Key, Value) {
-        return new Struct({
-          type: 'map',
-          schema: null,
-          *entries(value) {
-            if (Key && Value && value instanceof Map) {
-              for (const [k, v] of value.entries()) {
-                yield [k, k, Key];
-                yield [k, v, Value];
-              }
-            }
-          },
-          coercer(value) {
-            return value instanceof Map ? new Map(value) : value;
-          },
-          validator(value) {
-            return value instanceof Map || `Expected a \`Map\` object, but received: ${print(value)}`;
-          }
-        });
-      }
-      function never() {
-        return define('never', () => false);
-      }
-      function nullable(struct) {
-        return new Struct({
-          ...struct,
-          validator: (value, ctx) => value === null || struct.validator(value, ctx),
-          refiner: (value, ctx) => value === null || struct.refiner(value, ctx)
-        });
-      }
-      function number() {
-        return define('number', value => {
-          return typeof value === 'number' && !isNaN(value) || `Expected a number, but received: ${print(value)}`;
-        });
-      }
-      function object(schema) {
-        const knowns = schema ? Object.keys(schema) : [];
-        const Never = never();
-        return new Struct({
-          type: 'object',
-          schema: schema ? schema : null,
-          *entries(value) {
-            if (schema && isObject(value)) {
-              const unknowns = new Set(Object.keys(value));
-              for (const key of knowns) {
-                unknowns.delete(key);
-                yield [key, value[key], schema[key]];
-              }
-              for (const key of unknowns) {
-                yield [key, value[key], Never];
-              }
-            }
-          },
-          validator(value) {
-            return isObject(value) || `Expected an object, but received: ${print(value)}`;
-          },
-          coercer(value) {
-            return isObject(value) ? {
-              ...value
-            } : value;
-          }
-        });
-      }
-      function optional(struct) {
-        return new Struct({
-          ...struct,
-          validator: (value, ctx) => value === undefined || struct.validator(value, ctx),
-          refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx)
-        });
-      }
-      function record(Key, Value) {
-        return new Struct({
-          type: 'record',
-          schema: null,
-          *entries(value) {
-            if (isObject(value)) {
-              for (const k in value) {
-                const v = value[k];
-                yield [k, k, Key];
-                yield [k, v, Value];
-              }
-            }
-          },
-          validator(value) {
-            return isObject(value) || `Expected an object, but received: ${print(value)}`;
-          }
-        });
-      }
-      function regexp() {
-        return define('regexp', value => {
-          return value instanceof RegExp;
-        });
-      }
-      function set(Element) {
-        return new Struct({
-          type: 'set',
-          schema: null,
-          *entries(value) {
-            if (Element && value instanceof Set) {
-              for (const v of value) {
-                yield [v, v, Element];
-              }
-            }
-          },
-          coercer(value) {
-            return value instanceof Set ? new Set(value) : value;
-          },
-          validator(value) {
-            return value instanceof Set || `Expected a \`Set\` object, but received: ${print(value)}`;
-          }
-        });
-      }
-      function string() {
-        return define('string', value => {
-          return typeof value === 'string' || `Expected a string, but received: ${print(value)}`;
-        });
-      }
-      function tuple(Structs) {
-        const Never = never();
-        return new Struct({
-          type: 'tuple',
-          schema: null,
-          *entries(value) {
-            if (Array.isArray(value)) {
-              const length = Math.max(Structs.length, value.length);
-              for (let i = 0; i < length; i++) {
-                yield [i, value[i], Structs[i] || Never];
-              }
-            }
-          },
-          validator(value) {
-            return Array.isArray(value) || `Expected an array, but received: ${print(value)}`;
-          }
-        });
-      }
-      function type(schema) {
-        const keys = Object.keys(schema);
-        return new Struct({
-          type: 'type',
-          schema,
-          *entries(value) {
-            if (isObject(value)) {
-              for (const k of keys) {
-                yield [k, value[k], schema[k]];
-              }
-            }
-          },
-          validator(value) {
-            return isObject(value) || `Expected an object, but received: ${print(value)}`;
-          }
-        });
-      }
-      function union(Structs) {
-        const description = Structs.map(s => s.type).join(' | ');
-        return new Struct({
-          type: 'union',
-          schema: null,
-          coercer(value, ctx) {
-            const firstMatch = Structs.find(s => {
-              const [e] = s.validate(value, {
-                coerce: true
-              });
-              return !e;
-            }) || unknown();
-            return firstMatch.coercer(value, ctx);
-          },
-          validator(value, ctx) {
-            const failures = [];
-            for (const S of Structs) {
-              const [...tuples] = run(value, S, ctx);
-              const [first] = tuples;
-              if (!first[0]) {
-                return [];
-              } else {
-                for (const [failure] of tuples) {
-                  if (failure) {
-                    failures.push(failure);
-                  }
-                }
-              }
-            }
-            return [`Expected the value to satisfy a union of \`${description}\`, but received: ${print(value)}`, ...failures];
-          }
-        });
-      }
-      function unknown() {
-        return define('unknown', () => true);
-      }
-      function coerce(struct, condition, coercer) {
-        return new Struct({
-          ...struct,
-          coercer: (value, ctx) => {
-            return is(value, condition) ? struct.coercer(coercer(value, ctx), ctx) : struct.coercer(value, ctx);
-          }
-        });
-      }
-      function defaulted(struct, fallback, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        return coerce(struct, unknown(), x => {
-          const f = typeof fallback === 'function' ? fallback() : fallback;
-          if (x === undefined) {
-            return f;
-          }
-          if (!options.strict && isPlainObject(x) && isPlainObject(f)) {
-            const ret = {
-              ...x
-            };
-            let changed = false;
-            for (const key in f) {
-              if (ret[key] === undefined) {
-                ret[key] = f[key];
-                changed = true;
-              }
-            }
-            if (changed) {
-              return ret;
-            }
-          }
-          return x;
-        });
-      }
-      function trimmed(struct) {
-        return coerce(struct, string(), x => x.trim());
-      }
-      function empty(struct) {
-        return refine(struct, 'empty', value => {
-          const size = getSize(value);
-          return size === 0 || `Expected an empty ${struct.type} but received one with a size of \`${size}\``;
-        });
-      }
-      function getSize(value) {
-        if (value instanceof Map || value instanceof Set) {
-          return value.size;
-        } else {
-          return value.length;
-        }
-      }
-      function max(struct, threshold, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        const {
-          exclusive
-        } = options;
-        return refine(struct, 'max', value => {
-          return exclusive ? value < threshold : value <= threshold || `Expected a ${struct.type} less than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
-        });
-      }
-      function min(struct, threshold, options) {
-        if (options === void 0) {
-          options = {};
-        }
-        const {
-          exclusive
-        } = options;
-        return refine(struct, 'min', value => {
-          return exclusive ? value > threshold : value >= threshold || `Expected a ${struct.type} greater than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
-        });
-      }
-      function nonempty(struct) {
-        return refine(struct, 'nonempty', value => {
-          const size = getSize(value);
-          return size > 0 || `Expected a nonempty ${struct.type} but received an empty one`;
-        });
-      }
-      function pattern(struct, regexp) {
-        return refine(struct, 'pattern', value => {
-          return regexp.test(value) || `Expected a ${struct.type} matching \`/${regexp.source}/\` but received "${value}"`;
-        });
-      }
-      function size(struct, min, max) {
-        if (max === void 0) {
-          max = min;
-        }
-        const expected = `Expected a ${struct.type}`;
-        const of = min === max ? `of \`${min}\`` : `between \`${min}\` and \`${max}\``;
-        return refine(struct, 'size', value => {
-          if (typeof value === 'number' || value instanceof Date) {
-            return min <= value && value <= max || `${expected} ${of} but received \`${value}\``;
-          } else if (value instanceof Map || value instanceof Set) {
-            const {
-              size
-            } = value;
-            return min <= size && size <= max || `${expected} with a size ${of} but received one with a size of \`${size}\``;
-          } else {
-            const {
-              length
-            } = value;
-            return min <= length && length <= max || `${expected} with a length ${of} but received one with a length of \`${length}\``;
-          }
-        });
-      }
-      function refine(struct, name, refiner) {
-        return new Struct({
-          ...struct,
-          *refiner(value, ctx) {
-            yield* struct.refiner(value, ctx);
-            const result = refiner(value, ctx);
-            const failures = toFailures(result, ctx, struct, value);
-            for (const failure of failures) {
-              yield {
-                ...failure,
-                refinement: name
-              };
-            }
-          }
-        });
-      }
-      exports.Struct = Struct;
-      exports.StructError = StructError;
-      exports.any = any;
-      exports.array = array;
-      exports.assert = assert;
-      exports.assign = assign;
-      exports.bigint = bigint;
-      exports.boolean = boolean;
-      exports.coerce = coerce;
-      exports.create = create;
-      exports.date = date;
-      exports.defaulted = defaulted;
-      exports.define = define;
-      exports.deprecated = deprecated;
-      exports.dynamic = dynamic;
-      exports.empty = empty;
-      exports.enums = enums;
-      exports.func = func;
-      exports.instance = instance;
-      exports.integer = integer;
-      exports.intersection = intersection;
-      exports.is = is;
-      exports.lazy = lazy;
-      exports.literal = literal;
-      exports.map = map;
-      exports.mask = mask;
-      exports.max = max;
-      exports.min = min;
-      exports.never = never;
-      exports.nonempty = nonempty;
-      exports.nullable = nullable;
-      exports.number = number;
-      exports.object = object;
-      exports.omit = omit;
-      exports.optional = optional;
-      exports.partial = partial;
-      exports.pattern = pattern;
-      exports.pick = pick;
-      exports.record = record;
-      exports.refine = refine;
-      exports.regexp = regexp;
-      exports.set = set;
-      exports.size = size;
-      exports.string = string;
-      exports.struct = struct;
-      exports.trimmed = trimmed;
-      exports.tuple = tuple;
-      exports.type = type;
-      exports.union = union;
-      exports.unknown = unknown;
-      exports.validate = validate;
-    }, {}],
-    30: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.text = exports.spinner = exports.panel = exports.heading = exports.divider = exports.copyable = void 0;
-      const utils_1 = require("@metamask/utils");
-      const nodes_1 = require("./nodes");
-      function createBuilder(type, struct, keys = []) {
-        return (...args) => {
-          if (args.length === 1 && (0, utils_1.isPlainObject)(args[0])) {
-            const node = Object.assign(Object.assign({}, args[0]), {
-              type
-            });
-            (0, utils_1.assertStruct)(node, struct, `Invalid ${type} component`);
-            return node;
-          }
-          const node = keys.reduce((partialNode, key, index) => {
-            return Object.assign(Object.assign({}, partialNode), {
-              [key]: args[index]
-            });
-          }, {
-            type
-          });
-          (0, utils_1.assertStruct)(node, struct, `Invalid ${type} component`);
-          return node;
-        };
-      }
-      exports.copyable = createBuilder(nodes_1.NodeType.Copyable, nodes_1.CopyableStruct, ['value']);
-      exports.divider = createBuilder(nodes_1.NodeType.Divider, nodes_1.DividerStruct);
-      exports.heading = createBuilder(nodes_1.NodeType.Heading, nodes_1.HeadingStruct, ['value']);
-      exports.panel = createBuilder(nodes_1.NodeType.Panel, nodes_1.PanelStruct, ['children']);
-      exports.spinner = createBuilder(nodes_1.NodeType.Spinner, nodes_1.SpinnerStruct);
-      exports.text = createBuilder(nodes_1.NodeType.Text, nodes_1.TextStruct, ['value']);
-    }, {
-      "./nodes": 32,
-      "@metamask/utils": 41
-    }],
-    31: [function (require, module, exports) {
-      "use strict";
-
-      var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        var desc = Object.getOwnPropertyDescriptor(m, k);
-        if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-          desc = {
-            enumerable: true,
-            get: function () {
-              return m[k];
-            }
-          };
-        }
-        Object.defineProperty(o, k2, desc);
-      } : function (o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        o[k2] = m[k];
-      });
-      var __exportStar = this && this.__exportStar || function (m, exports) {
-        for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-      };
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      __exportStar(require("./builder"), exports);
-      __exportStar(require("./nodes"), exports);
-      __exportStar(require("./validation"), exports);
-    }, {
-      "./builder": 30,
-      "./nodes": 32,
-      "./validation": 33
-    }],
-    32: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.ComponentStruct = exports.TextStruct = exports.SpinnerStruct = exports.PanelStruct = exports.HeadingStruct = exports.DividerStruct = exports.CopyableStruct = exports.NodeType = void 0;
-      const superstruct_1 = require("superstruct");
-      const NodeStruct = (0, superstruct_1.object)({
-        type: (0, superstruct_1.string)()
-      });
-      const ParentStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
-        children: (0, superstruct_1.array)((0, superstruct_1.lazy)(() => exports.ComponentStruct))
-      }));
-      const LiteralStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
-        value: (0, superstruct_1.unknown)()
-      }));
-      var NodeType;
-      (function (NodeType) {
-        NodeType["Copyable"] = "copyable";
-        NodeType["Divider"] = "divider";
-        NodeType["Heading"] = "heading";
-        NodeType["Panel"] = "panel";
-        NodeType["Spinner"] = "spinner";
-        NodeType["Text"] = "text";
-      })(NodeType = exports.NodeType || (exports.NodeType = {}));
-      exports.CopyableStruct = (0, superstruct_1.assign)(LiteralStruct, (0, superstruct_1.object)({
-        type: (0, superstruct_1.literal)(NodeType.Copyable),
-        value: (0, superstruct_1.string)()
-      }));
-      exports.DividerStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
-        type: (0, superstruct_1.literal)(NodeType.Divider)
-      }));
-      exports.HeadingStruct = (0, superstruct_1.assign)(LiteralStruct, (0, superstruct_1.object)({
-        type: (0, superstruct_1.literal)(NodeType.Heading),
-        value: (0, superstruct_1.string)()
-      }));
-      exports.PanelStruct = (0, superstruct_1.assign)(ParentStruct, (0, superstruct_1.object)({
-        type: (0, superstruct_1.literal)(NodeType.Panel)
-      }));
-      exports.SpinnerStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
-        type: (0, superstruct_1.literal)(NodeType.Spinner)
-      }));
-      exports.TextStruct = (0, superstruct_1.assign)(LiteralStruct, (0, superstruct_1.object)({
-        type: (0, superstruct_1.literal)(NodeType.Text),
-        value: (0, superstruct_1.string)()
-      }));
-      exports.ComponentStruct = (0, superstruct_1.union)([exports.CopyableStruct, exports.DividerStruct, exports.HeadingStruct, exports.PanelStruct, exports.SpinnerStruct, exports.TextStruct]);
-    }, {
-      "superstruct": 279
-    }],
-    33: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.assertIsComponent = exports.isComponent = void 0;
-      const utils_1 = require("@metamask/utils");
-      const superstruct_1 = require("superstruct");
-      const nodes_1 = require("./nodes");
-      function isComponent(value) {
-        return (0, superstruct_1.is)(value, nodes_1.ComponentStruct);
-      }
-      exports.isComponent = isComponent;
-      function assertIsComponent(value) {
-        (0, utils_1.assertStruct)(value, nodes_1.ComponentStruct, 'Invalid component');
-      }
-      exports.assertIsComponent = assertIsComponent;
-    }, {
-      "./nodes": 32,
-      "@metamask/utils": 41,
-      "superstruct": 279
-    }],
-    34: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.assertExhaustive = exports.assertStruct = exports.assert = exports.AssertionError = void 0;
-      const superstruct_1 = require("superstruct");
-      function isErrorWithMessage(error) {
-        return typeof error === 'object' && error !== null && 'message' in error;
-      }
-      function isConstructable(fn) {
-        var _a, _b;
-        return Boolean(typeof ((_b = (_a = fn === null || fn === void 0 ? void 0 : fn.prototype) === null || _a === void 0 ? void 0 : _a.constructor) === null || _b === void 0 ? void 0 : _b.name) === 'string');
-      }
-      function getErrorMessage(error) {
-        const message = isErrorWithMessage(error) ? error.message : String(error);
-        if (message.endsWith('.')) {
-          return message.slice(0, -1);
-        }
-        return message;
-      }
-      function getError(ErrorWrapper, message) {
-        if (isConstructable(ErrorWrapper)) {
-          return new ErrorWrapper({
-            message
-          });
-        }
-        return ErrorWrapper({
-          message
-        });
-      }
-      class AssertionError extends Error {
-        constructor(options) {
-          super(options.message);
-          this.code = 'ERR_ASSERTION';
-        }
-      }
-      exports.AssertionError = AssertionError;
-      function assert(value, message = 'Assertion failed.', ErrorWrapper = AssertionError) {
-        if (!value) {
-          if (message instanceof Error) {
-            throw message;
-          }
-          throw getError(ErrorWrapper, message);
-        }
-      }
-      exports.assert = assert;
-      function assertStruct(value, struct, errorPrefix = 'Assertion failed', ErrorWrapper = AssertionError) {
-        try {
-          (0, superstruct_1.assert)(value, struct);
-        } catch (error) {
-          throw getError(ErrorWrapper, `${errorPrefix}: ${getErrorMessage(error)}.`);
-        }
-      }
-      exports.assertStruct = assertStruct;
-      function assertExhaustive(_object) {
-        throw new Error('Invalid branch reached. Should be detected during compilation.');
-      }
-      exports.assertExhaustive = assertExhaustive;
-    }, {
-      "superstruct": 279
-    }],
-    35: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.base64 = void 0;
-      const superstruct_1 = require("superstruct");
-      const assert_1 = require("./assert");
-      const base64 = (struct, options = {}) => {
-        var _a, _b;
-        const paddingRequired = (_a = options.paddingRequired) !== null && _a !== void 0 ? _a : false;
-        const characterSet = (_b = options.characterSet) !== null && _b !== void 0 ? _b : 'base64';
-        let letters;
-        if (characterSet === 'base64') {
-          letters = String.raw`[A-Za-z0-9+\/]`;
-        } else {
-          (0, assert_1.assert)(characterSet === 'base64url');
-          letters = String.raw`[-_A-Za-z0-9]`;
-        }
-        let re;
-        if (paddingRequired) {
-          re = new RegExp(`^(?:${letters}{4})*(?:${letters}{3}=|${letters}{2}==)?$`, 'u');
-        } else {
-          re = new RegExp(`^(?:${letters}{4})*(?:${letters}{2,3}|${letters}{3}=|${letters}{2}==)?$`, 'u');
-        }
-        return (0, superstruct_1.pattern)(struct, re);
-      };
-      exports.base64 = base64;
-    }, {
-      "./assert": 34,
-      "superstruct": 279
-    }],
-    36: [function (require, module, exports) {
-      (function () {
-        (function () {
-          "use strict";
-
-          Object.defineProperty(exports, "__esModule", {
-            value: true
-          });
-          exports.createDataView = exports.concatBytes = exports.valueToBytes = exports.stringToBytes = exports.numberToBytes = exports.signedBigIntToBytes = exports.bigIntToBytes = exports.hexToBytes = exports.bytesToString = exports.bytesToNumber = exports.bytesToSignedBigInt = exports.bytesToBigInt = exports.bytesToHex = exports.assertIsBytes = exports.isBytes = void 0;
-          const assert_1 = require("./assert");
-          const hex_1 = require("./hex");
-          const HEX_MINIMUM_NUMBER_CHARACTER = 48;
-          const HEX_MAXIMUM_NUMBER_CHARACTER = 58;
-          const HEX_CHARACTER_OFFSET = 87;
-          function getPrecomputedHexValuesBuilder() {
-            const lookupTable = [];
-            return () => {
-              if (lookupTable.length === 0) {
-                for (let i = 0; i < 256; i++) {
-                  lookupTable.push(i.toString(16).padStart(2, '0'));
-                }
-              }
-              return lookupTable;
-            };
-          }
-          const getPrecomputedHexValues = getPrecomputedHexValuesBuilder();
-          function isBytes(value) {
-            return value instanceof Uint8Array;
-          }
-          exports.isBytes = isBytes;
-          function assertIsBytes(value) {
-            (0, assert_1.assert)(isBytes(value), 'Value must be a Uint8Array.');
-          }
-          exports.assertIsBytes = assertIsBytes;
-          function bytesToHex(bytes) {
-            assertIsBytes(bytes);
-            if (bytes.length === 0) {
-              return '0x';
-            }
-            const lookupTable = getPrecomputedHexValues();
-            const hexadecimal = new Array(bytes.length);
-            for (let i = 0; i < bytes.length; i++) {
-              hexadecimal[i] = lookupTable[bytes[i]];
-            }
-            return (0, hex_1.add0x)(hexadecimal.join(''));
-          }
-          exports.bytesToHex = bytesToHex;
-          function bytesToBigInt(bytes) {
-            assertIsBytes(bytes);
-            const hexadecimal = bytesToHex(bytes);
-            return BigInt(hexadecimal);
-          }
-          exports.bytesToBigInt = bytesToBigInt;
-          function bytesToSignedBigInt(bytes) {
-            assertIsBytes(bytes);
-            let value = BigInt(0);
-            for (const byte of bytes) {
-              value = (value << BigInt(8)) + BigInt(byte);
-            }
-            return BigInt.asIntN(bytes.length * 8, value);
-          }
-          exports.bytesToSignedBigInt = bytesToSignedBigInt;
-          function bytesToNumber(bytes) {
-            assertIsBytes(bytes);
-            const bigint = bytesToBigInt(bytes);
-            (0, assert_1.assert)(bigint <= BigInt(Number.MAX_SAFE_INTEGER), 'Number is not a safe integer. Use `bytesToBigInt` instead.');
-            return Number(bigint);
-          }
-          exports.bytesToNumber = bytesToNumber;
-          function bytesToString(bytes) {
-            assertIsBytes(bytes);
-            return new TextDecoder().decode(bytes);
-          }
-          exports.bytesToString = bytesToString;
-          function hexToBytes(value) {
-            var _a;
-            if (((_a = value === null || value === void 0 ? void 0 : value.toLowerCase) === null || _a === void 0 ? void 0 : _a.call(value)) === '0x') {
-              return new Uint8Array();
-            }
-            (0, hex_1.assertIsHexString)(value);
-            const strippedValue = (0, hex_1.remove0x)(value).toLowerCase();
-            const normalizedValue = strippedValue.length % 2 === 0 ? strippedValue : `0${strippedValue}`;
-            const bytes = new Uint8Array(normalizedValue.length / 2);
-            for (let i = 0; i < bytes.length; i++) {
-              const c1 = normalizedValue.charCodeAt(i * 2);
-              const c2 = normalizedValue.charCodeAt(i * 2 + 1);
-              const n1 = c1 - (c1 < HEX_MAXIMUM_NUMBER_CHARACTER ? HEX_MINIMUM_NUMBER_CHARACTER : HEX_CHARACTER_OFFSET);
-              const n2 = c2 - (c2 < HEX_MAXIMUM_NUMBER_CHARACTER ? HEX_MINIMUM_NUMBER_CHARACTER : HEX_CHARACTER_OFFSET);
-              bytes[i] = n1 * 16 + n2;
-            }
-            return bytes;
-          }
-          exports.hexToBytes = hexToBytes;
-          function bigIntToBytes(value) {
-            (0, assert_1.assert)(typeof value === 'bigint', 'Value must be a bigint.');
-            (0, assert_1.assert)(value >= BigInt(0), 'Value must be a non-negative bigint.');
-            const hexadecimal = value.toString(16);
-            return hexToBytes(hexadecimal);
-          }
-          exports.bigIntToBytes = bigIntToBytes;
-          function bigIntFits(value, bytes) {
-            (0, assert_1.assert)(bytes > 0);
-            const mask = value >> BigInt(31);
-            return !((~value & mask) + (value & ~mask) >> BigInt(bytes * 8 + ~0));
-          }
-          function signedBigIntToBytes(value, byteLength) {
-            (0, assert_1.assert)(typeof value === 'bigint', 'Value must be a bigint.');
-            (0, assert_1.assert)(typeof byteLength === 'number', 'Byte length must be a number.');
-            (0, assert_1.assert)(byteLength > 0, 'Byte length must be greater than 0.');
-            (0, assert_1.assert)(bigIntFits(value, byteLength), 'Byte length is too small to represent the given value.');
-            let numberValue = value;
-            const bytes = new Uint8Array(byteLength);
-            for (let i = 0; i < bytes.length; i++) {
-              bytes[i] = Number(BigInt.asUintN(8, numberValue));
-              numberValue >>= BigInt(8);
-            }
-            return bytes.reverse();
-          }
-          exports.signedBigIntToBytes = signedBigIntToBytes;
-          function numberToBytes(value) {
-            (0, assert_1.assert)(typeof value === 'number', 'Value must be a number.');
-            (0, assert_1.assert)(value >= 0, 'Value must be a non-negative number.');
-            (0, assert_1.assert)(Number.isSafeInteger(value), 'Value is not a safe integer. Use `bigIntToBytes` instead.');
-            const hexadecimal = value.toString(16);
-            return hexToBytes(hexadecimal);
-          }
-          exports.numberToBytes = numberToBytes;
-          function stringToBytes(value) {
-            (0, assert_1.assert)(typeof value === 'string', 'Value must be a string.');
-            return new TextEncoder().encode(value);
-          }
-          exports.stringToBytes = stringToBytes;
-          function valueToBytes(value) {
-            if (typeof value === 'bigint') {
-              return bigIntToBytes(value);
-            }
-            if (typeof value === 'number') {
-              return numberToBytes(value);
-            }
-            if (typeof value === 'string') {
-              if (value.startsWith('0x')) {
-                return hexToBytes(value);
-              }
-              return stringToBytes(value);
-            }
-            if (isBytes(value)) {
-              return value;
-            }
-            throw new TypeError(`Unsupported value type: "${typeof value}".`);
-          }
-          exports.valueToBytes = valueToBytes;
-          function concatBytes(values) {
-            const normalizedValues = new Array(values.length);
-            let byteLength = 0;
-            for (let i = 0; i < values.length; i++) {
-              const value = valueToBytes(values[i]);
-              normalizedValues[i] = value;
-              byteLength += value.length;
-            }
-            const bytes = new Uint8Array(byteLength);
-            for (let i = 0, offset = 0; i < normalizedValues.length; i++) {
-              bytes.set(normalizedValues[i], offset);
-              offset += normalizedValues[i].length;
-            }
-            return bytes;
-          }
-          exports.concatBytes = concatBytes;
-          function createDataView(bytes) {
-            if (typeof Buffer !== 'undefined' && bytes instanceof Buffer) {
-              const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
-              return new DataView(buffer);
-            }
-            return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-          }
-          exports.createDataView = createDataView;
-        }).call(this);
-      }).call(this, require("buffer").Buffer);
-    }, {
-      "./assert": 34,
-      "./hex": 40,
-      "buffer": 199
-    }],
-    37: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.ChecksumStruct = void 0;
-      const superstruct_1 = require("superstruct");
-      const base64_1 = require("./base64");
-      exports.ChecksumStruct = (0, superstruct_1.size)((0, base64_1.base64)((0, superstruct_1.string)(), {
-        paddingRequired: true
-      }), 44, 44);
-    }, {
-      "./base64": 35,
-      "superstruct": 279
-    }],
-    38: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.createHex = exports.createBytes = exports.createBigInt = exports.createNumber = void 0;
-      const superstruct_1 = require("superstruct");
-      const assert_1 = require("./assert");
-      const bytes_1 = require("./bytes");
-      const hex_1 = require("./hex");
-      const NumberLikeStruct = (0, superstruct_1.union)([(0, superstruct_1.number)(), (0, superstruct_1.bigint)(), (0, superstruct_1.string)(), hex_1.StrictHexStruct]);
-      const NumberCoercer = (0, superstruct_1.coerce)((0, superstruct_1.number)(), NumberLikeStruct, Number);
-      const BigIntCoercer = (0, superstruct_1.coerce)((0, superstruct_1.bigint)(), NumberLikeStruct, BigInt);
-      const BytesLikeStruct = (0, superstruct_1.union)([hex_1.StrictHexStruct, (0, superstruct_1.instance)(Uint8Array)]);
-      const BytesCoercer = (0, superstruct_1.coerce)((0, superstruct_1.instance)(Uint8Array), (0, superstruct_1.union)([hex_1.StrictHexStruct]), bytes_1.hexToBytes);
-      const HexCoercer = (0, superstruct_1.coerce)(hex_1.StrictHexStruct, (0, superstruct_1.instance)(Uint8Array), bytes_1.bytesToHex);
-      function createNumber(value) {
-        try {
-          const result = (0, superstruct_1.create)(value, NumberCoercer);
-          (0, assert_1.assert)(Number.isFinite(result), `Expected a number-like value, got "${value}".`);
-          return result;
-        } catch (error) {
-          if (error instanceof superstruct_1.StructError) {
-            throw new Error(`Expected a number-like value, got "${value}".`);
-          }
-          throw error;
-        }
-      }
-      exports.createNumber = createNumber;
-      function createBigInt(value) {
-        try {
-          return (0, superstruct_1.create)(value, BigIntCoercer);
-        } catch (error) {
-          if (error instanceof superstruct_1.StructError) {
-            throw new Error(`Expected a number-like value, got "${String(error.value)}".`);
-          }
-          throw error;
-        }
-      }
-      exports.createBigInt = createBigInt;
-      function createBytes(value) {
-        if (typeof value === 'string' && value.toLowerCase() === '0x') {
-          return new Uint8Array();
-        }
-        try {
-          return (0, superstruct_1.create)(value, BytesCoercer);
-        } catch (error) {
-          if (error instanceof superstruct_1.StructError) {
-            throw new Error(`Expected a bytes-like value, got "${String(error.value)}".`);
-          }
-          throw error;
-        }
-      }
-      exports.createBytes = createBytes;
-      function createHex(value) {
-        if (value instanceof Uint8Array && value.length === 0 || typeof value === 'string' && value.toLowerCase() === '0x') {
-          return '0x';
-        }
-        try {
-          return (0, superstruct_1.create)(value, HexCoercer);
-        } catch (error) {
-          if (error instanceof superstruct_1.StructError) {
-            throw new Error(`Expected a bytes-like value, got "${String(error.value)}".`);
-          }
-          throw error;
-        }
-      }
-      exports.createHex = createHex;
-    }, {
-      "./assert": 34,
-      "./bytes": 36,
-      "./hex": 40,
-      "superstruct": 279
-    }],
-    39: [function (require, module, exports) {
-      arguments[4][21][0].apply(exports, arguments);
-    }, {
-      "dup": 21
-    }],
-    40: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.remove0x = exports.add0x = exports.assertIsStrictHexString = exports.assertIsHexString = exports.isStrictHexString = exports.isHexString = exports.StrictHexStruct = exports.HexStruct = void 0;
-      const superstruct_1 = require("superstruct");
-      const assert_1 = require("./assert");
-      exports.HexStruct = (0, superstruct_1.pattern)((0, superstruct_1.string)(), /^(?:0x)?[0-9a-f]+$/iu);
-      exports.StrictHexStruct = (0, superstruct_1.pattern)((0, superstruct_1.string)(), /^0x[0-9a-f]+$/iu);
-      function isHexString(value) {
-        return (0, superstruct_1.is)(value, exports.HexStruct);
-      }
-      exports.isHexString = isHexString;
-      function isStrictHexString(value) {
-        return (0, superstruct_1.is)(value, exports.StrictHexStruct);
-      }
-      exports.isStrictHexString = isStrictHexString;
-      function assertIsHexString(value) {
-        (0, assert_1.assert)(isHexString(value), 'Value must be a hexadecimal string.');
-      }
-      exports.assertIsHexString = assertIsHexString;
-      function assertIsStrictHexString(value) {
-        (0, assert_1.assert)(isStrictHexString(value), 'Value must be a hexadecimal string, starting with "0x".');
-      }
-      exports.assertIsStrictHexString = assertIsStrictHexString;
-      function add0x(hexadecimal) {
-        if (hexadecimal.startsWith('0x')) {
-          return hexadecimal;
-        }
-        if (hexadecimal.startsWith('0X')) {
-          return `0x${hexadecimal.substring(2)}`;
-        }
-        return `0x${hexadecimal}`;
-      }
-      exports.add0x = add0x;
-      function remove0x(hexadecimal) {
-        if (hexadecimal.startsWith('0x') || hexadecimal.startsWith('0X')) {
-          return hexadecimal.substring(2);
-        }
-        return hexadecimal;
-      }
-      exports.remove0x = remove0x;
-    }, {
-      "./assert": 34,
-      "superstruct": 279
-    }],
-    41: [function (require, module, exports) {
-      "use strict";
-
-      var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        var desc = Object.getOwnPropertyDescriptor(m, k);
-        if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-          desc = {
-            enumerable: true,
-            get: function () {
-              return m[k];
-            }
-          };
-        }
-        Object.defineProperty(o, k2, desc);
-      } : function (o, m, k, k2) {
-        if (k2 === undefined) k2 = k;
-        o[k2] = m[k];
-      });
-      var __exportStar = this && this.__exportStar || function (m, exports) {
-        for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
-      };
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      __exportStar(require("./assert"), exports);
-      __exportStar(require("./base64"), exports);
-      __exportStar(require("./bytes"), exports);
-      __exportStar(require("./checksum"), exports);
-      __exportStar(require("./coercers"), exports);
-      __exportStar(require("./collections"), exports);
-      __exportStar(require("./hex"), exports);
-      __exportStar(require("./json"), exports);
-      __exportStar(require("./logging"), exports);
-      __exportStar(require("./misc"), exports);
-      __exportStar(require("./number"), exports);
-      __exportStar(require("./opaque"), exports);
-      __exportStar(require("./time"), exports);
-      __exportStar(require("./versions"), exports);
-    }, {
-      "./assert": 34,
-      "./base64": 35,
-      "./bytes": 36,
-      "./checksum": 37,
-      "./coercers": 38,
-      "./collections": 39,
-      "./hex": 40,
-      "./json": 42,
-      "./logging": 43,
-      "./misc": 44,
-      "./number": 45,
-      "./opaque": 46,
-      "./time": 47,
-      "./versions": 48
-    }],
-    42: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.validateJsonAndGetSize = exports.getJsonRpcIdValidator = exports.assertIsJsonRpcError = exports.isJsonRpcError = exports.assertIsJsonRpcFailure = exports.isJsonRpcFailure = exports.assertIsJsonRpcSuccess = exports.isJsonRpcSuccess = exports.assertIsJsonRpcResponse = exports.isJsonRpcResponse = exports.assertIsPendingJsonRpcResponse = exports.isPendingJsonRpcResponse = exports.JsonRpcResponseStruct = exports.JsonRpcFailureStruct = exports.JsonRpcSuccessStruct = exports.PendingJsonRpcResponseStruct = exports.assertIsJsonRpcRequest = exports.isJsonRpcRequest = exports.assertIsJsonRpcNotification = exports.isJsonRpcNotification = exports.JsonRpcNotificationStruct = exports.JsonRpcRequestStruct = exports.JsonRpcParamsStruct = exports.JsonRpcErrorStruct = exports.JsonRpcIdStruct = exports.JsonRpcVersionStruct = exports.jsonrpc2 = exports.isValidJson = exports.JsonStruct = void 0;
-      const superstruct_1 = require("superstruct");
-      const assert_1 = require("./assert");
-      const misc_1 = require("./misc");
-      exports.JsonStruct = (0, superstruct_1.define)('Json', value => {
-        const [isValid] = validateJsonAndGetSize(value, true);
-        if (!isValid) {
-          return 'Expected a valid JSON-serializable value';
-        }
-        return true;
-      });
-      function isValidJson(value) {
-        return (0, superstruct_1.is)(value, exports.JsonStruct);
-      }
-      exports.isValidJson = isValidJson;
-      exports.jsonrpc2 = '2.0';
-      exports.JsonRpcVersionStruct = (0, superstruct_1.literal)(exports.jsonrpc2);
-      exports.JsonRpcIdStruct = (0, superstruct_1.nullable)((0, superstruct_1.union)([(0, superstruct_1.number)(), (0, superstruct_1.string)()]));
-      exports.JsonRpcErrorStruct = (0, superstruct_1.object)({
-        code: (0, superstruct_1.integer)(),
-        message: (0, superstruct_1.string)(),
-        data: (0, superstruct_1.optional)(exports.JsonStruct),
-        stack: (0, superstruct_1.optional)((0, superstruct_1.string)())
-      });
-      exports.JsonRpcParamsStruct = (0, superstruct_1.optional)((0, superstruct_1.union)([(0, superstruct_1.record)((0, superstruct_1.string)(), exports.JsonStruct), (0, superstruct_1.array)(exports.JsonStruct)]));
-      exports.JsonRpcRequestStruct = (0, superstruct_1.object)({
-        id: exports.JsonRpcIdStruct,
-        jsonrpc: exports.JsonRpcVersionStruct,
-        method: (0, superstruct_1.string)(),
-        params: exports.JsonRpcParamsStruct
-      });
-      exports.JsonRpcNotificationStruct = (0, superstruct_1.omit)(exports.JsonRpcRequestStruct, ['id']);
-      function isJsonRpcNotification(value) {
-        return (0, superstruct_1.is)(value, exports.JsonRpcNotificationStruct);
-      }
-      exports.isJsonRpcNotification = isJsonRpcNotification;
-      function assertIsJsonRpcNotification(value, ErrorWrapper) {
-        (0, assert_1.assertStruct)(value, exports.JsonRpcNotificationStruct, 'Invalid JSON-RPC notification', ErrorWrapper);
-      }
-      exports.assertIsJsonRpcNotification = assertIsJsonRpcNotification;
-      function isJsonRpcRequest(value) {
-        return (0, superstruct_1.is)(value, exports.JsonRpcRequestStruct);
-      }
-      exports.isJsonRpcRequest = isJsonRpcRequest;
-      function assertIsJsonRpcRequest(value, ErrorWrapper) {
-        (0, assert_1.assertStruct)(value, exports.JsonRpcRequestStruct, 'Invalid JSON-RPC request', ErrorWrapper);
-      }
-      exports.assertIsJsonRpcRequest = assertIsJsonRpcRequest;
-      exports.PendingJsonRpcResponseStruct = (0, superstruct_1.object)({
-        id: exports.JsonRpcIdStruct,
-        jsonrpc: exports.JsonRpcVersionStruct,
-        result: (0, superstruct_1.optional)((0, superstruct_1.unknown)()),
-        error: (0, superstruct_1.optional)(exports.JsonRpcErrorStruct)
-      });
-      exports.JsonRpcSuccessStruct = (0, superstruct_1.object)({
-        id: exports.JsonRpcIdStruct,
-        jsonrpc: exports.JsonRpcVersionStruct,
-        result: exports.JsonStruct
-      });
-      exports.JsonRpcFailureStruct = (0, superstruct_1.object)({
-        id: exports.JsonRpcIdStruct,
-        jsonrpc: exports.JsonRpcVersionStruct,
-        error: exports.JsonRpcErrorStruct
-      });
-      exports.JsonRpcResponseStruct = (0, superstruct_1.union)([exports.JsonRpcSuccessStruct, exports.JsonRpcFailureStruct]);
-      function isPendingJsonRpcResponse(response) {
-        return (0, superstruct_1.is)(response, exports.PendingJsonRpcResponseStruct);
-      }
-      exports.isPendingJsonRpcResponse = isPendingJsonRpcResponse;
-      function assertIsPendingJsonRpcResponse(response, ErrorWrapper) {
-        (0, assert_1.assertStruct)(response, exports.PendingJsonRpcResponseStruct, 'Invalid pending JSON-RPC response', ErrorWrapper);
-      }
-      exports.assertIsPendingJsonRpcResponse = assertIsPendingJsonRpcResponse;
-      function isJsonRpcResponse(response) {
-        return (0, superstruct_1.is)(response, exports.JsonRpcResponseStruct);
-      }
-      exports.isJsonRpcResponse = isJsonRpcResponse;
-      function assertIsJsonRpcResponse(value, ErrorWrapper) {
-        (0, assert_1.assertStruct)(value, exports.JsonRpcResponseStruct, 'Invalid JSON-RPC response', ErrorWrapper);
-      }
-      exports.assertIsJsonRpcResponse = assertIsJsonRpcResponse;
-      function isJsonRpcSuccess(value) {
-        return (0, superstruct_1.is)(value, exports.JsonRpcSuccessStruct);
-      }
-      exports.isJsonRpcSuccess = isJsonRpcSuccess;
-      function assertIsJsonRpcSuccess(value, ErrorWrapper) {
-        (0, assert_1.assertStruct)(value, exports.JsonRpcSuccessStruct, 'Invalid JSON-RPC success response', ErrorWrapper);
-      }
-      exports.assertIsJsonRpcSuccess = assertIsJsonRpcSuccess;
-      function isJsonRpcFailure(value) {
-        return (0, superstruct_1.is)(value, exports.JsonRpcFailureStruct);
-      }
-      exports.isJsonRpcFailure = isJsonRpcFailure;
-      function assertIsJsonRpcFailure(value, ErrorWrapper) {
-        (0, assert_1.assertStruct)(value, exports.JsonRpcFailureStruct, 'Invalid JSON-RPC failure response', ErrorWrapper);
-      }
-      exports.assertIsJsonRpcFailure = assertIsJsonRpcFailure;
-      function isJsonRpcError(value) {
-        return (0, superstruct_1.is)(value, exports.JsonRpcErrorStruct);
-      }
-      exports.isJsonRpcError = isJsonRpcError;
-      function assertIsJsonRpcError(value, ErrorWrapper) {
-        (0, assert_1.assertStruct)(value, exports.JsonRpcErrorStruct, 'Invalid JSON-RPC error', ErrorWrapper);
-      }
-      exports.assertIsJsonRpcError = assertIsJsonRpcError;
-      function getJsonRpcIdValidator(options) {
-        const {
-          permitEmptyString,
-          permitFractions,
-          permitNull
-        } = Object.assign({
-          permitEmptyString: true,
-          permitFractions: false,
-          permitNull: true
-        }, options);
-        const isValidJsonRpcId = id => {
-          return Boolean(typeof id === 'number' && (permitFractions || Number.isInteger(id)) || typeof id === 'string' && (permitEmptyString || id.length > 0) || permitNull && id === null);
-        };
-        return isValidJsonRpcId;
-      }
-      exports.getJsonRpcIdValidator = getJsonRpcIdValidator;
-      function validateJsonAndGetSize(jsObject, skipSizingProcess = false) {
-        const seenObjects = new Set();
-        function getJsonSerializableInfo(value, skipSizing) {
-          if (value === undefined) {
-            return [false, 0];
-          } else if (value === null) {
-            return [true, skipSizing ? 0 : misc_1.JsonSize.Null];
-          }
-          const typeOfValue = typeof value;
-          try {
-            if (typeOfValue === 'function') {
-              return [false, 0];
-            } else if (typeOfValue === 'string' || value instanceof String) {
-              return [true, skipSizing ? 0 : (0, misc_1.calculateStringSize)(value) + misc_1.JsonSize.Quote * 2];
-            } else if (typeOfValue === 'boolean' || value instanceof Boolean) {
-              if (skipSizing) {
-                return [true, 0];
-              }
-              return [true, value == true ? misc_1.JsonSize.True : misc_1.JsonSize.False];
-            } else if (typeOfValue === 'number' || value instanceof Number) {
-              if (skipSizing) {
-                return [true, 0];
-              }
-              return [true, (0, misc_1.calculateNumberSize)(value)];
-            } else if (value instanceof Date) {
-              if (skipSizing) {
-                return [true, 0];
-              }
-              return [true, isNaN(value.getDate()) ? misc_1.JsonSize.Null : misc_1.JsonSize.Date + misc_1.JsonSize.Quote * 2];
-            }
-          } catch (_) {
-            return [false, 0];
-          }
-          if (!(0, misc_1.isPlainObject)(value) && !Array.isArray(value)) {
-            return [false, 0];
-          }
-          if (seenObjects.has(value)) {
-            return [false, 0];
-          }
-          seenObjects.add(value);
-          try {
-            return [true, Object.entries(value).reduce((sum, [key, nestedValue], idx, arr) => {
-              let [valid, size] = getJsonSerializableInfo(nestedValue, skipSizing);
-              if (!valid) {
-                throw new Error('JSON validation did not pass. Validation process stopped.');
-              }
-              seenObjects.delete(value);
-              if (skipSizing) {
-                return 0;
-              }
-              const keySize = Array.isArray(value) ? 0 : key.length + misc_1.JsonSize.Comma + misc_1.JsonSize.Colon * 2;
-              const separator = idx < arr.length - 1 ? misc_1.JsonSize.Comma : 0;
-              return sum + keySize + size + separator;
-            }, skipSizing ? 0 : misc_1.JsonSize.Wrapper * 2)];
-          } catch (_) {
-            return [false, 0];
-          }
-        }
-        return getJsonSerializableInfo(jsObject, skipSizingProcess);
-      }
-      exports.validateJsonAndGetSize = validateJsonAndGetSize;
-    }, {
-      "./assert": 34,
-      "./misc": 44,
-      "superstruct": 279
-    }],
-    43: [function (require, module, exports) {
-      arguments[4][25][0].apply(exports, arguments);
-    }, {
-      "debug": 239,
-      "dup": 25
-    }],
-    44: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.calculateNumberSize = exports.calculateStringSize = exports.isASCII = exports.isPlainObject = exports.ESCAPE_CHARACTERS_REGEXP = exports.JsonSize = exports.hasProperty = exports.isObject = exports.isNullOrUndefined = exports.isNonEmptyArray = void 0;
-      function isNonEmptyArray(value) {
-        return Array.isArray(value) && value.length > 0;
-      }
-      exports.isNonEmptyArray = isNonEmptyArray;
-      function isNullOrUndefined(value) {
-        return value === null || value === undefined;
-      }
-      exports.isNullOrUndefined = isNullOrUndefined;
-      function isObject(value) {
-        return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
-      }
-      exports.isObject = isObject;
-      const hasProperty = (objectToCheck, name) => Object.hasOwnProperty.call(objectToCheck, name);
-      exports.hasProperty = hasProperty;
-      var JsonSize;
-      (function (JsonSize) {
-        JsonSize[JsonSize["Null"] = 4] = "Null";
-        JsonSize[JsonSize["Comma"] = 1] = "Comma";
-        JsonSize[JsonSize["Wrapper"] = 1] = "Wrapper";
-        JsonSize[JsonSize["True"] = 4] = "True";
-        JsonSize[JsonSize["False"] = 5] = "False";
-        JsonSize[JsonSize["Quote"] = 1] = "Quote";
-        JsonSize[JsonSize["Colon"] = 1] = "Colon";
-        JsonSize[JsonSize["Date"] = 24] = "Date";
-      })(JsonSize = exports.JsonSize || (exports.JsonSize = {}));
-      exports.ESCAPE_CHARACTERS_REGEXP = /"|\\|\n|\r|\t/gu;
-      function isPlainObject(value) {
-        if (typeof value !== 'object' || value === null) {
-          return false;
-        }
-        try {
-          let proto = value;
-          while (Object.getPrototypeOf(proto) !== null) {
-            proto = Object.getPrototypeOf(proto);
-          }
-          return Object.getPrototypeOf(value) === proto;
-        } catch (_) {
-          return false;
-        }
-      }
-      exports.isPlainObject = isPlainObject;
-      function isASCII(character) {
-        return character.charCodeAt(0) <= 127;
-      }
-      exports.isASCII = isASCII;
-      function calculateStringSize(value) {
-        var _a;
-        const size = value.split('').reduce((total, character) => {
-          if (isASCII(character)) {
-            return total + 1;
-          }
-          return total + 2;
-        }, 0);
-        return size + ((_a = value.match(exports.ESCAPE_CHARACTERS_REGEXP)) !== null && _a !== void 0 ? _a : []).length;
-      }
-      exports.calculateStringSize = calculateStringSize;
-      function calculateNumberSize(value) {
-        return value.toString().length;
-      }
-      exports.calculateNumberSize = calculateNumberSize;
-    }, {}],
-    45: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.hexToBigInt = exports.hexToNumber = exports.bigIntToHex = exports.numberToHex = void 0;
-      const assert_1 = require("./assert");
-      const hex_1 = require("./hex");
-      const numberToHex = value => {
-        (0, assert_1.assert)(typeof value === 'number', 'Value must be a number.');
-        (0, assert_1.assert)(value >= 0, 'Value must be a non-negative number.');
-        (0, assert_1.assert)(Number.isSafeInteger(value), 'Value is not a safe integer. Use `bigIntToHex` instead.');
-        return (0, hex_1.add0x)(value.toString(16));
-      };
-      exports.numberToHex = numberToHex;
-      const bigIntToHex = value => {
-        (0, assert_1.assert)(typeof value === 'bigint', 'Value must be a bigint.');
-        (0, assert_1.assert)(value >= 0, 'Value must be a non-negative bigint.');
-        return (0, hex_1.add0x)(value.toString(16));
-      };
-      exports.bigIntToHex = bigIntToHex;
-      const hexToNumber = value => {
-        (0, hex_1.assertIsHexString)(value);
-        const numberValue = parseInt(value, 16);
-        (0, assert_1.assert)(Number.isSafeInteger(numberValue), 'Value is not a safe integer. Use `hexToBigInt` instead.');
-        return numberValue;
-      };
-      exports.hexToNumber = hexToNumber;
-      const hexToBigInt = value => {
-        (0, hex_1.assertIsHexString)(value);
-        return BigInt((0, hex_1.add0x)(value));
-      };
-      exports.hexToBigInt = hexToBigInt;
-    }, {
-      "./assert": 34,
-      "./hex": 40
-    }],
-    46: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-    }, {}],
-    47: [function (require, module, exports) {
-      arguments[4][28][0].apply(exports, arguments);
-    }, {
-      "dup": 28
-    }],
-    48: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.satisfiesVersionRange = exports.gtRange = exports.gtVersion = exports.assertIsSemVerRange = exports.assertIsSemVerVersion = exports.isValidSemVerRange = exports.isValidSemVerVersion = exports.VersionRangeStruct = exports.VersionStruct = void 0;
-      const semver_1 = require("semver");
-      const superstruct_1 = require("superstruct");
-      const assert_1 = require("./assert");
-      exports.VersionStruct = (0, superstruct_1.refine)((0, superstruct_1.string)(), 'Version', value => {
-        if ((0, semver_1.valid)(value) === null) {
-          return `Expected SemVer version, got "${value}"`;
-        }
-        return true;
-      });
-      exports.VersionRangeStruct = (0, superstruct_1.refine)((0, superstruct_1.string)(), 'Version range', value => {
-        if ((0, semver_1.validRange)(value) === null) {
-          return `Expected SemVer range, got "${value}"`;
-        }
-        return true;
-      });
-      function isValidSemVerVersion(version) {
-        return (0, superstruct_1.is)(version, exports.VersionStruct);
-      }
-      exports.isValidSemVerVersion = isValidSemVerVersion;
-      function isValidSemVerRange(versionRange) {
-        return (0, superstruct_1.is)(versionRange, exports.VersionRangeStruct);
-      }
-      exports.isValidSemVerRange = isValidSemVerRange;
-      function assertIsSemVerVersion(version) {
-        (0, assert_1.assertStruct)(version, exports.VersionStruct);
-      }
-      exports.assertIsSemVerVersion = assertIsSemVerVersion;
-      function assertIsSemVerRange(range) {
-        (0, assert_1.assertStruct)(range, exports.VersionRangeStruct);
-      }
-      exports.assertIsSemVerRange = assertIsSemVerRange;
-      function gtVersion(version1, version2) {
-        return (0, semver_1.gt)(version1, version2);
-      }
-      exports.gtVersion = gtVersion;
-      function gtRange(version, range) {
-        return (0, semver_1.gtr)(version, range);
-      }
-      exports.gtRange = gtRange;
-      function satisfiesVersionRange(version, versionRange) {
-        return (0, semver_1.satisfies)(version, versionRange, {
-          includePrerelease: true
-        });
-      }
-      exports.satisfiesVersionRange = satisfiesVersionRange;
-    }, {
-      "./assert": 34,
-      "semver": 76,
-      "superstruct": 279
-    }],
-    49: [function (require, module, exports) {
-      const ANY = Symbol('SemVer ANY');
-      class Comparator {
-        static get ANY() {
-          return ANY;
-        }
-        constructor(comp, options) {
-          options = parseOptions(options);
-          if (comp instanceof Comparator) {
-            if (comp.loose === !!options.loose) {
-              return comp;
-            } else {
-              comp = comp.value;
-            }
-          }
-          debug('comparator', comp, options);
-          this.options = options;
-          this.loose = !!options.loose;
-          this.parse(comp);
-          if (this.semver === ANY) {
-            this.value = '';
-          } else {
-            this.value = this.operator + this.semver.version;
-          }
-          debug('comp', this);
-        }
-        parse(comp) {
-          const r = this.options.loose ? re[t.COMPARATORLOOSE] : re[t.COMPARATOR];
-          const m = comp.match(r);
-          if (!m) {
-            throw new TypeError(`Invalid comparator: ${comp}`);
-          }
-          this.operator = m[1] !== undefined ? m[1] : '';
-          if (this.operator === '=') {
-            this.operator = '';
-          }
-          if (!m[2]) {
-            this.semver = ANY;
-          } else {
-            this.semver = new SemVer(m[2], this.options.loose);
-          }
-        }
-        toString() {
-          return this.value;
-        }
-        test(version) {
-          debug('Comparator.test', version, this.options.loose);
-          if (this.semver === ANY || version === ANY) {
-            return true;
-          }
-          if (typeof version === 'string') {
-            try {
-              version = new SemVer(version, this.options);
-            } catch (er) {
-              return false;
-            }
-          }
-          return cmp(version, this.operator, this.semver, this.options);
-        }
-        intersects(comp, options) {
-          if (!(comp instanceof Comparator)) {
-            throw new TypeError('a Comparator is required');
-          }
-          if (!options || typeof options !== 'object') {
-            options = {
-              loose: !!options,
-              includePrerelease: false
-            };
-          }
-          if (this.operator === '') {
-            if (this.value === '') {
-              return true;
-            }
-            return new Range(comp.value, options).test(this.value);
-          } else if (comp.operator === '') {
-            if (comp.value === '') {
-              return true;
-            }
-            return new Range(this.value, options).test(comp.semver);
-          }
-          const sameDirectionIncreasing = (this.operator === '>=' || this.operator === '>') && (comp.operator === '>=' || comp.operator === '>');
-          const sameDirectionDecreasing = (this.operator === '<=' || this.operator === '<') && (comp.operator === '<=' || comp.operator === '<');
-          const sameSemVer = this.semver.version === comp.semver.version;
-          const differentDirectionsInclusive = (this.operator === '>=' || this.operator === '<=') && (comp.operator === '>=' || comp.operator === '<=');
-          const oppositeDirectionsLessThan = cmp(this.semver, '<', comp.semver, options) && (this.operator === '>=' || this.operator === '>') && (comp.operator === '<=' || comp.operator === '<');
-          const oppositeDirectionsGreaterThan = cmp(this.semver, '>', comp.semver, options) && (this.operator === '<=' || this.operator === '<') && (comp.operator === '>=' || comp.operator === '>');
-          return sameDirectionIncreasing || sameDirectionDecreasing || sameSemVer && differentDirectionsInclusive || oppositeDirectionsLessThan || oppositeDirectionsGreaterThan;
-        }
-      }
-      module.exports = Comparator;
-      const parseOptions = require('../internal/parse-options');
-      const {
-        re,
-        t
-      } = require('../internal/re');
-      const cmp = require('../functions/cmp');
-      const debug = require('../internal/debug');
-      const SemVer = require('./semver');
-      const Range = require('./range');
-    }, {
-      "../functions/cmp": 53,
-      "../internal/debug": 78,
-      "../internal/parse-options": 80,
-      "../internal/re": 81,
-      "./range": 50,
-      "./semver": 51
-    }],
-    50: [function (require, module, exports) {
-      class Range {
-        constructor(range, options) {
-          options = parseOptions(options);
-          if (range instanceof Range) {
-            if (range.loose === !!options.loose && range.includePrerelease === !!options.includePrerelease) {
-              return range;
-            } else {
-              return new Range(range.raw, options);
-            }
-          }
-          if (range instanceof Comparator) {
-            this.raw = range.value;
-            this.set = [[range]];
-            this.format();
-            return this;
-          }
-          this.options = options;
-          this.loose = !!options.loose;
-          this.includePrerelease = !!options.includePrerelease;
-          this.raw = range;
-          this.set = range.split('||').map(r => this.parseRange(r.trim())).filter(c => c.length);
-          if (!this.set.length) {
-            throw new TypeError(`Invalid SemVer Range: ${range}`);
-          }
-          if (this.set.length > 1) {
-            const first = this.set[0];
-            this.set = this.set.filter(c => !isNullSet(c[0]));
-            if (this.set.length === 0) {
-              this.set = [first];
-            } else if (this.set.length > 1) {
-              for (const c of this.set) {
-                if (c.length === 1 && isAny(c[0])) {
-                  this.set = [c];
-                  break;
-                }
-              }
-            }
-          }
-          this.format();
-        }
-        format() {
-          this.range = this.set.map(comps => {
-            return comps.join(' ').trim();
-          }).join('||').trim();
-          return this.range;
-        }
-        toString() {
-          return this.range;
-        }
-        parseRange(range) {
-          range = range.trim();
-          const memoOpts = Object.keys(this.options).join(',');
-          const memoKey = `parseRange:${memoOpts}:${range}`;
-          const cached = cache.get(memoKey);
-          if (cached) {
-            return cached;
-          }
-          const loose = this.options.loose;
-          const hr = loose ? re[t.HYPHENRANGELOOSE] : re[t.HYPHENRANGE];
-          range = range.replace(hr, hyphenReplace(this.options.includePrerelease));
-          debug('hyphen replace', range);
-          range = range.replace(re[t.COMPARATORTRIM], comparatorTrimReplace);
-          debug('comparator trim', range);
-          range = range.replace(re[t.TILDETRIM], tildeTrimReplace);
-          range = range.replace(re[t.CARETTRIM], caretTrimReplace);
-          range = range.split(/\s+/).join(' ');
-          let rangeList = range.split(' ').map(comp => parseComparator(comp, this.options)).join(' ').split(/\s+/).map(comp => replaceGTE0(comp, this.options));
-          if (loose) {
-            rangeList = rangeList.filter(comp => {
-              debug('loose invalid filter', comp, this.options);
-              return !!comp.match(re[t.COMPARATORLOOSE]);
-            });
-          }
-          debug('range list', rangeList);
-          const rangeMap = new Map();
-          const comparators = rangeList.map(comp => new Comparator(comp, this.options));
-          for (const comp of comparators) {
-            if (isNullSet(comp)) {
-              return [comp];
-            }
-            rangeMap.set(comp.value, comp);
-          }
-          if (rangeMap.size > 1 && rangeMap.has('')) {
-            rangeMap.delete('');
-          }
-          const result = [...rangeMap.values()];
-          cache.set(memoKey, result);
-          return result;
-        }
-        intersects(range, options) {
-          if (!(range instanceof Range)) {
-            throw new TypeError('a Range is required');
-          }
-          return this.set.some(thisComparators => {
-            return isSatisfiable(thisComparators, options) && range.set.some(rangeComparators => {
-              return isSatisfiable(rangeComparators, options) && thisComparators.every(thisComparator => {
-                return rangeComparators.every(rangeComparator => {
-                  return thisComparator.intersects(rangeComparator, options);
-                });
-              });
-            });
-          });
-        }
-        test(version) {
-          if (!version) {
-            return false;
-          }
-          if (typeof version === 'string') {
-            try {
-              version = new SemVer(version, this.options);
-            } catch (er) {
-              return false;
-            }
-          }
-          for (let i = 0; i < this.set.length; i++) {
-            if (testSet(this.set[i], version, this.options)) {
-              return true;
-            }
-          }
-          return false;
-        }
-      }
-      module.exports = Range;
-      const LRU = require('lru-cache');
-      const cache = new LRU({
-        max: 1000
-      });
-      const parseOptions = require('../internal/parse-options');
-      const Comparator = require('./comparator');
-      const debug = require('../internal/debug');
-      const SemVer = require('./semver');
-      const {
-        re,
-        t,
-        comparatorTrimReplace,
-        tildeTrimReplace,
-        caretTrimReplace
-      } = require('../internal/re');
-      const isNullSet = c => c.value === '<0.0.0-0';
-      const isAny = c => c.value === '';
-      const isSatisfiable = (comparators, options) => {
-        let result = true;
-        const remainingComparators = comparators.slice();
-        let testComparator = remainingComparators.pop();
-        while (result && remainingComparators.length) {
-          result = remainingComparators.every(otherComparator => {
-            return testComparator.intersects(otherComparator, options);
-          });
-          testComparator = remainingComparators.pop();
-        }
-        return result;
-      };
-      const parseComparator = (comp, options) => {
-        debug('comp', comp, options);
-        comp = replaceCarets(comp, options);
-        debug('caret', comp);
-        comp = replaceTildes(comp, options);
-        debug('tildes', comp);
-        comp = replaceXRanges(comp, options);
-        debug('xrange', comp);
-        comp = replaceStars(comp, options);
-        debug('stars', comp);
-        return comp;
-      };
-      const isX = id => !id || id.toLowerCase() === 'x' || id === '*';
-      const replaceTildes = (comp, options) => comp.trim().split(/\s+/).map(c => {
-        return replaceTilde(c, options);
-      }).join(' ');
-      const replaceTilde = (comp, options) => {
-        const r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
-        return comp.replace(r, (_, M, m, p, pr) => {
-          debug('tilde', comp, _, M, m, p, pr);
-          let ret;
-          if (isX(M)) {
-            ret = '';
-          } else if (isX(m)) {
-            ret = `>=${M}.0.0 <${+M + 1}.0.0-0`;
-          } else if (isX(p)) {
-            ret = `>=${M}.${m}.0 <${M}.${+m + 1}.0-0`;
-          } else if (pr) {
-            debug('replaceTilde pr', pr);
-            ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
-          } else {
-            ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
-          }
-          debug('tilde return', ret);
-          return ret;
-        });
-      };
-      const replaceCarets = (comp, options) => comp.trim().split(/\s+/).map(c => {
-        return replaceCaret(c, options);
-      }).join(' ');
-      const replaceCaret = (comp, options) => {
-        debug('caret', comp, options);
-        const r = options.loose ? re[t.CARETLOOSE] : re[t.CARET];
-        const z = options.includePrerelease ? '-0' : '';
-        return comp.replace(r, (_, M, m, p, pr) => {
-          debug('caret', comp, _, M, m, p, pr);
-          let ret;
-          if (isX(M)) {
-            ret = '';
-          } else if (isX(m)) {
-            ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
-          } else if (isX(p)) {
-            if (M === '0') {
-              ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
-            } else {
-              ret = `>=${M}.${m}.0${z} <${+M + 1}.0.0-0`;
-            }
-          } else if (pr) {
-            debug('replaceCaret pr', pr);
-            if (M === '0') {
-              if (m === '0') {
-                ret = `>=${M}.${m}.${p}-${pr} <${M}.${m}.${+p + 1}-0`;
-              } else {
-                ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
-              }
-            } else {
-              ret = `>=${M}.${m}.${p}-${pr} <${+M + 1}.0.0-0`;
-            }
-          } else {
-            debug('no pr');
-            if (M === '0') {
-              if (m === '0') {
-                ret = `>=${M}.${m}.${p}${z} <${M}.${m}.${+p + 1}-0`;
-              } else {
-                ret = `>=${M}.${m}.${p}${z} <${M}.${+m + 1}.0-0`;
-              }
-            } else {
-              ret = `>=${M}.${m}.${p} <${+M + 1}.0.0-0`;
-            }
-          }
-          debug('caret return', ret);
-          return ret;
-        });
-      };
-      const replaceXRanges = (comp, options) => {
-        debug('replaceXRanges', comp, options);
-        return comp.split(/\s+/).map(c => {
-          return replaceXRange(c, options);
-        }).join(' ');
-      };
-      const replaceXRange = (comp, options) => {
-        comp = comp.trim();
-        const r = options.loose ? re[t.XRANGELOOSE] : re[t.XRANGE];
-        return comp.replace(r, (ret, gtlt, M, m, p, pr) => {
-          debug('xRange', comp, ret, gtlt, M, m, p, pr);
-          const xM = isX(M);
-          const xm = xM || isX(m);
-          const xp = xm || isX(p);
-          const anyX = xp;
-          if (gtlt === '=' && anyX) {
-            gtlt = '';
-          }
-          pr = options.includePrerelease ? '-0' : '';
-          if (xM) {
-            if (gtlt === '>' || gtlt === '<') {
-              ret = '<0.0.0-0';
-            } else {
-              ret = '*';
-            }
-          } else if (gtlt && anyX) {
-            if (xm) {
-              m = 0;
-            }
-            p = 0;
-            if (gtlt === '>') {
-              gtlt = '>=';
-              if (xm) {
-                M = +M + 1;
-                m = 0;
-                p = 0;
-              } else {
-                m = +m + 1;
-                p = 0;
-              }
-            } else if (gtlt === '<=') {
-              gtlt = '<';
-              if (xm) {
-                M = +M + 1;
-              } else {
-                m = +m + 1;
-              }
-            }
-            if (gtlt === '<') {
-              pr = '-0';
-            }
-            ret = `${gtlt + M}.${m}.${p}${pr}`;
-          } else if (xm) {
-            ret = `>=${M}.0.0${pr} <${+M + 1}.0.0-0`;
-          } else if (xp) {
-            ret = `>=${M}.${m}.0${pr} <${M}.${+m + 1}.0-0`;
-          }
-          debug('xRange return', ret);
-          return ret;
-        });
-      };
-      const replaceStars = (comp, options) => {
-        debug('replaceStars', comp, options);
-        return comp.trim().replace(re[t.STAR], '');
-      };
-      const replaceGTE0 = (comp, options) => {
-        debug('replaceGTE0', comp, options);
-        return comp.trim().replace(re[options.includePrerelease ? t.GTE0PRE : t.GTE0], '');
-      };
-      const hyphenReplace = incPr => ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr, tb) => {
-        if (isX(fM)) {
-          from = '';
-        } else if (isX(fm)) {
-          from = `>=${fM}.0.0${incPr ? '-0' : ''}`;
-        } else if (isX(fp)) {
-          from = `>=${fM}.${fm}.0${incPr ? '-0' : ''}`;
-        } else if (fpr) {
-          from = `>=${from}`;
-        } else {
-          from = `>=${from}${incPr ? '-0' : ''}`;
-        }
-        if (isX(tM)) {
-          to = '';
-        } else if (isX(tm)) {
-          to = `<${+tM + 1}.0.0-0`;
-        } else if (isX(tp)) {
-          to = `<${tM}.${+tm + 1}.0-0`;
-        } else if (tpr) {
-          to = `<=${tM}.${tm}.${tp}-${tpr}`;
-        } else if (incPr) {
-          to = `<${tM}.${tm}.${+tp + 1}-0`;
-        } else {
-          to = `<=${to}`;
-        }
-        return `${from} ${to}`.trim();
-      };
-      const testSet = (set, version, options) => {
-        for (let i = 0; i < set.length; i++) {
-          if (!set[i].test(version)) {
-            return false;
-          }
-        }
-        if (version.prerelease.length && !options.includePrerelease) {
-          for (let i = 0; i < set.length; i++) {
-            debug(set[i].semver);
-            if (set[i].semver === Comparator.ANY) {
-              continue;
-            }
-            if (set[i].semver.prerelease.length > 0) {
-              const allowed = set[i].semver;
-              if (allowed.major === version.major && allowed.minor === version.minor && allowed.patch === version.patch) {
-                return true;
-              }
-            }
-          }
-          return false;
-        }
-        return true;
-      };
-    }, {
-      "../internal/debug": 78,
-      "../internal/parse-options": 80,
-      "../internal/re": 81,
-      "./comparator": 49,
-      "./semver": 51,
-      "lru-cache": 257
-    }],
-    51: [function (require, module, exports) {
-      const debug = require('../internal/debug');
-      const {
-        MAX_LENGTH,
-        MAX_SAFE_INTEGER
-      } = require('../internal/constants');
-      const {
-        re,
-        t
-      } = require('../internal/re');
-      const parseOptions = require('../internal/parse-options');
-      const {
-        compareIdentifiers
-      } = require('../internal/identifiers');
-      class SemVer {
-        constructor(version, options) {
-          options = parseOptions(options);
-          if (version instanceof SemVer) {
-            if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) {
-              return version;
-            } else {
-              version = version.version;
-            }
-          } else if (typeof version !== 'string') {
-            throw new TypeError(`Invalid Version: ${version}`);
-          }
-          if (version.length > MAX_LENGTH) {
-            throw new TypeError(`version is longer than ${MAX_LENGTH} characters`);
-          }
-          debug('SemVer', version, options);
-          this.options = options;
-          this.loose = !!options.loose;
-          this.includePrerelease = !!options.includePrerelease;
-          const m = version.trim().match(options.loose ? re[t.LOOSE] : re[t.FULL]);
-          if (!m) {
-            throw new TypeError(`Invalid Version: ${version}`);
-          }
-          this.raw = version;
-          this.major = +m[1];
-          this.minor = +m[2];
-          this.patch = +m[3];
-          if (this.major > MAX_SAFE_INTEGER || this.major < 0) {
-            throw new TypeError('Invalid major version');
-          }
-          if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) {
-            throw new TypeError('Invalid minor version');
-          }
-          if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) {
-            throw new TypeError('Invalid patch version');
-          }
-          if (!m[4]) {
-            this.prerelease = [];
-          } else {
-            this.prerelease = m[4].split('.').map(id => {
-              if (/^[0-9]+$/.test(id)) {
-                const num = +id;
-                if (num >= 0 && num < MAX_SAFE_INTEGER) {
-                  return num;
-                }
-              }
-              return id;
-            });
-          }
-          this.build = m[5] ? m[5].split('.') : [];
-          this.format();
-        }
-        format() {
-          this.version = `${this.major}.${this.minor}.${this.patch}`;
-          if (this.prerelease.length) {
-            this.version += `-${this.prerelease.join('.')}`;
-          }
-          return this.version;
-        }
-        toString() {
-          return this.version;
-        }
-        compare(other) {
-          debug('SemVer.compare', this.version, this.options, other);
-          if (!(other instanceof SemVer)) {
-            if (typeof other === 'string' && other === this.version) {
-              return 0;
-            }
-            other = new SemVer(other, this.options);
-          }
-          if (other.version === this.version) {
-            return 0;
-          }
-          return this.compareMain(other) || this.comparePre(other);
-        }
-        compareMain(other) {
-          if (!(other instanceof SemVer)) {
-            other = new SemVer(other, this.options);
-          }
-          return compareIdentifiers(this.major, other.major) || compareIdentifiers(this.minor, other.minor) || compareIdentifiers(this.patch, other.patch);
-        }
-        comparePre(other) {
-          if (!(other instanceof SemVer)) {
-            other = new SemVer(other, this.options);
-          }
-          if (this.prerelease.length && !other.prerelease.length) {
-            return -1;
-          } else if (!this.prerelease.length && other.prerelease.length) {
-            return 1;
-          } else if (!this.prerelease.length && !other.prerelease.length) {
-            return 0;
-          }
-          let i = 0;
-          do {
-            const a = this.prerelease[i];
-            const b = other.prerelease[i];
-            debug('prerelease compare', i, a, b);
-            if (a === undefined && b === undefined) {
-              return 0;
-            } else if (b === undefined) {
-              return 1;
-            } else if (a === undefined) {
-              return -1;
-            } else if (a === b) {
-              continue;
-            } else {
-              return compareIdentifiers(a, b);
-            }
-          } while (++i);
-        }
-        compareBuild(other) {
-          if (!(other instanceof SemVer)) {
-            other = new SemVer(other, this.options);
-          }
-          let i = 0;
-          do {
-            const a = this.build[i];
-            const b = other.build[i];
-            debug('prerelease compare', i, a, b);
-            if (a === undefined && b === undefined) {
-              return 0;
-            } else if (b === undefined) {
-              return 1;
-            } else if (a === undefined) {
-              return -1;
-            } else if (a === b) {
-              continue;
-            } else {
-              return compareIdentifiers(a, b);
-            }
-          } while (++i);
-        }
-        inc(release, identifier) {
-          switch (release) {
-            case 'premajor':
-              this.prerelease.length = 0;
-              this.patch = 0;
-              this.minor = 0;
-              this.major++;
-              this.inc('pre', identifier);
-              break;
-            case 'preminor':
-              this.prerelease.length = 0;
-              this.patch = 0;
-              this.minor++;
-              this.inc('pre', identifier);
-              break;
-            case 'prepatch':
-              this.prerelease.length = 0;
-              this.inc('patch', identifier);
-              this.inc('pre', identifier);
-              break;
-            case 'prerelease':
-              if (this.prerelease.length === 0) {
-                this.inc('patch', identifier);
-              }
-              this.inc('pre', identifier);
-              break;
-            case 'major':
-              if (this.minor !== 0 || this.patch !== 0 || this.prerelease.length === 0) {
-                this.major++;
-              }
-              this.minor = 0;
-              this.patch = 0;
-              this.prerelease = [];
-              break;
-            case 'minor':
-              if (this.patch !== 0 || this.prerelease.length === 0) {
-                this.minor++;
-              }
-              this.patch = 0;
-              this.prerelease = [];
-              break;
-            case 'patch':
-              if (this.prerelease.length === 0) {
-                this.patch++;
-              }
-              this.prerelease = [];
-              break;
-            case 'pre':
-              if (this.prerelease.length === 0) {
-                this.prerelease = [0];
-              } else {
-                let i = this.prerelease.length;
-                while (--i >= 0) {
-                  if (typeof this.prerelease[i] === 'number') {
-                    this.prerelease[i]++;
-                    i = -2;
-                  }
-                }
-                if (i === -1) {
-                  this.prerelease.push(0);
-                }
-              }
-              if (identifier) {
-                if (compareIdentifiers(this.prerelease[0], identifier) === 0) {
-                  if (isNaN(this.prerelease[1])) {
-                    this.prerelease = [identifier, 0];
-                  }
-                } else {
-                  this.prerelease = [identifier, 0];
-                }
-              }
-              break;
-            default:
-              throw new Error(`invalid increment argument: ${release}`);
-          }
-          this.format();
-          this.raw = this.version;
-          return this;
-        }
-      }
-      module.exports = SemVer;
-    }, {
-      "../internal/constants": 77,
-      "../internal/debug": 78,
-      "../internal/identifiers": 79,
-      "../internal/parse-options": 80,
-      "../internal/re": 81
-    }],
-    52: [function (require, module, exports) {
-      const parse = require('./parse');
-      const clean = (version, options) => {
-        const s = parse(version.trim().replace(/^[=v]+/, ''), options);
-        return s ? s.version : null;
-      };
-      module.exports = clean;
-    }, {
-      "./parse": 68
-    }],
-    53: [function (require, module, exports) {
-      const eq = require('./eq');
-      const neq = require('./neq');
-      const gt = require('./gt');
-      const gte = require('./gte');
-      const lt = require('./lt');
-      const lte = require('./lte');
-      const cmp = (a, op, b, loose) => {
-        switch (op) {
-          case '===':
-            if (typeof a === 'object') {
-              a = a.version;
-            }
-            if (typeof b === 'object') {
-              b = b.version;
-            }
-            return a === b;
-          case '!==':
-            if (typeof a === 'object') {
-              a = a.version;
-            }
-            if (typeof b === 'object') {
-              b = b.version;
-            }
-            return a !== b;
-          case '':
-          case '=':
-          case '==':
-            return eq(a, b, loose);
-          case '!=':
-            return neq(a, b, loose);
-          case '>':
-            return gt(a, b, loose);
-          case '>=':
-            return gte(a, b, loose);
-          case '<':
-            return lt(a, b, loose);
-          case '<=':
-            return lte(a, b, loose);
-          default:
-            throw new TypeError(`Invalid operator: ${op}`);
-        }
-      };
-      module.exports = cmp;
-    }, {
-      "./eq": 59,
-      "./gt": 60,
-      "./gte": 61,
-      "./lt": 63,
-      "./lte": 64,
-      "./neq": 67
-    }],
-    54: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const parse = require('./parse');
-      const {
-        re,
-        t
-      } = require('../internal/re');
-      const coerce = (version, options) => {
-        if (version instanceof SemVer) {
-          return version;
-        }
-        if (typeof version === 'number') {
-          version = String(version);
-        }
-        if (typeof version !== 'string') {
-          return null;
-        }
-        options = options || {};
-        let match = null;
-        if (!options.rtl) {
-          match = version.match(re[t.COERCE]);
-        } else {
-          let next;
-          while ((next = re[t.COERCERTL].exec(version)) && (!match || match.index + match[0].length !== version.length)) {
-            if (!match || next.index + next[0].length !== match.index + match[0].length) {
-              match = next;
-            }
-            re[t.COERCERTL].lastIndex = next.index + next[1].length + next[2].length;
-          }
-          re[t.COERCERTL].lastIndex = -1;
-        }
-        if (match === null) {
-          return null;
-        }
-        return parse(`${match[2]}.${match[3] || '0'}.${match[4] || '0'}`, options);
-      };
-      module.exports = coerce;
-    }, {
-      "../classes/semver": 51,
-      "../internal/re": 81,
-      "./parse": 68
-    }],
-    55: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const compareBuild = (a, b, loose) => {
-        const versionA = new SemVer(a, loose);
-        const versionB = new SemVer(b, loose);
-        return versionA.compare(versionB) || versionA.compareBuild(versionB);
-      };
-      module.exports = compareBuild;
-    }, {
-      "../classes/semver": 51
-    }],
-    56: [function (require, module, exports) {
-      const compare = require('./compare');
-      const compareLoose = (a, b) => compare(a, b, true);
-      module.exports = compareLoose;
-    }, {
-      "./compare": 57
-    }],
-    57: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const compare = (a, b, loose) => new SemVer(a, loose).compare(new SemVer(b, loose));
-      module.exports = compare;
-    }, {
-      "../classes/semver": 51
-    }],
-    58: [function (require, module, exports) {
-      const parse = require('./parse');
-      const eq = require('./eq');
-      const diff = (version1, version2) => {
-        if (eq(version1, version2)) {
-          return null;
-        } else {
-          const v1 = parse(version1);
-          const v2 = parse(version2);
-          const hasPre = v1.prerelease.length || v2.prerelease.length;
-          const prefix = hasPre ? 'pre' : '';
-          const defaultResult = hasPre ? 'prerelease' : '';
-          for (const key in v1) {
-            if (key === 'major' || key === 'minor' || key === 'patch') {
-              if (v1[key] !== v2[key]) {
-                return prefix + key;
-              }
-            }
-          }
-          return defaultResult;
-        }
-      };
-      module.exports = diff;
-    }, {
-      "./eq": 59,
-      "./parse": 68
-    }],
-    59: [function (require, module, exports) {
-      const compare = require('./compare');
-      const eq = (a, b, loose) => compare(a, b, loose) === 0;
-      module.exports = eq;
-    }, {
-      "./compare": 57
-    }],
-    60: [function (require, module, exports) {
-      const compare = require('./compare');
-      const gt = (a, b, loose) => compare(a, b, loose) > 0;
-      module.exports = gt;
-    }, {
-      "./compare": 57
-    }],
-    61: [function (require, module, exports) {
-      const compare = require('./compare');
-      const gte = (a, b, loose) => compare(a, b, loose) >= 0;
-      module.exports = gte;
-    }, {
-      "./compare": 57
-    }],
-    62: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const inc = (version, release, options, identifier) => {
-        if (typeof options === 'string') {
-          identifier = options;
-          options = undefined;
-        }
-        try {
-          return new SemVer(version instanceof SemVer ? version.version : version, options).inc(release, identifier).version;
-        } catch (er) {
-          return null;
-        }
-      };
-      module.exports = inc;
-    }, {
-      "../classes/semver": 51
-    }],
-    63: [function (require, module, exports) {
-      const compare = require('./compare');
-      const lt = (a, b, loose) => compare(a, b, loose) < 0;
-      module.exports = lt;
-    }, {
-      "./compare": 57
-    }],
-    64: [function (require, module, exports) {
-      const compare = require('./compare');
-      const lte = (a, b, loose) => compare(a, b, loose) <= 0;
-      module.exports = lte;
-    }, {
-      "./compare": 57
-    }],
-    65: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const major = (a, loose) => new SemVer(a, loose).major;
-      module.exports = major;
-    }, {
-      "../classes/semver": 51
-    }],
-    66: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const minor = (a, loose) => new SemVer(a, loose).minor;
-      module.exports = minor;
-    }, {
-      "../classes/semver": 51
-    }],
-    67: [function (require, module, exports) {
-      const compare = require('./compare');
-      const neq = (a, b, loose) => compare(a, b, loose) !== 0;
-      module.exports = neq;
-    }, {
-      "./compare": 57
-    }],
-    68: [function (require, module, exports) {
-      const {
-        MAX_LENGTH
-      } = require('../internal/constants');
-      const {
-        re,
-        t
-      } = require('../internal/re');
-      const SemVer = require('../classes/semver');
-      const parseOptions = require('../internal/parse-options');
-      const parse = (version, options) => {
-        options = parseOptions(options);
-        if (version instanceof SemVer) {
-          return version;
-        }
-        if (typeof version !== 'string') {
-          return null;
-        }
-        if (version.length > MAX_LENGTH) {
-          return null;
-        }
-        const r = options.loose ? re[t.LOOSE] : re[t.FULL];
-        if (!r.test(version)) {
-          return null;
-        }
-        try {
-          return new SemVer(version, options);
-        } catch (er) {
-          return null;
-        }
-      };
-      module.exports = parse;
-    }, {
-      "../classes/semver": 51,
-      "../internal/constants": 77,
-      "../internal/parse-options": 80,
-      "../internal/re": 81
-    }],
-    69: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const patch = (a, loose) => new SemVer(a, loose).patch;
-      module.exports = patch;
-    }, {
-      "../classes/semver": 51
-    }],
-    70: [function (require, module, exports) {
-      const parse = require('./parse');
-      const prerelease = (version, options) => {
-        const parsed = parse(version, options);
-        return parsed && parsed.prerelease.length ? parsed.prerelease : null;
-      };
-      module.exports = prerelease;
-    }, {
-      "./parse": 68
-    }],
-    71: [function (require, module, exports) {
-      const compare = require('./compare');
-      const rcompare = (a, b, loose) => compare(b, a, loose);
-      module.exports = rcompare;
-    }, {
-      "./compare": 57
-    }],
-    72: [function (require, module, exports) {
-      const compareBuild = require('./compare-build');
-      const rsort = (list, loose) => list.sort((a, b) => compareBuild(b, a, loose));
-      module.exports = rsort;
-    }, {
-      "./compare-build": 55
-    }],
-    73: [function (require, module, exports) {
-      const Range = require('../classes/range');
-      const satisfies = (version, range, options) => {
-        try {
-          range = new Range(range, options);
-        } catch (er) {
-          return false;
-        }
-        return range.test(version);
-      };
-      module.exports = satisfies;
-    }, {
-      "../classes/range": 50
-    }],
-    74: [function (require, module, exports) {
-      const compareBuild = require('./compare-build');
-      const sort = (list, loose) => list.sort((a, b) => compareBuild(a, b, loose));
-      module.exports = sort;
-    }, {
-      "./compare-build": 55
-    }],
-    75: [function (require, module, exports) {
-      const parse = require('./parse');
-      const valid = (version, options) => {
-        const v = parse(version, options);
-        return v ? v.version : null;
-      };
-      module.exports = valid;
-    }, {
-      "./parse": 68
-    }],
-    76: [function (require, module, exports) {
-      const internalRe = require('./internal/re');
-      const constants = require('./internal/constants');
-      const SemVer = require('./classes/semver');
-      const identifiers = require('./internal/identifiers');
-      const parse = require('./functions/parse');
-      const valid = require('./functions/valid');
-      const clean = require('./functions/clean');
-      const inc = require('./functions/inc');
-      const diff = require('./functions/diff');
-      const major = require('./functions/major');
-      const minor = require('./functions/minor');
-      const patch = require('./functions/patch');
-      const prerelease = require('./functions/prerelease');
-      const compare = require('./functions/compare');
-      const rcompare = require('./functions/rcompare');
-      const compareLoose = require('./functions/compare-loose');
-      const compareBuild = require('./functions/compare-build');
-      const sort = require('./functions/sort');
-      const rsort = require('./functions/rsort');
-      const gt = require('./functions/gt');
-      const lt = require('./functions/lt');
-      const eq = require('./functions/eq');
-      const neq = require('./functions/neq');
-      const gte = require('./functions/gte');
-      const lte = require('./functions/lte');
-      const cmp = require('./functions/cmp');
-      const coerce = require('./functions/coerce');
-      const Comparator = require('./classes/comparator');
-      const Range = require('./classes/range');
-      const satisfies = require('./functions/satisfies');
-      const toComparators = require('./ranges/to-comparators');
-      const maxSatisfying = require('./ranges/max-satisfying');
-      const minSatisfying = require('./ranges/min-satisfying');
-      const minVersion = require('./ranges/min-version');
-      const validRange = require('./ranges/valid');
-      const outside = require('./ranges/outside');
-      const gtr = require('./ranges/gtr');
-      const ltr = require('./ranges/ltr');
-      const intersects = require('./ranges/intersects');
-      const simplifyRange = require('./ranges/simplify');
-      const subset = require('./ranges/subset');
-      module.exports = {
-        parse,
-        valid,
-        clean,
-        inc,
-        diff,
-        major,
-        minor,
-        patch,
-        prerelease,
-        compare,
-        rcompare,
-        compareLoose,
-        compareBuild,
-        sort,
-        rsort,
-        gt,
-        lt,
-        eq,
-        neq,
-        gte,
-        lte,
-        cmp,
-        coerce,
-        Comparator,
-        Range,
-        satisfies,
-        toComparators,
-        maxSatisfying,
-        minSatisfying,
-        minVersion,
-        validRange,
-        outside,
-        gtr,
-        ltr,
-        intersects,
-        simplifyRange,
-        subset,
-        SemVer,
-        re: internalRe.re,
-        src: internalRe.src,
-        tokens: internalRe.t,
-        SEMVER_SPEC_VERSION: constants.SEMVER_SPEC_VERSION,
-        compareIdentifiers: identifiers.compareIdentifiers,
-        rcompareIdentifiers: identifiers.rcompareIdentifiers
-      };
-    }, {
-      "./classes/comparator": 49,
-      "./classes/range": 50,
-      "./classes/semver": 51,
-      "./functions/clean": 52,
-      "./functions/cmp": 53,
-      "./functions/coerce": 54,
-      "./functions/compare": 57,
-      "./functions/compare-build": 55,
-      "./functions/compare-loose": 56,
-      "./functions/diff": 58,
-      "./functions/eq": 59,
-      "./functions/gt": 60,
-      "./functions/gte": 61,
-      "./functions/inc": 62,
-      "./functions/lt": 63,
-      "./functions/lte": 64,
-      "./functions/major": 65,
-      "./functions/minor": 66,
-      "./functions/neq": 67,
-      "./functions/parse": 68,
-      "./functions/patch": 69,
-      "./functions/prerelease": 70,
-      "./functions/rcompare": 71,
-      "./functions/rsort": 72,
-      "./functions/satisfies": 73,
-      "./functions/sort": 74,
-      "./functions/valid": 75,
-      "./internal/constants": 77,
-      "./internal/identifiers": 79,
-      "./internal/re": 81,
-      "./ranges/gtr": 82,
-      "./ranges/intersects": 83,
-      "./ranges/ltr": 84,
-      "./ranges/max-satisfying": 85,
-      "./ranges/min-satisfying": 86,
-      "./ranges/min-version": 87,
-      "./ranges/outside": 88,
-      "./ranges/simplify": 89,
-      "./ranges/subset": 90,
-      "./ranges/to-comparators": 91,
-      "./ranges/valid": 92
-    }],
-    77: [function (require, module, exports) {
-      const SEMVER_SPEC_VERSION = '2.0.0';
-      const MAX_LENGTH = 256;
-      const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
-      const MAX_SAFE_COMPONENT_LENGTH = 16;
-      module.exports = {
-        SEMVER_SPEC_VERSION,
-        MAX_LENGTH,
-        MAX_SAFE_INTEGER,
-        MAX_SAFE_COMPONENT_LENGTH
-      };
-    }, {}],
-    78: [function (require, module, exports) {
-      (function (process) {
-        (function () {
-          const debug = typeof process === 'object' && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error('SEMVER', ...args) : () => {};
-          module.exports = debug;
-        }).call(this);
-      }).call(this, require('_process'));
-    }, {
-      "_process": 261
-    }],
-    79: [function (require, module, exports) {
-      const numeric = /^[0-9]+$/;
-      const compareIdentifiers = (a, b) => {
-        const anum = numeric.test(a);
-        const bnum = numeric.test(b);
-        if (anum && bnum) {
-          a = +a;
-          b = +b;
-        }
-        return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
-      };
-      const rcompareIdentifiers = (a, b) => compareIdentifiers(b, a);
-      module.exports = {
-        compareIdentifiers,
-        rcompareIdentifiers
-      };
-    }, {}],
-    80: [function (require, module, exports) {
-      const opts = ['includePrerelease', 'loose', 'rtl'];
-      const parseOptions = options => !options ? {} : typeof options !== 'object' ? {
-        loose: true
-      } : opts.filter(k => options[k]).reduce((o, k) => {
-        o[k] = true;
-        return o;
-      }, {});
-      module.exports = parseOptions;
-    }, {}],
-    81: [function (require, module, exports) {
-      const {
-        MAX_SAFE_COMPONENT_LENGTH
-      } = require('./constants');
-      const debug = require('./debug');
-      exports = module.exports = {};
-      const re = exports.re = [];
-      const src = exports.src = [];
-      const t = exports.t = {};
-      let R = 0;
-      const createToken = (name, value, isGlobal) => {
-        const index = R++;
-        debug(name, index, value);
-        t[name] = index;
-        src[index] = value;
-        re[index] = new RegExp(value, isGlobal ? 'g' : undefined);
-      };
-      createToken('NUMERICIDENTIFIER', '0|[1-9]\\d*');
-      createToken('NUMERICIDENTIFIERLOOSE', '[0-9]+');
-      createToken('NONNUMERICIDENTIFIER', '\\d*[a-zA-Z-][a-zA-Z0-9-]*');
-      createToken('MAINVERSION', `(${src[t.NUMERICIDENTIFIER]})\\.` + `(${src[t.NUMERICIDENTIFIER]})\\.` + `(${src[t.NUMERICIDENTIFIER]})`);
-      createToken('MAINVERSIONLOOSE', `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.` + `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.` + `(${src[t.NUMERICIDENTIFIERLOOSE]})`);
-      createToken('PRERELEASEIDENTIFIER', `(?:${src[t.NUMERICIDENTIFIER]}|${src[t.NONNUMERICIDENTIFIER]})`);
-      createToken('PRERELEASEIDENTIFIERLOOSE', `(?:${src[t.NUMERICIDENTIFIERLOOSE]}|${src[t.NONNUMERICIDENTIFIER]})`);
-      createToken('PRERELEASE', `(?:-(${src[t.PRERELEASEIDENTIFIER]}(?:\\.${src[t.PRERELEASEIDENTIFIER]})*))`);
-      createToken('PRERELEASELOOSE', `(?:-?(${src[t.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t.PRERELEASEIDENTIFIERLOOSE]})*))`);
-      createToken('BUILDIDENTIFIER', '[0-9A-Za-z-]+');
-      createToken('BUILD', `(?:\\+(${src[t.BUILDIDENTIFIER]}(?:\\.${src[t.BUILDIDENTIFIER]})*))`);
-      createToken('FULLPLAIN', `v?${src[t.MAINVERSION]}${src[t.PRERELEASE]}?${src[t.BUILD]}?`);
-      createToken('FULL', `^${src[t.FULLPLAIN]}$`);
-      createToken('LOOSEPLAIN', `[v=\\s]*${src[t.MAINVERSIONLOOSE]}${src[t.PRERELEASELOOSE]}?${src[t.BUILD]}?`);
-      createToken('LOOSE', `^${src[t.LOOSEPLAIN]}$`);
-      createToken('GTLT', '((?:<|>)?=?)');
-      createToken('XRANGEIDENTIFIERLOOSE', `${src[t.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
-      createToken('XRANGEIDENTIFIER', `${src[t.NUMERICIDENTIFIER]}|x|X|\\*`);
-      createToken('XRANGEPLAIN', `[v=\\s]*(${src[t.XRANGEIDENTIFIER]})` + `(?:\\.(${src[t.XRANGEIDENTIFIER]})` + `(?:\\.(${src[t.XRANGEIDENTIFIER]})` + `(?:${src[t.PRERELEASE]})?${src[t.BUILD]}?` + `)?)?`);
-      createToken('XRANGEPLAINLOOSE', `[v=\\s]*(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:${src[t.PRERELEASELOOSE]})?${src[t.BUILD]}?` + `)?)?`);
-      createToken('XRANGE', `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAIN]}$`);
-      createToken('XRANGELOOSE', `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAINLOOSE]}$`);
-      createToken('COERCE', `${'(^|[^\\d])' + '(\\d{1,'}${MAX_SAFE_COMPONENT_LENGTH}})` + `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` + `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` + `(?:$|[^\\d])`);
-      createToken('COERCERTL', src[t.COERCE], true);
-      createToken('LONETILDE', '(?:~>?)');
-      createToken('TILDETRIM', `(\\s*)${src[t.LONETILDE]}\\s+`, true);
-      exports.tildeTrimReplace = '$1~';
-      createToken('TILDE', `^${src[t.LONETILDE]}${src[t.XRANGEPLAIN]}$`);
-      createToken('TILDELOOSE', `^${src[t.LONETILDE]}${src[t.XRANGEPLAINLOOSE]}$`);
-      createToken('LONECARET', '(?:\\^)');
-      createToken('CARETTRIM', `(\\s*)${src[t.LONECARET]}\\s+`, true);
-      exports.caretTrimReplace = '$1^';
-      createToken('CARET', `^${src[t.LONECARET]}${src[t.XRANGEPLAIN]}$`);
-      createToken('CARETLOOSE', `^${src[t.LONECARET]}${src[t.XRANGEPLAINLOOSE]}$`);
-      createToken('COMPARATORLOOSE', `^${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]})$|^$`);
-      createToken('COMPARATOR', `^${src[t.GTLT]}\\s*(${src[t.FULLPLAIN]})$|^$`);
-      createToken('COMPARATORTRIM', `(\\s*)${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]}|${src[t.XRANGEPLAIN]})`, true);
-      exports.comparatorTrimReplace = '$1$2$3';
-      createToken('HYPHENRANGE', `^\\s*(${src[t.XRANGEPLAIN]})` + `\\s+-\\s+` + `(${src[t.XRANGEPLAIN]})` + `\\s*$`);
-      createToken('HYPHENRANGELOOSE', `^\\s*(${src[t.XRANGEPLAINLOOSE]})` + `\\s+-\\s+` + `(${src[t.XRANGEPLAINLOOSE]})` + `\\s*$`);
-      createToken('STAR', '(<|>)?=?\\s*\\*');
-      createToken('GTE0', '^\\s*>=\\s*0\\.0\\.0\\s*$');
-      createToken('GTE0PRE', '^\\s*>=\\s*0\\.0\\.0-0\\s*$');
-    }, {
-      "./constants": 77,
-      "./debug": 78
-    }],
-    82: [function (require, module, exports) {
-      const outside = require('./outside');
-      const gtr = (version, range, options) => outside(version, range, '>', options);
-      module.exports = gtr;
-    }, {
-      "./outside": 88
-    }],
-    83: [function (require, module, exports) {
-      const Range = require('../classes/range');
-      const intersects = (r1, r2, options) => {
-        r1 = new Range(r1, options);
-        r2 = new Range(r2, options);
-        return r1.intersects(r2);
-      };
-      module.exports = intersects;
-    }, {
-      "../classes/range": 50
-    }],
-    84: [function (require, module, exports) {
-      const outside = require('./outside');
-      const ltr = (version, range, options) => outside(version, range, '<', options);
-      module.exports = ltr;
-    }, {
-      "./outside": 88
-    }],
-    85: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const Range = require('../classes/range');
-      const maxSatisfying = (versions, range, options) => {
-        let max = null;
-        let maxSV = null;
-        let rangeObj = null;
-        try {
-          rangeObj = new Range(range, options);
-        } catch (er) {
-          return null;
-        }
-        versions.forEach(v => {
-          if (rangeObj.test(v)) {
-            if (!max || maxSV.compare(v) === -1) {
-              max = v;
-              maxSV = new SemVer(max, options);
-            }
-          }
-        });
-        return max;
-      };
-      module.exports = maxSatisfying;
-    }, {
-      "../classes/range": 50,
-      "../classes/semver": 51
-    }],
-    86: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const Range = require('../classes/range');
-      const minSatisfying = (versions, range, options) => {
-        let min = null;
-        let minSV = null;
-        let rangeObj = null;
-        try {
-          rangeObj = new Range(range, options);
-        } catch (er) {
-          return null;
-        }
-        versions.forEach(v => {
-          if (rangeObj.test(v)) {
-            if (!min || minSV.compare(v) === 1) {
-              min = v;
-              minSV = new SemVer(min, options);
-            }
-          }
-        });
-        return min;
-      };
-      module.exports = minSatisfying;
-    }, {
-      "../classes/range": 50,
-      "../classes/semver": 51
-    }],
-    87: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const Range = require('../classes/range');
-      const gt = require('../functions/gt');
-      const minVersion = (range, loose) => {
-        range = new Range(range, loose);
-        let minver = new SemVer('0.0.0');
-        if (range.test(minver)) {
-          return minver;
-        }
-        minver = new SemVer('0.0.0-0');
-        if (range.test(minver)) {
-          return minver;
-        }
-        minver = null;
-        for (let i = 0; i < range.set.length; ++i) {
-          const comparators = range.set[i];
-          let setMin = null;
-          comparators.forEach(comparator => {
-            const compver = new SemVer(comparator.semver.version);
-            switch (comparator.operator) {
-              case '>':
-                if (compver.prerelease.length === 0) {
-                  compver.patch++;
-                } else {
-                  compver.prerelease.push(0);
-                }
-                compver.raw = compver.format();
-              case '':
-              case '>=':
-                if (!setMin || gt(compver, setMin)) {
-                  setMin = compver;
-                }
-                break;
-              case '<':
-              case '<=':
-                break;
-              default:
-                throw new Error(`Unexpected operation: ${comparator.operator}`);
-            }
-          });
-          if (setMin && (!minver || gt(minver, setMin))) {
-            minver = setMin;
-          }
-        }
-        if (minver && range.test(minver)) {
-          return minver;
-        }
-        return null;
-      };
-      module.exports = minVersion;
-    }, {
-      "../classes/range": 50,
-      "../classes/semver": 51,
-      "../functions/gt": 60
-    }],
-    88: [function (require, module, exports) {
-      const SemVer = require('../classes/semver');
-      const Comparator = require('../classes/comparator');
-      const {
-        ANY
-      } = Comparator;
-      const Range = require('../classes/range');
-      const satisfies = require('../functions/satisfies');
-      const gt = require('../functions/gt');
-      const lt = require('../functions/lt');
-      const lte = require('../functions/lte');
-      const gte = require('../functions/gte');
-      const outside = (version, range, hilo, options) => {
-        version = new SemVer(version, options);
-        range = new Range(range, options);
-        let gtfn, ltefn, ltfn, comp, ecomp;
-        switch (hilo) {
-          case '>':
-            gtfn = gt;
-            ltefn = lte;
-            ltfn = lt;
-            comp = '>';
-            ecomp = '>=';
-            break;
-          case '<':
-            gtfn = lt;
-            ltefn = gte;
-            ltfn = gt;
-            comp = '<';
-            ecomp = '<=';
-            break;
-          default:
-            throw new TypeError('Must provide a hilo val of "<" or ">"');
-        }
-        if (satisfies(version, range, options)) {
-          return false;
-        }
-        for (let i = 0; i < range.set.length; ++i) {
-          const comparators = range.set[i];
-          let high = null;
-          let low = null;
-          comparators.forEach(comparator => {
-            if (comparator.semver === ANY) {
-              comparator = new Comparator('>=0.0.0');
-            }
-            high = high || comparator;
-            low = low || comparator;
-            if (gtfn(comparator.semver, high.semver, options)) {
-              high = comparator;
-            } else if (ltfn(comparator.semver, low.semver, options)) {
-              low = comparator;
-            }
-          });
-          if (high.operator === comp || high.operator === ecomp) {
-            return false;
-          }
-          if ((!low.operator || low.operator === comp) && ltefn(version, low.semver)) {
-            return false;
-          } else if (low.operator === ecomp && ltfn(version, low.semver)) {
-            return false;
-          }
-        }
-        return true;
-      };
-      module.exports = outside;
-    }, {
-      "../classes/comparator": 49,
-      "../classes/range": 50,
-      "../classes/semver": 51,
-      "../functions/gt": 60,
-      "../functions/gte": 61,
-      "../functions/lt": 63,
-      "../functions/lte": 64,
-      "../functions/satisfies": 73
-    }],
-    89: [function (require, module, exports) {
-      const satisfies = require('../functions/satisfies.js');
-      const compare = require('../functions/compare.js');
-      module.exports = (versions, range, options) => {
-        const set = [];
-        let first = null;
-        let prev = null;
-        const v = versions.sort((a, b) => compare(a, b, options));
-        for (const version of v) {
-          const included = satisfies(version, range, options);
-          if (included) {
-            prev = version;
-            if (!first) {
-              first = version;
-            }
-          } else {
-            if (prev) {
-              set.push([first, prev]);
-            }
-            prev = null;
-            first = null;
-          }
-        }
-        if (first) {
-          set.push([first, null]);
-        }
-        const ranges = [];
-        for (const [min, max] of set) {
-          if (min === max) {
-            ranges.push(min);
-          } else if (!max && min === v[0]) {
-            ranges.push('*');
-          } else if (!max) {
-            ranges.push(`>=${min}`);
-          } else if (min === v[0]) {
-            ranges.push(`<=${max}`);
-          } else {
-            ranges.push(`${min} - ${max}`);
-          }
-        }
-        const simplified = ranges.join(' || ');
-        const original = typeof range.raw === 'string' ? range.raw : String(range);
-        return simplified.length < original.length ? simplified : range;
-      };
-    }, {
-      "../functions/compare.js": 57,
-      "../functions/satisfies.js": 73
-    }],
-    90: [function (require, module, exports) {
-      const Range = require('../classes/range.js');
-      const Comparator = require('../classes/comparator.js');
-      const {
-        ANY
-      } = Comparator;
-      const satisfies = require('../functions/satisfies.js');
-      const compare = require('../functions/compare.js');
-      const subset = (sub, dom, options = {}) => {
-        if (sub === dom) {
-          return true;
-        }
-        sub = new Range(sub, options);
-        dom = new Range(dom, options);
-        let sawNonNull = false;
-        OUTER: for (const simpleSub of sub.set) {
-          for (const simpleDom of dom.set) {
-            const isSub = simpleSubset(simpleSub, simpleDom, options);
-            sawNonNull = sawNonNull || isSub !== null;
-            if (isSub) {
-              continue OUTER;
-            }
-          }
-          if (sawNonNull) {
-            return false;
-          }
-        }
-        return true;
-      };
-      const simpleSubset = (sub, dom, options) => {
-        if (sub === dom) {
-          return true;
-        }
-        if (sub.length === 1 && sub[0].semver === ANY) {
-          if (dom.length === 1 && dom[0].semver === ANY) {
-            return true;
-          } else if (options.includePrerelease) {
-            sub = [new Comparator('>=0.0.0-0')];
-          } else {
-            sub = [new Comparator('>=0.0.0')];
-          }
-        }
-        if (dom.length === 1 && dom[0].semver === ANY) {
-          if (options.includePrerelease) {
-            return true;
-          } else {
-            dom = [new Comparator('>=0.0.0')];
-          }
-        }
-        const eqSet = new Set();
-        let gt, lt;
-        for (const c of sub) {
-          if (c.operator === '>' || c.operator === '>=') {
-            gt = higherGT(gt, c, options);
-          } else if (c.operator === '<' || c.operator === '<=') {
-            lt = lowerLT(lt, c, options);
-          } else {
-            eqSet.add(c.semver);
-          }
-        }
-        if (eqSet.size > 1) {
-          return null;
-        }
-        let gtltComp;
-        if (gt && lt) {
-          gtltComp = compare(gt.semver, lt.semver, options);
-          if (gtltComp > 0) {
-            return null;
-          } else if (gtltComp === 0 && (gt.operator !== '>=' || lt.operator !== '<=')) {
-            return null;
-          }
-        }
-        for (const eq of eqSet) {
-          if (gt && !satisfies(eq, String(gt), options)) {
-            return null;
-          }
-          if (lt && !satisfies(eq, String(lt), options)) {
-            return null;
-          }
-          for (const c of dom) {
-            if (!satisfies(eq, String(c), options)) {
-              return false;
-            }
-          }
-          return true;
-        }
-        let higher, lower;
-        let hasDomLT, hasDomGT;
-        let needDomLTPre = lt && !options.includePrerelease && lt.semver.prerelease.length ? lt.semver : false;
-        let needDomGTPre = gt && !options.includePrerelease && gt.semver.prerelease.length ? gt.semver : false;
-        if (needDomLTPre && needDomLTPre.prerelease.length === 1 && lt.operator === '<' && needDomLTPre.prerelease[0] === 0) {
-          needDomLTPre = false;
-        }
-        for (const c of dom) {
-          hasDomGT = hasDomGT || c.operator === '>' || c.operator === '>=';
-          hasDomLT = hasDomLT || c.operator === '<' || c.operator === '<=';
-          if (gt) {
-            if (needDomGTPre) {
-              if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomGTPre.major && c.semver.minor === needDomGTPre.minor && c.semver.patch === needDomGTPre.patch) {
-                needDomGTPre = false;
-              }
-            }
-            if (c.operator === '>' || c.operator === '>=') {
-              higher = higherGT(gt, c, options);
-              if (higher === c && higher !== gt) {
-                return false;
-              }
-            } else if (gt.operator === '>=' && !satisfies(gt.semver, String(c), options)) {
-              return false;
-            }
-          }
-          if (lt) {
-            if (needDomLTPre) {
-              if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomLTPre.major && c.semver.minor === needDomLTPre.minor && c.semver.patch === needDomLTPre.patch) {
-                needDomLTPre = false;
-              }
-            }
-            if (c.operator === '<' || c.operator === '<=') {
-              lower = lowerLT(lt, c, options);
-              if (lower === c && lower !== lt) {
-                return false;
-              }
-            } else if (lt.operator === '<=' && !satisfies(lt.semver, String(c), options)) {
-              return false;
-            }
-          }
-          if (!c.operator && (lt || gt) && gtltComp !== 0) {
-            return false;
-          }
-        }
-        if (gt && hasDomLT && !lt && gtltComp !== 0) {
-          return false;
-        }
-        if (lt && hasDomGT && !gt && gtltComp !== 0) {
-          return false;
-        }
-        if (needDomGTPre || needDomLTPre) {
-          return false;
-        }
-        return true;
-      };
-      const higherGT = (a, b, options) => {
-        if (!a) {
-          return b;
-        }
-        const comp = compare(a.semver, b.semver, options);
-        return comp > 0 ? a : comp < 0 ? b : b.operator === '>' && a.operator === '>=' ? b : a;
-      };
-      const lowerLT = (a, b, options) => {
-        if (!a) {
-          return b;
-        }
-        const comp = compare(a.semver, b.semver, options);
-        return comp < 0 ? a : comp > 0 ? b : b.operator === '<' && a.operator === '<=' ? b : a;
-      };
-      module.exports = subset;
-    }, {
-      "../classes/comparator.js": 49,
-      "../classes/range.js": 50,
-      "../functions/compare.js": 57,
-      "../functions/satisfies.js": 73
-    }],
-    91: [function (require, module, exports) {
-      const Range = require('../classes/range');
-      const toComparators = (range, options) => new Range(range, options).set.map(comp => comp.map(c => c.value).join(' ').trim().split(' '));
-      module.exports = toComparators;
-    }, {
-      "../classes/range": 50
-    }],
-    92: [function (require, module, exports) {
-      const Range = require('../classes/range');
-      const validRange = (range, options) => {
-        try {
-          return new Range(range, options).range || '*';
-        } catch (er) {
-          return null;
-        }
-      };
-      module.exports = validRange;
-    }, {
-      "../classes/range": 50
-    }],
-    93: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.utils = exports.curve25519 = exports.getSharedSecret = exports.sync = exports.verify = exports.sign = exports.getPublicKey = exports.Signature = exports.Point = exports.RistrettoPoint = exports.ExtendedPoint = exports.CURVE = void 0;
-      const nodeCrypto = require("crypto");
-      const _0n = BigInt(0);
-      const _1n = BigInt(1);
-      const _2n = BigInt(2);
-      const CU_O = BigInt('7237005577332262213973186563042994240857116359379907606001950938285454250989');
-      const CURVE = Object.freeze({
-        a: BigInt(-1),
-        d: BigInt('37095705934669439343138083508754565189542113879843219016388785533085940283555'),
-        P: BigInt('57896044618658097711785492504343953926634992332820282019728792003956564819949'),
-        l: CU_O,
-        n: CU_O,
-        h: BigInt(8),
-        Gx: BigInt('15112221349535400772501151409588531511454012693041857206046113283949847762202'),
-        Gy: BigInt('46316835694926478169428394003475163141307993866256225615783033603165251855960')
-      });
-      exports.CURVE = CURVE;
-      const POW_2_256 = BigInt('0x10000000000000000000000000000000000000000000000000000000000000000');
-      const SQRT_M1 = BigInt('19681161376707505956807079304988542015446066515923890162744021073123829784752');
-      const SQRT_D = BigInt('6853475219497561581579357271197624642482790079785650197046958215289687604742');
-      const SQRT_AD_MINUS_ONE = BigInt('25063068953384623474111414158702152701244531502492656460079210482610430750235');
-      const INVSQRT_A_MINUS_D = BigInt('54469307008909316920995813868745141605393597292927456921205312896311721017578');
-      const ONE_MINUS_D_SQ = BigInt('1159843021668779879193775521855586647937357759715417654439879720876111806838');
-      const D_MINUS_ONE_SQ = BigInt('40440834346308536858101042469323190826248399146238708352240133220865137265952');
-      class ExtendedPoint {
-        constructor(x, y, z, t) {
-          this.x = x;
-          this.y = y;
-          this.z = z;
-          this.t = t;
-        }
-        static fromAffine(p) {
-          if (!(p instanceof Point)) {
-            throw new TypeError('ExtendedPoint#fromAffine: expected Point');
-          }
-          if (p.equals(Point.ZERO)) return ExtendedPoint.ZERO;
-          return new ExtendedPoint(p.x, p.y, _1n, mod(p.x * p.y));
-        }
-        static toAffineBatch(points) {
-          const toInv = invertBatch(points.map(p => p.z));
-          return points.map((p, i) => p.toAffine(toInv[i]));
-        }
-        static normalizeZ(points) {
-          return this.toAffineBatch(points).map(this.fromAffine);
-        }
-        equals(other) {
-          assertExtPoint(other);
-          const {
-            x: X1,
-            y: Y1,
-            z: Z1
-          } = this;
-          const {
-            x: X2,
-            y: Y2,
-            z: Z2
-          } = other;
-          const X1Z2 = mod(X1 * Z2);
-          const X2Z1 = mod(X2 * Z1);
-          const Y1Z2 = mod(Y1 * Z2);
-          const Y2Z1 = mod(Y2 * Z1);
-          return X1Z2 === X2Z1 && Y1Z2 === Y2Z1;
-        }
-        negate() {
-          return new ExtendedPoint(mod(-this.x), this.y, this.z, mod(-this.t));
-        }
-        double() {
-          const {
-            x: X1,
-            y: Y1,
-            z: Z1
-          } = this;
-          const {
-            a
-          } = CURVE;
-          const A = mod(X1 * X1);
-          const B = mod(Y1 * Y1);
-          const C = mod(_2n * mod(Z1 * Z1));
-          const D = mod(a * A);
-          const x1y1 = X1 + Y1;
-          const E = mod(mod(x1y1 * x1y1) - A - B);
-          const G = D + B;
-          const F = G - C;
-          const H = D - B;
-          const X3 = mod(E * F);
-          const Y3 = mod(G * H);
-          const T3 = mod(E * H);
-          const Z3 = mod(F * G);
-          return new ExtendedPoint(X3, Y3, Z3, T3);
-        }
-        add(other) {
-          assertExtPoint(other);
-          const {
-            x: X1,
-            y: Y1,
-            z: Z1,
-            t: T1
-          } = this;
-          const {
-            x: X2,
-            y: Y2,
-            z: Z2,
-            t: T2
-          } = other;
-          const A = mod((Y1 - X1) * (Y2 + X2));
-          const B = mod((Y1 + X1) * (Y2 - X2));
-          const F = mod(B - A);
-          if (F === _0n) return this.double();
-          const C = mod(Z1 * _2n * T2);
-          const D = mod(T1 * _2n * Z2);
-          const E = D + C;
-          const G = B + A;
-          const H = D - C;
-          const X3 = mod(E * F);
-          const Y3 = mod(G * H);
-          const T3 = mod(E * H);
-          const Z3 = mod(F * G);
-          return new ExtendedPoint(X3, Y3, Z3, T3);
-        }
-        subtract(other) {
-          return this.add(other.negate());
-        }
-        precomputeWindow(W) {
-          const windows = 1 + 256 / W;
-          const points = [];
-          let p = this;
-          let base = p;
-          for (let window = 0; window < windows; window++) {
-            base = p;
-            points.push(base);
-            for (let i = 1; i < 2 ** (W - 1); i++) {
-              base = base.add(p);
-              points.push(base);
-            }
-            p = base.double();
-          }
-          return points;
-        }
-        wNAF(n, affinePoint) {
-          if (!affinePoint && this.equals(ExtendedPoint.BASE)) affinePoint = Point.BASE;
-          const W = affinePoint && affinePoint._WINDOW_SIZE || 1;
-          if (256 % W) {
-            throw new Error('Point#wNAF: Invalid precomputation window, must be power of 2');
-          }
-          let precomputes = affinePoint && pointPrecomputes.get(affinePoint);
-          if (!precomputes) {
-            precomputes = this.precomputeWindow(W);
-            if (affinePoint && W !== 1) {
-              precomputes = ExtendedPoint.normalizeZ(precomputes);
-              pointPrecomputes.set(affinePoint, precomputes);
-            }
-          }
-          let p = ExtendedPoint.ZERO;
-          let f = ExtendedPoint.ZERO;
-          const windows = 1 + 256 / W;
-          const windowSize = 2 ** (W - 1);
-          const mask = BigInt(2 ** W - 1);
-          const maxNumber = 2 ** W;
-          const shiftBy = BigInt(W);
-          for (let window = 0; window < windows; window++) {
-            const offset = window * windowSize;
-            let wbits = Number(n & mask);
-            n >>= shiftBy;
-            if (wbits > windowSize) {
-              wbits -= maxNumber;
-              n += _1n;
-            }
-            if (wbits === 0) {
-              let pr = precomputes[offset];
-              if (window % 2) pr = pr.negate();
-              f = f.add(pr);
-            } else {
-              let cached = precomputes[offset + Math.abs(wbits) - 1];
-              if (wbits < 0) cached = cached.negate();
-              p = p.add(cached);
-            }
-          }
-          return ExtendedPoint.normalizeZ([p, f])[0];
-        }
-        multiply(scalar, affinePoint) {
-          return this.wNAF(normalizeScalar(scalar, CURVE.l), affinePoint);
-        }
-        multiplyUnsafe(scalar) {
-          let n = normalizeScalar(scalar, CURVE.l, false);
-          const G = ExtendedPoint.BASE;
-          const P0 = ExtendedPoint.ZERO;
-          if (n === _0n) return P0;
-          if (this.equals(P0) || n === _1n) return this;
-          if (this.equals(G)) return this.wNAF(n);
-          let p = P0;
-          let d = this;
-          while (n > _0n) {
-            if (n & _1n) p = p.add(d);
-            d = d.double();
-            n >>= _1n;
-          }
-          return p;
-        }
-        isSmallOrder() {
-          return this.multiplyUnsafe(CURVE.h).equals(ExtendedPoint.ZERO);
-        }
-        isTorsionFree() {
-          return this.multiplyUnsafe(CURVE.l).equals(ExtendedPoint.ZERO);
-        }
-        toAffine(invZ = invert(this.z)) {
-          const {
-            x,
-            y,
-            z
-          } = this;
-          const ax = mod(x * invZ);
-          const ay = mod(y * invZ);
-          const zz = mod(z * invZ);
-          if (zz !== _1n) throw new Error('invZ was invalid');
-          return new Point(ax, ay);
-        }
-        fromRistrettoBytes() {
-          legacyRist();
-        }
-        toRistrettoBytes() {
-          legacyRist();
-        }
-        fromRistrettoHash() {
-          legacyRist();
-        }
-      }
-      exports.ExtendedPoint = ExtendedPoint;
-      ExtendedPoint.BASE = new ExtendedPoint(CURVE.Gx, CURVE.Gy, _1n, mod(CURVE.Gx * CURVE.Gy));
-      ExtendedPoint.ZERO = new ExtendedPoint(_0n, _1n, _1n, _0n);
-      function assertExtPoint(other) {
-        if (!(other instanceof ExtendedPoint)) throw new TypeError('ExtendedPoint expected');
-      }
-      function assertRstPoint(other) {
-        if (!(other instanceof RistrettoPoint)) throw new TypeError('RistrettoPoint expected');
-      }
-      function legacyRist() {
-        throw new Error('Legacy method: switch to RistrettoPoint');
-      }
-      class RistrettoPoint {
-        constructor(ep) {
-          this.ep = ep;
-        }
-        static calcElligatorRistrettoMap(r0) {
-          const {
-            d
-          } = CURVE;
-          const r = mod(SQRT_M1 * r0 * r0);
-          const Ns = mod((r + _1n) * ONE_MINUS_D_SQ);
-          let c = BigInt(-1);
-          const D = mod((c - d * r) * mod(r + d));
-          let {
-            isValid: Ns_D_is_sq,
-            value: s
-          } = uvRatio(Ns, D);
-          let s_ = mod(s * r0);
-          if (!edIsNegative(s_)) s_ = mod(-s_);
-          if (!Ns_D_is_sq) s = s_;
-          if (!Ns_D_is_sq) c = r;
-          const Nt = mod(c * (r - _1n) * D_MINUS_ONE_SQ - D);
-          const s2 = s * s;
-          const W0 = mod((s + s) * D);
-          const W1 = mod(Nt * SQRT_AD_MINUS_ONE);
-          const W2 = mod(_1n - s2);
-          const W3 = mod(_1n + s2);
-          return new ExtendedPoint(mod(W0 * W3), mod(W2 * W1), mod(W1 * W3), mod(W0 * W2));
-        }
-        static hashToCurve(hex) {
-          hex = ensureBytes(hex, 64);
-          const r1 = bytes255ToNumberLE(hex.slice(0, 32));
-          const R1 = this.calcElligatorRistrettoMap(r1);
-          const r2 = bytes255ToNumberLE(hex.slice(32, 64));
-          const R2 = this.calcElligatorRistrettoMap(r2);
-          return new RistrettoPoint(R1.add(R2));
-        }
-        static fromHex(hex) {
-          hex = ensureBytes(hex, 32);
-          const {
-            a,
-            d
-          } = CURVE;
-          const emsg = 'RistrettoPoint.fromHex: the hex is not valid encoding of RistrettoPoint';
-          const s = bytes255ToNumberLE(hex);
-          if (!equalBytes(numberTo32BytesLE(s), hex) || edIsNegative(s)) throw new Error(emsg);
-          const s2 = mod(s * s);
-          const u1 = mod(_1n + a * s2);
-          const u2 = mod(_1n - a * s2);
-          const u1_2 = mod(u1 * u1);
-          const u2_2 = mod(u2 * u2);
-          const v = mod(a * d * u1_2 - u2_2);
-          const {
-            isValid,
-            value: I
-          } = invertSqrt(mod(v * u2_2));
-          const Dx = mod(I * u2);
-          const Dy = mod(I * Dx * v);
-          let x = mod((s + s) * Dx);
-          if (edIsNegative(x)) x = mod(-x);
-          const y = mod(u1 * Dy);
-          const t = mod(x * y);
-          if (!isValid || edIsNegative(t) || y === _0n) throw new Error(emsg);
-          return new RistrettoPoint(new ExtendedPoint(x, y, _1n, t));
-        }
-        toRawBytes() {
-          let {
-            x,
-            y,
-            z,
-            t
-          } = this.ep;
-          const u1 = mod(mod(z + y) * mod(z - y));
-          const u2 = mod(x * y);
-          const u2sq = mod(u2 * u2);
-          const {
-            value: invsqrt
-          } = invertSqrt(mod(u1 * u2sq));
-          const D1 = mod(invsqrt * u1);
-          const D2 = mod(invsqrt * u2);
-          const zInv = mod(D1 * D2 * t);
-          let D;
-          if (edIsNegative(t * zInv)) {
-            let _x = mod(y * SQRT_M1);
-            let _y = mod(x * SQRT_M1);
-            x = _x;
-            y = _y;
-            D = mod(D1 * INVSQRT_A_MINUS_D);
-          } else {
-            D = D2;
-          }
-          if (edIsNegative(x * zInv)) y = mod(-y);
-          let s = mod((z - y) * D);
-          if (edIsNegative(s)) s = mod(-s);
-          return numberTo32BytesLE(s);
-        }
-        toHex() {
-          return bytesToHex(this.toRawBytes());
-        }
-        toString() {
-          return this.toHex();
-        }
-        equals(other) {
-          assertRstPoint(other);
-          const a = this.ep;
-          const b = other.ep;
-          const one = mod(a.x * b.y) === mod(a.y * b.x);
-          const two = mod(a.y * b.y) === mod(a.x * b.x);
-          return one || two;
-        }
-        add(other) {
-          assertRstPoint(other);
-          return new RistrettoPoint(this.ep.add(other.ep));
-        }
-        subtract(other) {
-          assertRstPoint(other);
-          return new RistrettoPoint(this.ep.subtract(other.ep));
-        }
-        multiply(scalar) {
-          return new RistrettoPoint(this.ep.multiply(scalar));
-        }
-        multiplyUnsafe(scalar) {
-          return new RistrettoPoint(this.ep.multiplyUnsafe(scalar));
-        }
-      }
-      exports.RistrettoPoint = RistrettoPoint;
-      RistrettoPoint.BASE = new RistrettoPoint(ExtendedPoint.BASE);
-      RistrettoPoint.ZERO = new RistrettoPoint(ExtendedPoint.ZERO);
-      const pointPrecomputes = new WeakMap();
-      class Point {
-        constructor(x, y) {
-          this.x = x;
-          this.y = y;
-        }
-        _setWindowSize(windowSize) {
-          this._WINDOW_SIZE = windowSize;
-          pointPrecomputes.delete(this);
-        }
-        static fromHex(hex, strict = true) {
-          const {
-            d,
-            P
-          } = CURVE;
-          hex = ensureBytes(hex, 32);
-          const normed = hex.slice();
-          normed[31] = hex[31] & ~0x80;
-          const y = bytesToNumberLE(normed);
-          if (strict && y >= P) throw new Error('Expected 0 < hex < P');
-          if (!strict && y >= POW_2_256) throw new Error('Expected 0 < hex < 2**256');
-          const y2 = mod(y * y);
-          const u = mod(y2 - _1n);
-          const v = mod(d * y2 + _1n);
-          let {
-            isValid,
-            value: x
-          } = uvRatio(u, v);
-          if (!isValid) throw new Error('Point.fromHex: invalid y coordinate');
-          const isXOdd = (x & _1n) === _1n;
-          const isLastByteOdd = (hex[31] & 0x80) !== 0;
-          if (isLastByteOdd !== isXOdd) {
-            x = mod(-x);
-          }
-          return new Point(x, y);
-        }
-        static async fromPrivateKey(privateKey) {
-          return (await getExtendedPublicKey(privateKey)).point;
-        }
-        toRawBytes() {
-          const bytes = numberTo32BytesLE(this.y);
-          bytes[31] |= this.x & _1n ? 0x80 : 0;
-          return bytes;
-        }
-        toHex() {
-          return bytesToHex(this.toRawBytes());
-        }
-        toX25519() {
-          const {
-            y
-          } = this;
-          const u = mod((_1n + y) * invert(_1n - y));
-          return numberTo32BytesLE(u);
-        }
-        isTorsionFree() {
-          return ExtendedPoint.fromAffine(this).isTorsionFree();
-        }
-        equals(other) {
-          return this.x === other.x && this.y === other.y;
-        }
-        negate() {
-          return new Point(mod(-this.x), this.y);
-        }
-        add(other) {
-          return ExtendedPoint.fromAffine(this).add(ExtendedPoint.fromAffine(other)).toAffine();
-        }
-        subtract(other) {
-          return this.add(other.negate());
-        }
-        multiply(scalar) {
-          return ExtendedPoint.fromAffine(this).multiply(scalar, this).toAffine();
-        }
-      }
-      exports.Point = Point;
-      Point.BASE = new Point(CURVE.Gx, CURVE.Gy);
-      Point.ZERO = new Point(_0n, _1n);
-      class Signature {
-        constructor(r, s) {
-          this.r = r;
-          this.s = s;
-          this.assertValidity();
-        }
-        static fromHex(hex) {
-          const bytes = ensureBytes(hex, 64);
-          const r = Point.fromHex(bytes.slice(0, 32), false);
-          const s = bytesToNumberLE(bytes.slice(32, 64));
-          return new Signature(r, s);
-        }
-        assertValidity() {
-          const {
-            r,
-            s
-          } = this;
-          if (!(r instanceof Point)) throw new Error('Expected Point instance');
-          normalizeScalar(s, CURVE.l, false);
-          return this;
-        }
-        toRawBytes() {
-          const u8 = new Uint8Array(64);
-          u8.set(this.r.toRawBytes());
-          u8.set(numberTo32BytesLE(this.s), 32);
-          return u8;
-        }
-        toHex() {
-          return bytesToHex(this.toRawBytes());
-        }
-      }
-      exports.Signature = Signature;
-      function concatBytes(...arrays) {
-        if (!arrays.every(a => a instanceof Uint8Array)) throw new Error('Expected Uint8Array list');
-        if (arrays.length === 1) return arrays[0];
-        const length = arrays.reduce((a, arr) => a + arr.length, 0);
-        const result = new Uint8Array(length);
-        for (let i = 0, pad = 0; i < arrays.length; i++) {
-          const arr = arrays[i];
-          result.set(arr, pad);
-          pad += arr.length;
-        }
-        return result;
-      }
-      const hexes = Array.from({
-        length: 256
-      }, (v, i) => i.toString(16).padStart(2, '0'));
-      function bytesToHex(uint8a) {
-        if (!(uint8a instanceof Uint8Array)) throw new Error('Uint8Array expected');
-        let hex = '';
-        for (let i = 0; i < uint8a.length; i++) {
-          hex += hexes[uint8a[i]];
-        }
-        return hex;
-      }
-      function hexToBytes(hex) {
-        if (typeof hex !== 'string') {
-          throw new TypeError('hexToBytes: expected string, got ' + typeof hex);
-        }
-        if (hex.length % 2) throw new Error('hexToBytes: received invalid unpadded hex');
-        const array = new Uint8Array(hex.length / 2);
-        for (let i = 0; i < array.length; i++) {
-          const j = i * 2;
-          const hexByte = hex.slice(j, j + 2);
-          const byte = Number.parseInt(hexByte, 16);
-          if (Number.isNaN(byte) || byte < 0) throw new Error('Invalid byte sequence');
-          array[i] = byte;
-        }
-        return array;
-      }
-      function numberTo32BytesBE(num) {
-        const length = 32;
-        const hex = num.toString(16).padStart(length * 2, '0');
-        return hexToBytes(hex);
-      }
-      function numberTo32BytesLE(num) {
-        return numberTo32BytesBE(num).reverse();
-      }
-      function edIsNegative(num) {
-        return (mod(num) & _1n) === _1n;
-      }
-      function bytesToNumberLE(uint8a) {
-        if (!(uint8a instanceof Uint8Array)) throw new Error('Expected Uint8Array');
-        return BigInt('0x' + bytesToHex(Uint8Array.from(uint8a).reverse()));
-      }
-      const MAX_255B = BigInt('0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
-      function bytes255ToNumberLE(bytes) {
-        return mod(bytesToNumberLE(bytes) & MAX_255B);
-      }
-      function mod(a, b = CURVE.P) {
-        const res = a % b;
-        return res >= _0n ? res : b + res;
-      }
-      function invert(number, modulo = CURVE.P) {
-        if (number === _0n || modulo <= _0n) {
-          throw new Error(`invert: expected positive integers, got n=${number} mod=${modulo}`);
-        }
-        let a = mod(number, modulo);
-        let b = modulo;
-        let x = _0n,
-          y = _1n,
-          u = _1n,
-          v = _0n;
-        while (a !== _0n) {
-          const q = b / a;
-          const r = b % a;
-          const m = x - u * q;
-          const n = y - v * q;
-          b = a, a = r, x = u, y = v, u = m, v = n;
-        }
-        const gcd = b;
-        if (gcd !== _1n) throw new Error('invert: does not exist');
-        return mod(x, modulo);
-      }
-      function invertBatch(nums, p = CURVE.P) {
-        const tmp = new Array(nums.length);
-        const lastMultiplied = nums.reduce((acc, num, i) => {
-          if (num === _0n) return acc;
-          tmp[i] = acc;
-          return mod(acc * num, p);
-        }, _1n);
-        const inverted = invert(lastMultiplied, p);
-        nums.reduceRight((acc, num, i) => {
-          if (num === _0n) return acc;
-          tmp[i] = mod(acc * tmp[i], p);
-          return mod(acc * num, p);
-        }, inverted);
-        return tmp;
-      }
-      function pow2(x, power) {
-        const {
-          P
-        } = CURVE;
-        let res = x;
-        while (power-- > _0n) {
-          res *= res;
-          res %= P;
-        }
-        return res;
-      }
-      function pow_2_252_3(x) {
-        const {
-          P
-        } = CURVE;
-        const _5n = BigInt(5);
-        const _10n = BigInt(10);
-        const _20n = BigInt(20);
-        const _40n = BigInt(40);
-        const _80n = BigInt(80);
-        const x2 = x * x % P;
-        const b2 = x2 * x % P;
-        const b4 = pow2(b2, _2n) * b2 % P;
-        const b5 = pow2(b4, _1n) * x % P;
-        const b10 = pow2(b5, _5n) * b5 % P;
-        const b20 = pow2(b10, _10n) * b10 % P;
-        const b40 = pow2(b20, _20n) * b20 % P;
-        const b80 = pow2(b40, _40n) * b40 % P;
-        const b160 = pow2(b80, _80n) * b80 % P;
-        const b240 = pow2(b160, _80n) * b80 % P;
-        const b250 = pow2(b240, _10n) * b10 % P;
-        const pow_p_5_8 = pow2(b250, _2n) * x % P;
-        return {
-          pow_p_5_8,
-          b2
-        };
-      }
-      function uvRatio(u, v) {
-        const v3 = mod(v * v * v);
-        const v7 = mod(v3 * v3 * v);
-        const pow = pow_2_252_3(u * v7).pow_p_5_8;
-        let x = mod(u * v3 * pow);
-        const vx2 = mod(v * x * x);
-        const root1 = x;
-        const root2 = mod(x * SQRT_M1);
-        const useRoot1 = vx2 === u;
-        const useRoot2 = vx2 === mod(-u);
-        const noRoot = vx2 === mod(-u * SQRT_M1);
-        if (useRoot1) x = root1;
-        if (useRoot2 || noRoot) x = root2;
-        if (edIsNegative(x)) x = mod(-x);
-        return {
-          isValid: useRoot1 || useRoot2,
-          value: x
-        };
-      }
-      function invertSqrt(number) {
-        return uvRatio(_1n, number);
-      }
-      function modlLE(hash) {
-        return mod(bytesToNumberLE(hash), CURVE.l);
-      }
-      function equalBytes(b1, b2) {
-        if (b1.length !== b2.length) {
-          return false;
-        }
-        for (let i = 0; i < b1.length; i++) {
-          if (b1[i] !== b2[i]) {
-            return false;
-          }
-        }
-        return true;
-      }
-      function ensureBytes(hex, expectedLength) {
-        const bytes = hex instanceof Uint8Array ? Uint8Array.from(hex) : hexToBytes(hex);
-        if (typeof expectedLength === 'number' && bytes.length !== expectedLength) throw new Error(`Expected ${expectedLength} bytes`);
-        return bytes;
-      }
-      function normalizeScalar(num, max, strict = true) {
-        if (!max) throw new TypeError('Specify max value');
-        if (typeof num === 'number' && Number.isSafeInteger(num)) num = BigInt(num);
-        if (typeof num === 'bigint' && num < max) {
-          if (strict) {
-            if (_0n < num) return num;
-          } else {
-            if (_0n <= num) return num;
-          }
-        }
-        throw new TypeError('Expected valid scalar: 0 < scalar < max');
-      }
-      function adjustBytes25519(bytes) {
-        bytes[0] &= 248;
-        bytes[31] &= 127;
-        bytes[31] |= 64;
-        return bytes;
-      }
-      function decodeScalar25519(n) {
-        return bytesToNumberLE(adjustBytes25519(ensureBytes(n, 32)));
-      }
-      function checkPrivateKey(key) {
-        key = typeof key === 'bigint' || typeof key === 'number' ? numberTo32BytesBE(normalizeScalar(key, POW_2_256)) : ensureBytes(key);
-        if (key.length !== 32) throw new Error(`Expected 32 bytes`);
-        return key;
-      }
-      function getKeyFromHash(hashed) {
-        const head = adjustBytes25519(hashed.slice(0, 32));
-        const prefix = hashed.slice(32, 64);
-        const scalar = modlLE(head);
-        const point = Point.BASE.multiply(scalar);
-        const pointBytes = point.toRawBytes();
-        return {
-          head,
-          prefix,
-          scalar,
-          point,
-          pointBytes
-        };
-      }
-      let _sha512Sync;
-      function sha512s(...m) {
-        if (typeof _sha512Sync !== 'function') throw new Error('utils.sha512Sync must be set to use sync methods');
-        return _sha512Sync(...m);
-      }
-      async function getExtendedPublicKey(key) {
-        return getKeyFromHash(await exports.utils.sha512(checkPrivateKey(key)));
-      }
-      function getExtendedPublicKeySync(key) {
-        return getKeyFromHash(sha512s(checkPrivateKey(key)));
-      }
-      async function getPublicKey(privateKey) {
-        return (await getExtendedPublicKey(privateKey)).pointBytes;
-      }
-      exports.getPublicKey = getPublicKey;
-      function getPublicKeySync(privateKey) {
-        return getExtendedPublicKeySync(privateKey).pointBytes;
-      }
-      async function sign(message, privateKey) {
-        message = ensureBytes(message);
-        const {
-          prefix,
-          scalar,
-          pointBytes
-        } = await getExtendedPublicKey(privateKey);
-        const r = modlLE(await exports.utils.sha512(prefix, message));
-        const R = Point.BASE.multiply(r);
-        const k = modlLE(await exports.utils.sha512(R.toRawBytes(), pointBytes, message));
-        const s = mod(r + k * scalar, CURVE.l);
-        return new Signature(R, s).toRawBytes();
-      }
-      exports.sign = sign;
-      function signSync(message, privateKey) {
-        message = ensureBytes(message);
-        const {
-          prefix,
-          scalar,
-          pointBytes
-        } = getExtendedPublicKeySync(privateKey);
-        const r = modlLE(sha512s(prefix, message));
-        const R = Point.BASE.multiply(r);
-        const k = modlLE(sha512s(R.toRawBytes(), pointBytes, message));
-        const s = mod(r + k * scalar, CURVE.l);
-        return new Signature(R, s).toRawBytes();
-      }
-      function prepareVerification(sig, message, publicKey) {
-        message = ensureBytes(message);
-        if (!(publicKey instanceof Point)) publicKey = Point.fromHex(publicKey, false);
-        const {
-          r,
-          s
-        } = sig instanceof Signature ? sig.assertValidity() : Signature.fromHex(sig);
-        const SB = ExtendedPoint.BASE.multiplyUnsafe(s);
-        return {
-          r,
-          s,
-          SB,
-          pub: publicKey,
-          msg: message
-        };
-      }
-      function finishVerification(publicKey, r, SB, hashed) {
-        const k = modlLE(hashed);
-        const kA = ExtendedPoint.fromAffine(publicKey).multiplyUnsafe(k);
-        const RkA = ExtendedPoint.fromAffine(r).add(kA);
-        return RkA.subtract(SB).multiplyUnsafe(CURVE.h).equals(ExtendedPoint.ZERO);
-      }
-      async function verify(sig, message, publicKey) {
-        const {
-          r,
-          SB,
-          msg,
-          pub
-        } = prepareVerification(sig, message, publicKey);
-        const hashed = await exports.utils.sha512(r.toRawBytes(), pub.toRawBytes(), msg);
-        return finishVerification(pub, r, SB, hashed);
-      }
-      exports.verify = verify;
-      function verifySync(sig, message, publicKey) {
-        const {
-          r,
-          SB,
-          msg,
-          pub
-        } = prepareVerification(sig, message, publicKey);
-        const hashed = sha512s(r.toRawBytes(), pub.toRawBytes(), msg);
-        return finishVerification(pub, r, SB, hashed);
-      }
-      exports.sync = {
-        getExtendedPublicKey: getExtendedPublicKeySync,
-        getPublicKey: getPublicKeySync,
-        sign: signSync,
-        verify: verifySync
-      };
-      async function getSharedSecret(privateKey, publicKey) {
-        const {
-          head
-        } = await getExtendedPublicKey(privateKey);
-        const u = Point.fromHex(publicKey).toX25519();
-        return exports.curve25519.scalarMult(head, u);
-      }
-      exports.getSharedSecret = getSharedSecret;
-      Point.BASE._setWindowSize(8);
-      function cswap(swap, x_2, x_3) {
-        const dummy = mod(swap * (x_2 - x_3));
-        x_2 = mod(x_2 - dummy);
-        x_3 = mod(x_3 + dummy);
-        return [x_2, x_3];
-      }
-      function montgomeryLadder(pointU, scalar) {
-        const {
-          P
-        } = CURVE;
-        const u = normalizeScalar(pointU, P);
-        const k = normalizeScalar(scalar, P);
-        const a24 = BigInt(121665);
-        const x_1 = u;
-        let x_2 = _1n;
-        let z_2 = _0n;
-        let x_3 = u;
-        let z_3 = _1n;
-        let swap = _0n;
-        let sw;
-        for (let t = BigInt(255 - 1); t >= _0n; t--) {
-          const k_t = k >> t & _1n;
-          swap ^= k_t;
-          sw = cswap(swap, x_2, x_3);
-          x_2 = sw[0];
-          x_3 = sw[1];
-          sw = cswap(swap, z_2, z_3);
-          z_2 = sw[0];
-          z_3 = sw[1];
-          swap = k_t;
-          const A = x_2 + z_2;
-          const AA = mod(A * A);
-          const B = x_2 - z_2;
-          const BB = mod(B * B);
-          const E = AA - BB;
-          const C = x_3 + z_3;
-          const D = x_3 - z_3;
-          const DA = mod(D * A);
-          const CB = mod(C * B);
-          const dacb = DA + CB;
-          const da_cb = DA - CB;
-          x_3 = mod(dacb * dacb);
-          z_3 = mod(x_1 * mod(da_cb * da_cb));
-          x_2 = mod(AA * BB);
-          z_2 = mod(E * (AA + mod(a24 * E)));
-        }
-        sw = cswap(swap, x_2, x_3);
-        x_2 = sw[0];
-        x_3 = sw[1];
-        sw = cswap(swap, z_2, z_3);
-        z_2 = sw[0];
-        z_3 = sw[1];
-        const {
-          pow_p_5_8,
-          b2
-        } = pow_2_252_3(z_2);
-        const xp2 = mod(pow2(pow_p_5_8, BigInt(3)) * b2);
-        return mod(x_2 * xp2);
-      }
-      function encodeUCoordinate(u) {
-        return numberTo32BytesLE(mod(u, CURVE.P));
-      }
-      function decodeUCoordinate(uEnc) {
-        const u = ensureBytes(uEnc, 32);
-        u[31] &= 127;
-        return bytesToNumberLE(u);
-      }
-      exports.curve25519 = {
-        BASE_POINT_U: '0900000000000000000000000000000000000000000000000000000000000000',
-        scalarMult(privateKey, publicKey) {
-          const u = decodeUCoordinate(publicKey);
-          const p = decodeScalar25519(privateKey);
-          const pu = montgomeryLadder(u, p);
-          if (pu === _0n) throw new Error('Invalid private or public key received');
-          return encodeUCoordinate(pu);
-        },
-        scalarMultBase(privateKey) {
-          return exports.curve25519.scalarMult(privateKey, exports.curve25519.BASE_POINT_U);
-        }
-      };
-      const crypto = {
-        node: nodeCrypto,
-        web: typeof self === 'object' && 'crypto' in self ? self.crypto : undefined
-      };
-      exports.utils = {
-        bytesToHex,
-        hexToBytes,
-        concatBytes,
-        getExtendedPublicKey,
-        mod,
-        invert,
-        TORSION_SUBGROUP: ['0100000000000000000000000000000000000000000000000000000000000000', 'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a', '0000000000000000000000000000000000000000000000000000000000000080', '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05', 'ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f', '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85', '0000000000000000000000000000000000000000000000000000000000000000', 'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa'],
-        hashToPrivateScalar: hash => {
-          hash = ensureBytes(hash);
-          if (hash.length < 40 || hash.length > 1024) throw new Error('Expected 40-1024 bytes of private key as per FIPS 186');
-          return mod(bytesToNumberLE(hash), CURVE.l - _1n) + _1n;
-        },
-        randomBytes: (bytesLength = 32) => {
-          if (crypto.web) {
-            return crypto.web.getRandomValues(new Uint8Array(bytesLength));
-          } else if (crypto.node) {
-            const {
-              randomBytes
-            } = crypto.node;
-            return new Uint8Array(randomBytes(bytesLength).buffer);
-          } else {
-            throw new Error("The environment doesn't have randomBytes function");
-          }
-        },
-        randomPrivateKey: () => {
-          return exports.utils.randomBytes(32);
-        },
-        sha512: async (...messages) => {
-          const message = concatBytes(...messages);
-          if (crypto.web) {
-            const buffer = await crypto.web.subtle.digest('SHA-512', message.buffer);
-            return new Uint8Array(buffer);
-          } else if (crypto.node) {
-            return Uint8Array.from(crypto.node.createHash('sha512').update(message).digest());
-          } else {
-            throw new Error("The environment doesn't have sha512 function");
-          }
-        },
-        precompute(windowSize = 8, point = Point.BASE) {
-          const cached = point.equals(Point.BASE) ? point : new Point(point.x, point.y);
-          cached._setWindowSize(windowSize);
-          cached.multiply(_2n);
-          return cached;
-        },
-        sha512Sync: undefined
-      };
-      Object.defineProperties(exports.utils, {
-        sha512Sync: {
-          configurable: false,
-          get() {
-            return _sha512Sync;
-          },
-          set(val) {
-            if (!_sha512Sync) _sha512Sync = val;
-          }
-        }
-      });
-    }, {
-      "crypto": 198
-    }],
-    94: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -7024,7 +2517,7 @@
       };
       exports.default = assert;
     }, {}],
-    95: [function (require, module, exports) {
+    30: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -7147,10 +2640,10 @@
       }
       exports.SHA2 = SHA2;
     }, {
-      "./_assert.js": 94,
-      "./utils.js": 104
+      "./_assert.js": 29,
+      "./utils.js": 39
     }],
-    96: [function (require, module, exports) {
+    31: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -7237,7 +2730,7 @@
       };
       exports.default = u64;
     }, {}],
-    97: [function (require, module, exports) {
+    32: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -7249,7 +2742,7 @@
         web: typeof self === 'object' && 'crypto' in self ? self.crypto : undefined
       };
     }, {}],
-    98: [function (require, module, exports) {
+    33: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -7327,10 +2820,10 @@
       exports.hmac = hmac;
       exports.hmac.create = (hash, key) => new HMAC(hash, key);
     }, {
-      "./_assert.js": 94,
-      "./utils.js": 104
+      "./_assert.js": 29,
+      "./utils.js": 39
     }],
-    99: [function (require, module, exports) {
+    34: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -7428,11 +2921,11 @@
       }
       exports.pbkdf2Async = pbkdf2Async;
     }, {
-      "./_assert.js": 94,
-      "./hmac.js": 98,
-      "./utils.js": 104
+      "./_assert.js": 29,
+      "./hmac.js": 33,
+      "./utils.js": 39
     }],
-    100: [function (require, module, exports) {
+    35: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -7528,10 +3021,10 @@
       exports.RIPEMD160 = RIPEMD160;
       exports.ripemd160 = (0, utils_js_1.wrapConstructor)(() => new RIPEMD160());
     }, {
-      "./_sha2.js": 95,
-      "./utils.js": 104
+      "./_sha2.js": 30,
+      "./utils.js": 39
     }],
-    101: [function (require, module, exports) {
+    36: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -7633,10 +3126,10 @@
       }
       exports.sha256 = (0, utils_js_1.wrapConstructor)(() => new SHA256());
     }, {
-      "./_sha2.js": 95,
-      "./utils.js": 104
+      "./_sha2.js": 30,
+      "./utils.js": 39
     }],
-    102: [function (require, module, exports) {
+    37: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -7830,11 +3323,11 @@
       exports.shake128 = genShake(0x1f, 168, 128 / 8);
       exports.shake256 = genShake(0x1f, 136, 256 / 8);
     }, {
-      "./_assert.js": 94,
-      "./_u64.js": 96,
-      "./utils.js": 104
+      "./_assert.js": 29,
+      "./_u64.js": 31,
+      "./utils.js": 39
     }],
-    103: [function (require, module, exports) {
+    38: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -8067,11 +3560,11 @@
       exports.sha512_256 = (0, utils_js_1.wrapConstructor)(() => new SHA512_256());
       exports.sha384 = (0, utils_js_1.wrapConstructor)(() => new SHA384());
     }, {
-      "./_sha2.js": 95,
-      "./_u64.js": 96,
-      "./utils.js": 104
+      "./_sha2.js": 30,
+      "./_u64.js": 31,
+      "./utils.js": 39
     }],
-    104: [function (require, module, exports) {
+    39: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -8198,9 +3691,9 @@
       }
       exports.randomBytes = randomBytes;
     }, {
-      "@noble/hashes/crypto": 97
+      "@noble/hashes/crypto": 32
     }],
-    105: [function (require, module, exports) {
+    40: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -9479,7 +4972,4608 @@
     }, {
       "crypto": 198
     }],
+    41: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.mnemonicToSeedSync = exports.mnemonicToSeed = exports.validateMnemonic = exports.entropyToMnemonic = exports.mnemonicToEntropy = exports.generateMnemonic = void 0;
+      const _assert_1 = require("@noble/hashes/_assert");
+      const pbkdf2_1 = require("@noble/hashes/pbkdf2");
+      const sha256_1 = require("@noble/hashes/sha256");
+      const sha512_1 = require("@noble/hashes/sha512");
+      const utils_1 = require("@noble/hashes/utils");
+      const base_1 = require("@scure/base");
+      const isJapanese = wordlist => wordlist[0] === '\u3042\u3044\u3053\u304f\u3057\u3093';
+      function nfkd(str) {
+        if (typeof str !== 'string') throw new TypeError(`Invalid mnemonic type: ${typeof str}`);
+        return str.normalize('NFKD');
+      }
+      function normalize(str) {
+        const norm = nfkd(str);
+        const words = norm.split(' ');
+        if (![12, 15, 18, 21, 24].includes(words.length)) throw new Error('Invalid mnemonic');
+        return {
+          nfkd: norm,
+          words
+        };
+      }
+      function assertEntropy(entropy) {
+        _assert_1.default.bytes(entropy, 16, 20, 24, 28, 32);
+      }
+      function generateMnemonic(wordlist, strength = 128) {
+        _assert_1.default.number(strength);
+        if (strength % 32 !== 0 || strength > 256) throw new TypeError('Invalid entropy');
+        return entropyToMnemonic((0, utils_1.randomBytes)(strength / 8), wordlist);
+      }
+      exports.generateMnemonic = generateMnemonic;
+      const calcChecksum = entropy => {
+        const bitsLeft = 8 - entropy.length / 4;
+        return new Uint8Array([(0, sha256_1.sha256)(entropy)[0] >> bitsLeft << bitsLeft]);
+      };
+      function getCoder(wordlist) {
+        if (!Array.isArray(wordlist) || wordlist.length !== 2 ** 11 || typeof wordlist[0] !== 'string') throw new Error('Worlist: expected array of 2048 strings');
+        wordlist.forEach(i => {
+          if (typeof i !== 'string') throw new Error(`Wordlist: non-string element: ${i}`);
+        });
+        return base_1.utils.chain(base_1.utils.checksum(1, calcChecksum), base_1.utils.radix2(11, true), base_1.utils.alphabet(wordlist));
+      }
+      function mnemonicToEntropy(mnemonic, wordlist) {
+        const {
+          words
+        } = normalize(mnemonic);
+        const entropy = getCoder(wordlist).decode(words);
+        assertEntropy(entropy);
+        return entropy;
+      }
+      exports.mnemonicToEntropy = mnemonicToEntropy;
+      function entropyToMnemonic(entropy, wordlist) {
+        assertEntropy(entropy);
+        const words = getCoder(wordlist).encode(entropy);
+        return words.join(isJapanese(wordlist) ? '\u3000' : ' ');
+      }
+      exports.entropyToMnemonic = entropyToMnemonic;
+      function validateMnemonic(mnemonic, wordlist) {
+        try {
+          mnemonicToEntropy(mnemonic, wordlist);
+        } catch (e) {
+          return false;
+        }
+        return true;
+      }
+      exports.validateMnemonic = validateMnemonic;
+      const salt = passphrase => nfkd(`mnemonic${passphrase}`);
+      function mnemonicToSeed(mnemonic, passphrase = '') {
+        return (0, pbkdf2_1.pbkdf2Async)(sha512_1.sha512, normalize(mnemonic).nfkd, salt(passphrase), {
+          c: 2048,
+          dkLen: 64
+        });
+      }
+      exports.mnemonicToSeed = mnemonicToSeed;
+      function mnemonicToSeedSync(mnemonic, passphrase = '') {
+        return (0, pbkdf2_1.pbkdf2)(sha512_1.sha512, normalize(mnemonic).nfkd, salt(passphrase), {
+          c: 2048,
+          dkLen: 64
+        });
+      }
+      exports.mnemonicToSeedSync = mnemonicToSeedSync;
+    }, {
+      "@noble/hashes/_assert": 29,
+      "@noble/hashes/pbkdf2": 34,
+      "@noble/hashes/sha256": 36,
+      "@noble/hashes/sha512": 38,
+      "@noble/hashes/utils": 39,
+      "@scure/base": 107
+    }],
+    42: [function (require, module, exports) {
+      'use strict';
+
+      Object.defineProperty(exports, '__esModule', {
+        value: true
+      });
+      class StructError extends TypeError {
+        constructor(failure, failures) {
+          let cached;
+          const {
+            message,
+            ...rest
+          } = failure;
+          const {
+            path
+          } = failure;
+          const msg = path.length === 0 ? message : `At path: ${path.join('.')} -- ${message}`;
+          super(msg);
+          this.value = void 0;
+          this.key = void 0;
+          this.type = void 0;
+          this.refinement = void 0;
+          this.path = void 0;
+          this.branch = void 0;
+          this.failures = void 0;
+          Object.assign(this, rest);
+          this.name = this.constructor.name;
+          this.failures = () => {
+            return cached ?? (cached = [failure, ...failures()]);
+          };
+        }
+      }
+      function isIterable(x) {
+        return isObject(x) && typeof x[Symbol.iterator] === 'function';
+      }
+      function isObject(x) {
+        return typeof x === 'object' && x != null;
+      }
+      function isPlainObject(x) {
+        if (Object.prototype.toString.call(x) !== '[object Object]') {
+          return false;
+        }
+        const prototype = Object.getPrototypeOf(x);
+        return prototype === null || prototype === Object.prototype;
+      }
+      function print(value) {
+        if (typeof value === 'symbol') {
+          return value.toString();
+        }
+        return typeof value === 'string' ? JSON.stringify(value) : `${value}`;
+      }
+      function shiftIterator(input) {
+        const {
+          done,
+          value
+        } = input.next();
+        return done ? undefined : value;
+      }
+      function toFailure(result, context, struct, value) {
+        if (result === true) {
+          return;
+        } else if (result === false) {
+          result = {};
+        } else if (typeof result === 'string') {
+          result = {
+            message: result
+          };
+        }
+        const {
+          path,
+          branch
+        } = context;
+        const {
+          type
+        } = struct;
+        const {
+          refinement,
+          message = `Expected a value of type \`${type}\`${refinement ? ` with refinement \`${refinement}\`` : ''}, but received: \`${print(value)}\``
+        } = result;
+        return {
+          value,
+          type,
+          refinement,
+          key: path[path.length - 1],
+          path,
+          branch,
+          ...result,
+          message
+        };
+      }
+      function* toFailures(result, context, struct, value) {
+        if (!isIterable(result)) {
+          result = [result];
+        }
+        for (const r of result) {
+          const failure = toFailure(r, context, struct, value);
+          if (failure) {
+            yield failure;
+          }
+        }
+      }
+      function* run(value, struct, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        const {
+          path = [],
+          branch = [value],
+          coerce = false,
+          mask = false
+        } = options;
+        const ctx = {
+          path,
+          branch
+        };
+        if (coerce) {
+          value = struct.coercer(value, ctx);
+          if (mask && struct.type !== 'type' && isObject(struct.schema) && isObject(value) && !Array.isArray(value)) {
+            for (const key in value) {
+              if (struct.schema[key] === undefined) {
+                delete value[key];
+              }
+            }
+          }
+        }
+        let status = 'valid';
+        for (const failure of struct.validator(value, ctx)) {
+          status = 'not_valid';
+          yield [failure, undefined];
+        }
+        for (let [k, v, s] of struct.entries(value, ctx)) {
+          const ts = run(v, s, {
+            path: k === undefined ? path : [...path, k],
+            branch: k === undefined ? branch : [...branch, v],
+            coerce,
+            mask
+          });
+          for (const t of ts) {
+            if (t[0]) {
+              status = t[0].refinement != null ? 'not_refined' : 'not_valid';
+              yield [t[0], undefined];
+            } else if (coerce) {
+              v = t[1];
+              if (k === undefined) {
+                value = v;
+              } else if (value instanceof Map) {
+                value.set(k, v);
+              } else if (value instanceof Set) {
+                value.add(v);
+              } else if (isObject(value)) {
+                if (v !== undefined || k in value) value[k] = v;
+              }
+            }
+          }
+        }
+        if (status !== 'not_valid') {
+          for (const failure of struct.refiner(value, ctx)) {
+            status = 'not_refined';
+            yield [failure, undefined];
+          }
+        }
+        if (status === 'valid') {
+          yield [undefined, value];
+        }
+      }
+      class Struct {
+        constructor(props) {
+          this.TYPE = void 0;
+          this.type = void 0;
+          this.schema = void 0;
+          this.coercer = void 0;
+          this.validator = void 0;
+          this.refiner = void 0;
+          this.entries = void 0;
+          const {
+            type,
+            schema,
+            validator,
+            refiner,
+            coercer = value => value,
+            entries = function* () {}
+          } = props;
+          this.type = type;
+          this.schema = schema;
+          this.entries = entries;
+          this.coercer = coercer;
+          if (validator) {
+            this.validator = (value, context) => {
+              const result = validator(value, context);
+              return toFailures(result, context, this, value);
+            };
+          } else {
+            this.validator = () => [];
+          }
+          if (refiner) {
+            this.refiner = (value, context) => {
+              const result = refiner(value, context);
+              return toFailures(result, context, this, value);
+            };
+          } else {
+            this.refiner = () => [];
+          }
+        }
+        assert(value) {
+          return assert(value, this);
+        }
+        create(value) {
+          return create(value, this);
+        }
+        is(value) {
+          return is(value, this);
+        }
+        mask(value) {
+          return mask(value, this);
+        }
+        validate(value, options) {
+          if (options === void 0) {
+            options = {};
+          }
+          return validate(value, this, options);
+        }
+      }
+      function assert(value, struct) {
+        const result = validate(value, struct);
+        if (result[0]) {
+          throw result[0];
+        }
+      }
+      function create(value, struct) {
+        const result = validate(value, struct, {
+          coerce: true
+        });
+        if (result[0]) {
+          throw result[0];
+        } else {
+          return result[1];
+        }
+      }
+      function mask(value, struct) {
+        const result = validate(value, struct, {
+          coerce: true,
+          mask: true
+        });
+        if (result[0]) {
+          throw result[0];
+        } else {
+          return result[1];
+        }
+      }
+      function is(value, struct) {
+        const result = validate(value, struct);
+        return !result[0];
+      }
+      function validate(value, struct, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        const tuples = run(value, struct, options);
+        const tuple = shiftIterator(tuples);
+        if (tuple[0]) {
+          const error = new StructError(tuple[0], function* () {
+            for (const t of tuples) {
+              if (t[0]) {
+                yield t[0];
+              }
+            }
+          });
+          return [error, undefined];
+        } else {
+          const v = tuple[1];
+          return [undefined, v];
+        }
+      }
+      function assign() {
+        for (var _len = arguments.length, Structs = new Array(_len), _key = 0; _key < _len; _key++) {
+          Structs[_key] = arguments[_key];
+        }
+        const isType = Structs[0].type === 'type';
+        const schemas = Structs.map(s => s.schema);
+        const schema = Object.assign({}, ...schemas);
+        return isType ? type(schema) : object(schema);
+      }
+      function define(name, validator) {
+        return new Struct({
+          type: name,
+          schema: null,
+          validator
+        });
+      }
+      function deprecated(struct, log) {
+        return new Struct({
+          ...struct,
+          refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx),
+          validator(value, ctx) {
+            if (value === undefined) {
+              return true;
+            } else {
+              log(value, ctx);
+              return struct.validator(value, ctx);
+            }
+          }
+        });
+      }
+      function dynamic(fn) {
+        return new Struct({
+          type: 'dynamic',
+          schema: null,
+          *entries(value, ctx) {
+            const struct = fn(value, ctx);
+            yield* struct.entries(value, ctx);
+          },
+          validator(value, ctx) {
+            const struct = fn(value, ctx);
+            return struct.validator(value, ctx);
+          },
+          coercer(value, ctx) {
+            const struct = fn(value, ctx);
+            return struct.coercer(value, ctx);
+          },
+          refiner(value, ctx) {
+            const struct = fn(value, ctx);
+            return struct.refiner(value, ctx);
+          }
+        });
+      }
+      function lazy(fn) {
+        let struct;
+        return new Struct({
+          type: 'lazy',
+          schema: null,
+          *entries(value, ctx) {
+            struct ?? (struct = fn());
+            yield* struct.entries(value, ctx);
+          },
+          validator(value, ctx) {
+            struct ?? (struct = fn());
+            return struct.validator(value, ctx);
+          },
+          coercer(value, ctx) {
+            struct ?? (struct = fn());
+            return struct.coercer(value, ctx);
+          },
+          refiner(value, ctx) {
+            struct ?? (struct = fn());
+            return struct.refiner(value, ctx);
+          }
+        });
+      }
+      function omit(struct, keys) {
+        const {
+          schema
+        } = struct;
+        const subschema = {
+          ...schema
+        };
+        for (const key of keys) {
+          delete subschema[key];
+        }
+        switch (struct.type) {
+          case 'type':
+            return type(subschema);
+          default:
+            return object(subschema);
+        }
+      }
+      function partial(struct) {
+        const schema = struct instanceof Struct ? {
+          ...struct.schema
+        } : {
+          ...struct
+        };
+        for (const key in schema) {
+          schema[key] = optional(schema[key]);
+        }
+        return object(schema);
+      }
+      function pick(struct, keys) {
+        const {
+          schema
+        } = struct;
+        const subschema = {};
+        for (const key of keys) {
+          subschema[key] = schema[key];
+        }
+        return object(subschema);
+      }
+      function struct(name, validator) {
+        console.warn('superstruct@0.11 - The `struct` helper has been renamed to `define`.');
+        return define(name, validator);
+      }
+      function any() {
+        return define('any', () => true);
+      }
+      function array(Element) {
+        return new Struct({
+          type: 'array',
+          schema: Element,
+          *entries(value) {
+            if (Element && Array.isArray(value)) {
+              for (const [i, v] of value.entries()) {
+                yield [i, v, Element];
+              }
+            }
+          },
+          coercer(value) {
+            return Array.isArray(value) ? value.slice() : value;
+          },
+          validator(value) {
+            return Array.isArray(value) || `Expected an array value, but received: ${print(value)}`;
+          }
+        });
+      }
+      function bigint() {
+        return define('bigint', value => {
+          return typeof value === 'bigint';
+        });
+      }
+      function boolean() {
+        return define('boolean', value => {
+          return typeof value === 'boolean';
+        });
+      }
+      function date() {
+        return define('date', value => {
+          return value instanceof Date && !isNaN(value.getTime()) || `Expected a valid \`Date\` object, but received: ${print(value)}`;
+        });
+      }
+      function enums(values) {
+        const schema = {};
+        const description = values.map(v => print(v)).join();
+        for (const key of values) {
+          schema[key] = key;
+        }
+        return new Struct({
+          type: 'enums',
+          schema,
+          validator(value) {
+            return values.includes(value) || `Expected one of \`${description}\`, but received: ${print(value)}`;
+          }
+        });
+      }
+      function func() {
+        return define('func', value => {
+          return typeof value === 'function' || `Expected a function, but received: ${print(value)}`;
+        });
+      }
+      function instance(Class) {
+        return define('instance', value => {
+          return value instanceof Class || `Expected a \`${Class.name}\` instance, but received: ${print(value)}`;
+        });
+      }
+      function integer() {
+        return define('integer', value => {
+          return typeof value === 'number' && !isNaN(value) && Number.isInteger(value) || `Expected an integer, but received: ${print(value)}`;
+        });
+      }
+      function intersection(Structs) {
+        return new Struct({
+          type: 'intersection',
+          schema: null,
+          *entries(value, ctx) {
+            for (const S of Structs) {
+              yield* S.entries(value, ctx);
+            }
+          },
+          *validator(value, ctx) {
+            for (const S of Structs) {
+              yield* S.validator(value, ctx);
+            }
+          },
+          *refiner(value, ctx) {
+            for (const S of Structs) {
+              yield* S.refiner(value, ctx);
+            }
+          }
+        });
+      }
+      function literal(constant) {
+        const description = print(constant);
+        const t = typeof constant;
+        return new Struct({
+          type: 'literal',
+          schema: t === 'string' || t === 'number' || t === 'boolean' ? constant : null,
+          validator(value) {
+            return value === constant || `Expected the literal \`${description}\`, but received: ${print(value)}`;
+          }
+        });
+      }
+      function map(Key, Value) {
+        return new Struct({
+          type: 'map',
+          schema: null,
+          *entries(value) {
+            if (Key && Value && value instanceof Map) {
+              for (const [k, v] of value.entries()) {
+                yield [k, k, Key];
+                yield [k, v, Value];
+              }
+            }
+          },
+          coercer(value) {
+            return value instanceof Map ? new Map(value) : value;
+          },
+          validator(value) {
+            return value instanceof Map || `Expected a \`Map\` object, but received: ${print(value)}`;
+          }
+        });
+      }
+      function never() {
+        return define('never', () => false);
+      }
+      function nullable(struct) {
+        return new Struct({
+          ...struct,
+          validator: (value, ctx) => value === null || struct.validator(value, ctx),
+          refiner: (value, ctx) => value === null || struct.refiner(value, ctx)
+        });
+      }
+      function number() {
+        return define('number', value => {
+          return typeof value === 'number' && !isNaN(value) || `Expected a number, but received: ${print(value)}`;
+        });
+      }
+      function object(schema) {
+        const knowns = schema ? Object.keys(schema) : [];
+        const Never = never();
+        return new Struct({
+          type: 'object',
+          schema: schema ? schema : null,
+          *entries(value) {
+            if (schema && isObject(value)) {
+              const unknowns = new Set(Object.keys(value));
+              for (const key of knowns) {
+                unknowns.delete(key);
+                yield [key, value[key], schema[key]];
+              }
+              for (const key of unknowns) {
+                yield [key, value[key], Never];
+              }
+            }
+          },
+          validator(value) {
+            return isObject(value) || `Expected an object, but received: ${print(value)}`;
+          },
+          coercer(value) {
+            return isObject(value) ? {
+              ...value
+            } : value;
+          }
+        });
+      }
+      function optional(struct) {
+        return new Struct({
+          ...struct,
+          validator: (value, ctx) => value === undefined || struct.validator(value, ctx),
+          refiner: (value, ctx) => value === undefined || struct.refiner(value, ctx)
+        });
+      }
+      function record(Key, Value) {
+        return new Struct({
+          type: 'record',
+          schema: null,
+          *entries(value) {
+            if (isObject(value)) {
+              for (const k in value) {
+                const v = value[k];
+                yield [k, k, Key];
+                yield [k, v, Value];
+              }
+            }
+          },
+          validator(value) {
+            return isObject(value) || `Expected an object, but received: ${print(value)}`;
+          }
+        });
+      }
+      function regexp() {
+        return define('regexp', value => {
+          return value instanceof RegExp;
+        });
+      }
+      function set(Element) {
+        return new Struct({
+          type: 'set',
+          schema: null,
+          *entries(value) {
+            if (Element && value instanceof Set) {
+              for (const v of value) {
+                yield [v, v, Element];
+              }
+            }
+          },
+          coercer(value) {
+            return value instanceof Set ? new Set(value) : value;
+          },
+          validator(value) {
+            return value instanceof Set || `Expected a \`Set\` object, but received: ${print(value)}`;
+          }
+        });
+      }
+      function string() {
+        return define('string', value => {
+          return typeof value === 'string' || `Expected a string, but received: ${print(value)}`;
+        });
+      }
+      function tuple(Structs) {
+        const Never = never();
+        return new Struct({
+          type: 'tuple',
+          schema: null,
+          *entries(value) {
+            if (Array.isArray(value)) {
+              const length = Math.max(Structs.length, value.length);
+              for (let i = 0; i < length; i++) {
+                yield [i, value[i], Structs[i] || Never];
+              }
+            }
+          },
+          validator(value) {
+            return Array.isArray(value) || `Expected an array, but received: ${print(value)}`;
+          }
+        });
+      }
+      function type(schema) {
+        const keys = Object.keys(schema);
+        return new Struct({
+          type: 'type',
+          schema,
+          *entries(value) {
+            if (isObject(value)) {
+              for (const k of keys) {
+                yield [k, value[k], schema[k]];
+              }
+            }
+          },
+          validator(value) {
+            return isObject(value) || `Expected an object, but received: ${print(value)}`;
+          }
+        });
+      }
+      function union(Structs) {
+        const description = Structs.map(s => s.type).join(' | ');
+        return new Struct({
+          type: 'union',
+          schema: null,
+          coercer(value, ctx) {
+            const firstMatch = Structs.find(s => {
+              const [e] = s.validate(value, {
+                coerce: true
+              });
+              return !e;
+            }) || unknown();
+            return firstMatch.coercer(value, ctx);
+          },
+          validator(value, ctx) {
+            const failures = [];
+            for (const S of Structs) {
+              const [...tuples] = run(value, S, ctx);
+              const [first] = tuples;
+              if (!first[0]) {
+                return [];
+              } else {
+                for (const [failure] of tuples) {
+                  if (failure) {
+                    failures.push(failure);
+                  }
+                }
+              }
+            }
+            return [`Expected the value to satisfy a union of \`${description}\`, but received: ${print(value)}`, ...failures];
+          }
+        });
+      }
+      function unknown() {
+        return define('unknown', () => true);
+      }
+      function coerce(struct, condition, coercer) {
+        return new Struct({
+          ...struct,
+          coercer: (value, ctx) => {
+            return is(value, condition) ? struct.coercer(coercer(value, ctx), ctx) : struct.coercer(value, ctx);
+          }
+        });
+      }
+      function defaulted(struct, fallback, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        return coerce(struct, unknown(), x => {
+          const f = typeof fallback === 'function' ? fallback() : fallback;
+          if (x === undefined) {
+            return f;
+          }
+          if (!options.strict && isPlainObject(x) && isPlainObject(f)) {
+            const ret = {
+              ...x
+            };
+            let changed = false;
+            for (const key in f) {
+              if (ret[key] === undefined) {
+                ret[key] = f[key];
+                changed = true;
+              }
+            }
+            if (changed) {
+              return ret;
+            }
+          }
+          return x;
+        });
+      }
+      function trimmed(struct) {
+        return coerce(struct, string(), x => x.trim());
+      }
+      function empty(struct) {
+        return refine(struct, 'empty', value => {
+          const size = getSize(value);
+          return size === 0 || `Expected an empty ${struct.type} but received one with a size of \`${size}\``;
+        });
+      }
+      function getSize(value) {
+        if (value instanceof Map || value instanceof Set) {
+          return value.size;
+        } else {
+          return value.length;
+        }
+      }
+      function max(struct, threshold, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        const {
+          exclusive
+        } = options;
+        return refine(struct, 'max', value => {
+          return exclusive ? value < threshold : value <= threshold || `Expected a ${struct.type} less than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
+        });
+      }
+      function min(struct, threshold, options) {
+        if (options === void 0) {
+          options = {};
+        }
+        const {
+          exclusive
+        } = options;
+        return refine(struct, 'min', value => {
+          return exclusive ? value > threshold : value >= threshold || `Expected a ${struct.type} greater than ${exclusive ? '' : 'or equal to '}${threshold} but received \`${value}\``;
+        });
+      }
+      function nonempty(struct) {
+        return refine(struct, 'nonempty', value => {
+          const size = getSize(value);
+          return size > 0 || `Expected a nonempty ${struct.type} but received an empty one`;
+        });
+      }
+      function pattern(struct, regexp) {
+        return refine(struct, 'pattern', value => {
+          return regexp.test(value) || `Expected a ${struct.type} matching \`/${regexp.source}/\` but received "${value}"`;
+        });
+      }
+      function size(struct, min, max) {
+        if (max === void 0) {
+          max = min;
+        }
+        const expected = `Expected a ${struct.type}`;
+        const of = min === max ? `of \`${min}\`` : `between \`${min}\` and \`${max}\``;
+        return refine(struct, 'size', value => {
+          if (typeof value === 'number' || value instanceof Date) {
+            return min <= value && value <= max || `${expected} ${of} but received \`${value}\``;
+          } else if (value instanceof Map || value instanceof Set) {
+            const {
+              size
+            } = value;
+            return min <= size && size <= max || `${expected} with a size ${of} but received one with a size of \`${size}\``;
+          } else {
+            const {
+              length
+            } = value;
+            return min <= length && length <= max || `${expected} with a length ${of} but received one with a length of \`${length}\``;
+          }
+        });
+      }
+      function refine(struct, name, refiner) {
+        return new Struct({
+          ...struct,
+          *refiner(value, ctx) {
+            yield* struct.refiner(value, ctx);
+            const result = refiner(value, ctx);
+            const failures = toFailures(result, ctx, struct, value);
+            for (const failure of failures) {
+              yield {
+                ...failure,
+                refinement: name
+              };
+            }
+          }
+        });
+      }
+      exports.Struct = Struct;
+      exports.StructError = StructError;
+      exports.any = any;
+      exports.array = array;
+      exports.assert = assert;
+      exports.assign = assign;
+      exports.bigint = bigint;
+      exports.boolean = boolean;
+      exports.coerce = coerce;
+      exports.create = create;
+      exports.date = date;
+      exports.defaulted = defaulted;
+      exports.define = define;
+      exports.deprecated = deprecated;
+      exports.dynamic = dynamic;
+      exports.empty = empty;
+      exports.enums = enums;
+      exports.func = func;
+      exports.instance = instance;
+      exports.integer = integer;
+      exports.intersection = intersection;
+      exports.is = is;
+      exports.lazy = lazy;
+      exports.literal = literal;
+      exports.map = map;
+      exports.mask = mask;
+      exports.max = max;
+      exports.min = min;
+      exports.never = never;
+      exports.nonempty = nonempty;
+      exports.nullable = nullable;
+      exports.number = number;
+      exports.object = object;
+      exports.omit = omit;
+      exports.optional = optional;
+      exports.partial = partial;
+      exports.pattern = pattern;
+      exports.pick = pick;
+      exports.record = record;
+      exports.refine = refine;
+      exports.regexp = regexp;
+      exports.set = set;
+      exports.size = size;
+      exports.string = string;
+      exports.struct = struct;
+      exports.trimmed = trimmed;
+      exports.tuple = tuple;
+      exports.type = type;
+      exports.union = union;
+      exports.unknown = unknown;
+      exports.validate = validate;
+    }, {}],
+    43: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.text = exports.spinner = exports.panel = exports.heading = exports.divider = exports.copyable = void 0;
+      const utils_1 = require("@metamask/utils");
+      const nodes_1 = require("./nodes");
+      function createBuilder(type, struct, keys = []) {
+        return (...args) => {
+          if (args.length === 1 && (0, utils_1.isPlainObject)(args[0])) {
+            const node = Object.assign(Object.assign({}, args[0]), {
+              type
+            });
+            (0, utils_1.assertStruct)(node, struct, `Invalid ${type} component`);
+            return node;
+          }
+          const node = keys.reduce((partialNode, key, index) => {
+            return Object.assign(Object.assign({}, partialNode), {
+              [key]: args[index]
+            });
+          }, {
+            type
+          });
+          (0, utils_1.assertStruct)(node, struct, `Invalid ${type} component`);
+          return node;
+        };
+      }
+      exports.copyable = createBuilder(nodes_1.NodeType.Copyable, nodes_1.CopyableStruct, ['value']);
+      exports.divider = createBuilder(nodes_1.NodeType.Divider, nodes_1.DividerStruct);
+      exports.heading = createBuilder(nodes_1.NodeType.Heading, nodes_1.HeadingStruct, ['value']);
+      exports.panel = createBuilder(nodes_1.NodeType.Panel, nodes_1.PanelStruct, ['children']);
+      exports.spinner = createBuilder(nodes_1.NodeType.Spinner, nodes_1.SpinnerStruct);
+      exports.text = createBuilder(nodes_1.NodeType.Text, nodes_1.TextStruct, ['value']);
+    }, {
+      "./nodes": 45,
+      "@metamask/utils": 54
+    }],
+    44: [function (require, module, exports) {
+      "use strict";
+
+      var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            }
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      } : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+      var __exportStar = this && this.__exportStar || function (m, exports) {
+        for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+      };
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      __exportStar(require("./builder"), exports);
+      __exportStar(require("./nodes"), exports);
+      __exportStar(require("./validation"), exports);
+    }, {
+      "./builder": 43,
+      "./nodes": 45,
+      "./validation": 46
+    }],
+    45: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ComponentStruct = exports.TextStruct = exports.SpinnerStruct = exports.PanelStruct = exports.HeadingStruct = exports.DividerStruct = exports.CopyableStruct = exports.NodeType = void 0;
+      const superstruct_1 = require("superstruct");
+      const NodeStruct = (0, superstruct_1.object)({
+        type: (0, superstruct_1.string)()
+      });
+      const ParentStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
+        children: (0, superstruct_1.array)((0, superstruct_1.lazy)(() => exports.ComponentStruct))
+      }));
+      const LiteralStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
+        value: (0, superstruct_1.unknown)()
+      }));
+      var NodeType;
+      (function (NodeType) {
+        NodeType["Copyable"] = "copyable";
+        NodeType["Divider"] = "divider";
+        NodeType["Heading"] = "heading";
+        NodeType["Panel"] = "panel";
+        NodeType["Spinner"] = "spinner";
+        NodeType["Text"] = "text";
+      })(NodeType = exports.NodeType || (exports.NodeType = {}));
+      exports.CopyableStruct = (0, superstruct_1.assign)(LiteralStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Copyable),
+        value: (0, superstruct_1.string)()
+      }));
+      exports.DividerStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Divider)
+      }));
+      exports.HeadingStruct = (0, superstruct_1.assign)(LiteralStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Heading),
+        value: (0, superstruct_1.string)()
+      }));
+      exports.PanelStruct = (0, superstruct_1.assign)(ParentStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Panel)
+      }));
+      exports.SpinnerStruct = (0, superstruct_1.assign)(NodeStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Spinner)
+      }));
+      exports.TextStruct = (0, superstruct_1.assign)(LiteralStruct, (0, superstruct_1.object)({
+        type: (0, superstruct_1.literal)(NodeType.Text),
+        value: (0, superstruct_1.string)()
+      }));
+      exports.ComponentStruct = (0, superstruct_1.union)([exports.CopyableStruct, exports.DividerStruct, exports.HeadingStruct, exports.PanelStruct, exports.SpinnerStruct, exports.TextStruct]);
+    }, {
+      "superstruct": 279
+    }],
+    46: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.assertIsComponent = exports.isComponent = void 0;
+      const utils_1 = require("@metamask/utils");
+      const superstruct_1 = require("superstruct");
+      const nodes_1 = require("./nodes");
+      function isComponent(value) {
+        return (0, superstruct_1.is)(value, nodes_1.ComponentStruct);
+      }
+      exports.isComponent = isComponent;
+      function assertIsComponent(value) {
+        (0, utils_1.assertStruct)(value, nodes_1.ComponentStruct, 'Invalid component');
+      }
+      exports.assertIsComponent = assertIsComponent;
+    }, {
+      "./nodes": 45,
+      "@metamask/utils": 54,
+      "superstruct": 279
+    }],
+    47: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.assertExhaustive = exports.assertStruct = exports.assert = exports.AssertionError = void 0;
+      const superstruct_1 = require("superstruct");
+      function isErrorWithMessage(error) {
+        return typeof error === 'object' && error !== null && 'message' in error;
+      }
+      function isConstructable(fn) {
+        var _a, _b;
+        return Boolean(typeof ((_b = (_a = fn === null || fn === void 0 ? void 0 : fn.prototype) === null || _a === void 0 ? void 0 : _a.constructor) === null || _b === void 0 ? void 0 : _b.name) === 'string');
+      }
+      function getErrorMessage(error) {
+        const message = isErrorWithMessage(error) ? error.message : String(error);
+        if (message.endsWith('.')) {
+          return message.slice(0, -1);
+        }
+        return message;
+      }
+      function getError(ErrorWrapper, message) {
+        if (isConstructable(ErrorWrapper)) {
+          return new ErrorWrapper({
+            message
+          });
+        }
+        return ErrorWrapper({
+          message
+        });
+      }
+      class AssertionError extends Error {
+        constructor(options) {
+          super(options.message);
+          this.code = 'ERR_ASSERTION';
+        }
+      }
+      exports.AssertionError = AssertionError;
+      function assert(value, message = 'Assertion failed.', ErrorWrapper = AssertionError) {
+        if (!value) {
+          if (message instanceof Error) {
+            throw message;
+          }
+          throw getError(ErrorWrapper, message);
+        }
+      }
+      exports.assert = assert;
+      function assertStruct(value, struct, errorPrefix = 'Assertion failed', ErrorWrapper = AssertionError) {
+        try {
+          (0, superstruct_1.assert)(value, struct);
+        } catch (error) {
+          throw getError(ErrorWrapper, `${errorPrefix}: ${getErrorMessage(error)}.`);
+        }
+      }
+      exports.assertStruct = assertStruct;
+      function assertExhaustive(_object) {
+        throw new Error('Invalid branch reached. Should be detected during compilation.');
+      }
+      exports.assertExhaustive = assertExhaustive;
+    }, {
+      "superstruct": 279
+    }],
+    48: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.base64 = void 0;
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      const base64 = (struct, options = {}) => {
+        var _a, _b;
+        const paddingRequired = (_a = options.paddingRequired) !== null && _a !== void 0 ? _a : false;
+        const characterSet = (_b = options.characterSet) !== null && _b !== void 0 ? _b : 'base64';
+        let letters;
+        if (characterSet === 'base64') {
+          letters = String.raw`[A-Za-z0-9+\/]`;
+        } else {
+          (0, assert_1.assert)(characterSet === 'base64url');
+          letters = String.raw`[-_A-Za-z0-9]`;
+        }
+        let re;
+        if (paddingRequired) {
+          re = new RegExp(`^(?:${letters}{4})*(?:${letters}{3}=|${letters}{2}==)?$`, 'u');
+        } else {
+          re = new RegExp(`^(?:${letters}{4})*(?:${letters}{2,3}|${letters}{3}=|${letters}{2}==)?$`, 'u');
+        }
+        return (0, superstruct_1.pattern)(struct, re);
+      };
+      exports.base64 = base64;
+    }, {
+      "./assert": 47,
+      "superstruct": 279
+    }],
+    49: [function (require, module, exports) {
+      (function () {
+        (function () {
+          "use strict";
+
+          Object.defineProperty(exports, "__esModule", {
+            value: true
+          });
+          exports.createDataView = exports.concatBytes = exports.valueToBytes = exports.stringToBytes = exports.numberToBytes = exports.signedBigIntToBytes = exports.bigIntToBytes = exports.hexToBytes = exports.bytesToString = exports.bytesToNumber = exports.bytesToSignedBigInt = exports.bytesToBigInt = exports.bytesToHex = exports.assertIsBytes = exports.isBytes = void 0;
+          const assert_1 = require("./assert");
+          const hex_1 = require("./hex");
+          const HEX_MINIMUM_NUMBER_CHARACTER = 48;
+          const HEX_MAXIMUM_NUMBER_CHARACTER = 58;
+          const HEX_CHARACTER_OFFSET = 87;
+          function getPrecomputedHexValuesBuilder() {
+            const lookupTable = [];
+            return () => {
+              if (lookupTable.length === 0) {
+                for (let i = 0; i < 256; i++) {
+                  lookupTable.push(i.toString(16).padStart(2, '0'));
+                }
+              }
+              return lookupTable;
+            };
+          }
+          const getPrecomputedHexValues = getPrecomputedHexValuesBuilder();
+          function isBytes(value) {
+            return value instanceof Uint8Array;
+          }
+          exports.isBytes = isBytes;
+          function assertIsBytes(value) {
+            (0, assert_1.assert)(isBytes(value), 'Value must be a Uint8Array.');
+          }
+          exports.assertIsBytes = assertIsBytes;
+          function bytesToHex(bytes) {
+            assertIsBytes(bytes);
+            if (bytes.length === 0) {
+              return '0x';
+            }
+            const lookupTable = getPrecomputedHexValues();
+            const hexadecimal = new Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) {
+              hexadecimal[i] = lookupTable[bytes[i]];
+            }
+            return (0, hex_1.add0x)(hexadecimal.join(''));
+          }
+          exports.bytesToHex = bytesToHex;
+          function bytesToBigInt(bytes) {
+            assertIsBytes(bytes);
+            const hexadecimal = bytesToHex(bytes);
+            return BigInt(hexadecimal);
+          }
+          exports.bytesToBigInt = bytesToBigInt;
+          function bytesToSignedBigInt(bytes) {
+            assertIsBytes(bytes);
+            let value = BigInt(0);
+            for (const byte of bytes) {
+              value = (value << BigInt(8)) + BigInt(byte);
+            }
+            return BigInt.asIntN(bytes.length * 8, value);
+          }
+          exports.bytesToSignedBigInt = bytesToSignedBigInt;
+          function bytesToNumber(bytes) {
+            assertIsBytes(bytes);
+            const bigint = bytesToBigInt(bytes);
+            (0, assert_1.assert)(bigint <= BigInt(Number.MAX_SAFE_INTEGER), 'Number is not a safe integer. Use `bytesToBigInt` instead.');
+            return Number(bigint);
+          }
+          exports.bytesToNumber = bytesToNumber;
+          function bytesToString(bytes) {
+            assertIsBytes(bytes);
+            return new TextDecoder().decode(bytes);
+          }
+          exports.bytesToString = bytesToString;
+          function hexToBytes(value) {
+            var _a;
+            if (((_a = value === null || value === void 0 ? void 0 : value.toLowerCase) === null || _a === void 0 ? void 0 : _a.call(value)) === '0x') {
+              return new Uint8Array();
+            }
+            (0, hex_1.assertIsHexString)(value);
+            const strippedValue = (0, hex_1.remove0x)(value).toLowerCase();
+            const normalizedValue = strippedValue.length % 2 === 0 ? strippedValue : `0${strippedValue}`;
+            const bytes = new Uint8Array(normalizedValue.length / 2);
+            for (let i = 0; i < bytes.length; i++) {
+              const c1 = normalizedValue.charCodeAt(i * 2);
+              const c2 = normalizedValue.charCodeAt(i * 2 + 1);
+              const n1 = c1 - (c1 < HEX_MAXIMUM_NUMBER_CHARACTER ? HEX_MINIMUM_NUMBER_CHARACTER : HEX_CHARACTER_OFFSET);
+              const n2 = c2 - (c2 < HEX_MAXIMUM_NUMBER_CHARACTER ? HEX_MINIMUM_NUMBER_CHARACTER : HEX_CHARACTER_OFFSET);
+              bytes[i] = n1 * 16 + n2;
+            }
+            return bytes;
+          }
+          exports.hexToBytes = hexToBytes;
+          function bigIntToBytes(value) {
+            (0, assert_1.assert)(typeof value === 'bigint', 'Value must be a bigint.');
+            (0, assert_1.assert)(value >= BigInt(0), 'Value must be a non-negative bigint.');
+            const hexadecimal = value.toString(16);
+            return hexToBytes(hexadecimal);
+          }
+          exports.bigIntToBytes = bigIntToBytes;
+          function bigIntFits(value, bytes) {
+            (0, assert_1.assert)(bytes > 0);
+            const mask = value >> BigInt(31);
+            return !((~value & mask) + (value & ~mask) >> BigInt(bytes * 8 + ~0));
+          }
+          function signedBigIntToBytes(value, byteLength) {
+            (0, assert_1.assert)(typeof value === 'bigint', 'Value must be a bigint.');
+            (0, assert_1.assert)(typeof byteLength === 'number', 'Byte length must be a number.');
+            (0, assert_1.assert)(byteLength > 0, 'Byte length must be greater than 0.');
+            (0, assert_1.assert)(bigIntFits(value, byteLength), 'Byte length is too small to represent the given value.');
+            let numberValue = value;
+            const bytes = new Uint8Array(byteLength);
+            for (let i = 0; i < bytes.length; i++) {
+              bytes[i] = Number(BigInt.asUintN(8, numberValue));
+              numberValue >>= BigInt(8);
+            }
+            return bytes.reverse();
+          }
+          exports.signedBigIntToBytes = signedBigIntToBytes;
+          function numberToBytes(value) {
+            (0, assert_1.assert)(typeof value === 'number', 'Value must be a number.');
+            (0, assert_1.assert)(value >= 0, 'Value must be a non-negative number.');
+            (0, assert_1.assert)(Number.isSafeInteger(value), 'Value is not a safe integer. Use `bigIntToBytes` instead.');
+            const hexadecimal = value.toString(16);
+            return hexToBytes(hexadecimal);
+          }
+          exports.numberToBytes = numberToBytes;
+          function stringToBytes(value) {
+            (0, assert_1.assert)(typeof value === 'string', 'Value must be a string.');
+            return new TextEncoder().encode(value);
+          }
+          exports.stringToBytes = stringToBytes;
+          function valueToBytes(value) {
+            if (typeof value === 'bigint') {
+              return bigIntToBytes(value);
+            }
+            if (typeof value === 'number') {
+              return numberToBytes(value);
+            }
+            if (typeof value === 'string') {
+              if (value.startsWith('0x')) {
+                return hexToBytes(value);
+              }
+              return stringToBytes(value);
+            }
+            if (isBytes(value)) {
+              return value;
+            }
+            throw new TypeError(`Unsupported value type: "${typeof value}".`);
+          }
+          exports.valueToBytes = valueToBytes;
+          function concatBytes(values) {
+            const normalizedValues = new Array(values.length);
+            let byteLength = 0;
+            for (let i = 0; i < values.length; i++) {
+              const value = valueToBytes(values[i]);
+              normalizedValues[i] = value;
+              byteLength += value.length;
+            }
+            const bytes = new Uint8Array(byteLength);
+            for (let i = 0, offset = 0; i < normalizedValues.length; i++) {
+              bytes.set(normalizedValues[i], offset);
+              offset += normalizedValues[i].length;
+            }
+            return bytes;
+          }
+          exports.concatBytes = concatBytes;
+          function createDataView(bytes) {
+            if (typeof Buffer !== 'undefined' && bytes instanceof Buffer) {
+              const buffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+              return new DataView(buffer);
+            }
+            return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+          }
+          exports.createDataView = createDataView;
+        }).call(this);
+      }).call(this, require("buffer").Buffer);
+    }, {
+      "./assert": 47,
+      "./hex": 53,
+      "buffer": 199
+    }],
+    50: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.ChecksumStruct = void 0;
+      const superstruct_1 = require("superstruct");
+      const base64_1 = require("./base64");
+      exports.ChecksumStruct = (0, superstruct_1.size)((0, base64_1.base64)((0, superstruct_1.string)(), {
+        paddingRequired: true
+      }), 44, 44);
+    }, {
+      "./base64": 48,
+      "superstruct": 279
+    }],
+    51: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.createHex = exports.createBytes = exports.createBigInt = exports.createNumber = void 0;
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      const bytes_1 = require("./bytes");
+      const hex_1 = require("./hex");
+      const NumberLikeStruct = (0, superstruct_1.union)([(0, superstruct_1.number)(), (0, superstruct_1.bigint)(), (0, superstruct_1.string)(), hex_1.StrictHexStruct]);
+      const NumberCoercer = (0, superstruct_1.coerce)((0, superstruct_1.number)(), NumberLikeStruct, Number);
+      const BigIntCoercer = (0, superstruct_1.coerce)((0, superstruct_1.bigint)(), NumberLikeStruct, BigInt);
+      const BytesLikeStruct = (0, superstruct_1.union)([hex_1.StrictHexStruct, (0, superstruct_1.instance)(Uint8Array)]);
+      const BytesCoercer = (0, superstruct_1.coerce)((0, superstruct_1.instance)(Uint8Array), (0, superstruct_1.union)([hex_1.StrictHexStruct]), bytes_1.hexToBytes);
+      const HexCoercer = (0, superstruct_1.coerce)(hex_1.StrictHexStruct, (0, superstruct_1.instance)(Uint8Array), bytes_1.bytesToHex);
+      function createNumber(value) {
+        try {
+          const result = (0, superstruct_1.create)(value, NumberCoercer);
+          (0, assert_1.assert)(Number.isFinite(result), `Expected a number-like value, got "${value}".`);
+          return result;
+        } catch (error) {
+          if (error instanceof superstruct_1.StructError) {
+            throw new Error(`Expected a number-like value, got "${value}".`);
+          }
+          throw error;
+        }
+      }
+      exports.createNumber = createNumber;
+      function createBigInt(value) {
+        try {
+          return (0, superstruct_1.create)(value, BigIntCoercer);
+        } catch (error) {
+          if (error instanceof superstruct_1.StructError) {
+            throw new Error(`Expected a number-like value, got "${String(error.value)}".`);
+          }
+          throw error;
+        }
+      }
+      exports.createBigInt = createBigInt;
+      function createBytes(value) {
+        if (typeof value === 'string' && value.toLowerCase() === '0x') {
+          return new Uint8Array();
+        }
+        try {
+          return (0, superstruct_1.create)(value, BytesCoercer);
+        } catch (error) {
+          if (error instanceof superstruct_1.StructError) {
+            throw new Error(`Expected a bytes-like value, got "${String(error.value)}".`);
+          }
+          throw error;
+        }
+      }
+      exports.createBytes = createBytes;
+      function createHex(value) {
+        if (value instanceof Uint8Array && value.length === 0 || typeof value === 'string' && value.toLowerCase() === '0x') {
+          return '0x';
+        }
+        try {
+          return (0, superstruct_1.create)(value, HexCoercer);
+        } catch (error) {
+          if (error instanceof superstruct_1.StructError) {
+            throw new Error(`Expected a bytes-like value, got "${String(error.value)}".`);
+          }
+          throw error;
+        }
+      }
+      exports.createHex = createHex;
+    }, {
+      "./assert": 47,
+      "./bytes": 49,
+      "./hex": 53,
+      "superstruct": 279
+    }],
+    52: [function (require, module, exports) {
+      arguments[4][21][0].apply(exports, arguments);
+    }, {
+      "dup": 21
+    }],
+    53: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.remove0x = exports.add0x = exports.assertIsStrictHexString = exports.assertIsHexString = exports.isStrictHexString = exports.isHexString = exports.StrictHexStruct = exports.HexStruct = void 0;
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      exports.HexStruct = (0, superstruct_1.pattern)((0, superstruct_1.string)(), /^(?:0x)?[0-9a-f]+$/iu);
+      exports.StrictHexStruct = (0, superstruct_1.pattern)((0, superstruct_1.string)(), /^0x[0-9a-f]+$/iu);
+      function isHexString(value) {
+        return (0, superstruct_1.is)(value, exports.HexStruct);
+      }
+      exports.isHexString = isHexString;
+      function isStrictHexString(value) {
+        return (0, superstruct_1.is)(value, exports.StrictHexStruct);
+      }
+      exports.isStrictHexString = isStrictHexString;
+      function assertIsHexString(value) {
+        (0, assert_1.assert)(isHexString(value), 'Value must be a hexadecimal string.');
+      }
+      exports.assertIsHexString = assertIsHexString;
+      function assertIsStrictHexString(value) {
+        (0, assert_1.assert)(isStrictHexString(value), 'Value must be a hexadecimal string, starting with "0x".');
+      }
+      exports.assertIsStrictHexString = assertIsStrictHexString;
+      function add0x(hexadecimal) {
+        if (hexadecimal.startsWith('0x')) {
+          return hexadecimal;
+        }
+        if (hexadecimal.startsWith('0X')) {
+          return `0x${hexadecimal.substring(2)}`;
+        }
+        return `0x${hexadecimal}`;
+      }
+      exports.add0x = add0x;
+      function remove0x(hexadecimal) {
+        if (hexadecimal.startsWith('0x') || hexadecimal.startsWith('0X')) {
+          return hexadecimal.substring(2);
+        }
+        return hexadecimal;
+      }
+      exports.remove0x = remove0x;
+    }, {
+      "./assert": 47,
+      "superstruct": 279
+    }],
+    54: [function (require, module, exports) {
+      "use strict";
+
+      var __createBinding = this && this.__createBinding || (Object.create ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            }
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      } : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+      var __exportStar = this && this.__exportStar || function (m, exports) {
+        for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
+      };
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      __exportStar(require("./assert"), exports);
+      __exportStar(require("./base64"), exports);
+      __exportStar(require("./bytes"), exports);
+      __exportStar(require("./checksum"), exports);
+      __exportStar(require("./coercers"), exports);
+      __exportStar(require("./collections"), exports);
+      __exportStar(require("./hex"), exports);
+      __exportStar(require("./json"), exports);
+      __exportStar(require("./logging"), exports);
+      __exportStar(require("./misc"), exports);
+      __exportStar(require("./number"), exports);
+      __exportStar(require("./opaque"), exports);
+      __exportStar(require("./time"), exports);
+      __exportStar(require("./versions"), exports);
+    }, {
+      "./assert": 47,
+      "./base64": 48,
+      "./bytes": 49,
+      "./checksum": 50,
+      "./coercers": 51,
+      "./collections": 52,
+      "./hex": 53,
+      "./json": 55,
+      "./logging": 56,
+      "./misc": 57,
+      "./number": 58,
+      "./opaque": 59,
+      "./time": 60,
+      "./versions": 61
+    }],
+    55: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.validateJsonAndGetSize = exports.getJsonRpcIdValidator = exports.assertIsJsonRpcError = exports.isJsonRpcError = exports.assertIsJsonRpcFailure = exports.isJsonRpcFailure = exports.assertIsJsonRpcSuccess = exports.isJsonRpcSuccess = exports.assertIsJsonRpcResponse = exports.isJsonRpcResponse = exports.assertIsPendingJsonRpcResponse = exports.isPendingJsonRpcResponse = exports.JsonRpcResponseStruct = exports.JsonRpcFailureStruct = exports.JsonRpcSuccessStruct = exports.PendingJsonRpcResponseStruct = exports.assertIsJsonRpcRequest = exports.isJsonRpcRequest = exports.assertIsJsonRpcNotification = exports.isJsonRpcNotification = exports.JsonRpcNotificationStruct = exports.JsonRpcRequestStruct = exports.JsonRpcParamsStruct = exports.JsonRpcErrorStruct = exports.JsonRpcIdStruct = exports.JsonRpcVersionStruct = exports.jsonrpc2 = exports.isValidJson = exports.JsonStruct = void 0;
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      const misc_1 = require("./misc");
+      exports.JsonStruct = (0, superstruct_1.define)('Json', value => {
+        const [isValid] = validateJsonAndGetSize(value, true);
+        if (!isValid) {
+          return 'Expected a valid JSON-serializable value';
+        }
+        return true;
+      });
+      function isValidJson(value) {
+        return (0, superstruct_1.is)(value, exports.JsonStruct);
+      }
+      exports.isValidJson = isValidJson;
+      exports.jsonrpc2 = '2.0';
+      exports.JsonRpcVersionStruct = (0, superstruct_1.literal)(exports.jsonrpc2);
+      exports.JsonRpcIdStruct = (0, superstruct_1.nullable)((0, superstruct_1.union)([(0, superstruct_1.number)(), (0, superstruct_1.string)()]));
+      exports.JsonRpcErrorStruct = (0, superstruct_1.object)({
+        code: (0, superstruct_1.integer)(),
+        message: (0, superstruct_1.string)(),
+        data: (0, superstruct_1.optional)(exports.JsonStruct),
+        stack: (0, superstruct_1.optional)((0, superstruct_1.string)())
+      });
+      exports.JsonRpcParamsStruct = (0, superstruct_1.optional)((0, superstruct_1.union)([(0, superstruct_1.record)((0, superstruct_1.string)(), exports.JsonStruct), (0, superstruct_1.array)(exports.JsonStruct)]));
+      exports.JsonRpcRequestStruct = (0, superstruct_1.object)({
+        id: exports.JsonRpcIdStruct,
+        jsonrpc: exports.JsonRpcVersionStruct,
+        method: (0, superstruct_1.string)(),
+        params: exports.JsonRpcParamsStruct
+      });
+      exports.JsonRpcNotificationStruct = (0, superstruct_1.omit)(exports.JsonRpcRequestStruct, ['id']);
+      function isJsonRpcNotification(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcNotificationStruct);
+      }
+      exports.isJsonRpcNotification = isJsonRpcNotification;
+      function assertIsJsonRpcNotification(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcNotificationStruct, 'Invalid JSON-RPC notification', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcNotification = assertIsJsonRpcNotification;
+      function isJsonRpcRequest(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcRequestStruct);
+      }
+      exports.isJsonRpcRequest = isJsonRpcRequest;
+      function assertIsJsonRpcRequest(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcRequestStruct, 'Invalid JSON-RPC request', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcRequest = assertIsJsonRpcRequest;
+      exports.PendingJsonRpcResponseStruct = (0, superstruct_1.object)({
+        id: exports.JsonRpcIdStruct,
+        jsonrpc: exports.JsonRpcVersionStruct,
+        result: (0, superstruct_1.optional)((0, superstruct_1.unknown)()),
+        error: (0, superstruct_1.optional)(exports.JsonRpcErrorStruct)
+      });
+      exports.JsonRpcSuccessStruct = (0, superstruct_1.object)({
+        id: exports.JsonRpcIdStruct,
+        jsonrpc: exports.JsonRpcVersionStruct,
+        result: exports.JsonStruct
+      });
+      exports.JsonRpcFailureStruct = (0, superstruct_1.object)({
+        id: exports.JsonRpcIdStruct,
+        jsonrpc: exports.JsonRpcVersionStruct,
+        error: exports.JsonRpcErrorStruct
+      });
+      exports.JsonRpcResponseStruct = (0, superstruct_1.union)([exports.JsonRpcSuccessStruct, exports.JsonRpcFailureStruct]);
+      function isPendingJsonRpcResponse(response) {
+        return (0, superstruct_1.is)(response, exports.PendingJsonRpcResponseStruct);
+      }
+      exports.isPendingJsonRpcResponse = isPendingJsonRpcResponse;
+      function assertIsPendingJsonRpcResponse(response, ErrorWrapper) {
+        (0, assert_1.assertStruct)(response, exports.PendingJsonRpcResponseStruct, 'Invalid pending JSON-RPC response', ErrorWrapper);
+      }
+      exports.assertIsPendingJsonRpcResponse = assertIsPendingJsonRpcResponse;
+      function isJsonRpcResponse(response) {
+        return (0, superstruct_1.is)(response, exports.JsonRpcResponseStruct);
+      }
+      exports.isJsonRpcResponse = isJsonRpcResponse;
+      function assertIsJsonRpcResponse(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcResponseStruct, 'Invalid JSON-RPC response', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcResponse = assertIsJsonRpcResponse;
+      function isJsonRpcSuccess(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcSuccessStruct);
+      }
+      exports.isJsonRpcSuccess = isJsonRpcSuccess;
+      function assertIsJsonRpcSuccess(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcSuccessStruct, 'Invalid JSON-RPC success response', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcSuccess = assertIsJsonRpcSuccess;
+      function isJsonRpcFailure(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcFailureStruct);
+      }
+      exports.isJsonRpcFailure = isJsonRpcFailure;
+      function assertIsJsonRpcFailure(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcFailureStruct, 'Invalid JSON-RPC failure response', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcFailure = assertIsJsonRpcFailure;
+      function isJsonRpcError(value) {
+        return (0, superstruct_1.is)(value, exports.JsonRpcErrorStruct);
+      }
+      exports.isJsonRpcError = isJsonRpcError;
+      function assertIsJsonRpcError(value, ErrorWrapper) {
+        (0, assert_1.assertStruct)(value, exports.JsonRpcErrorStruct, 'Invalid JSON-RPC error', ErrorWrapper);
+      }
+      exports.assertIsJsonRpcError = assertIsJsonRpcError;
+      function getJsonRpcIdValidator(options) {
+        const {
+          permitEmptyString,
+          permitFractions,
+          permitNull
+        } = Object.assign({
+          permitEmptyString: true,
+          permitFractions: false,
+          permitNull: true
+        }, options);
+        const isValidJsonRpcId = id => {
+          return Boolean(typeof id === 'number' && (permitFractions || Number.isInteger(id)) || typeof id === 'string' && (permitEmptyString || id.length > 0) || permitNull && id === null);
+        };
+        return isValidJsonRpcId;
+      }
+      exports.getJsonRpcIdValidator = getJsonRpcIdValidator;
+      function validateJsonAndGetSize(jsObject, skipSizingProcess = false) {
+        const seenObjects = new Set();
+        function getJsonSerializableInfo(value, skipSizing) {
+          if (value === undefined) {
+            return [false, 0];
+          } else if (value === null) {
+            return [true, skipSizing ? 0 : misc_1.JsonSize.Null];
+          }
+          const typeOfValue = typeof value;
+          try {
+            if (typeOfValue === 'function') {
+              return [false, 0];
+            } else if (typeOfValue === 'string' || value instanceof String) {
+              return [true, skipSizing ? 0 : (0, misc_1.calculateStringSize)(value) + misc_1.JsonSize.Quote * 2];
+            } else if (typeOfValue === 'boolean' || value instanceof Boolean) {
+              if (skipSizing) {
+                return [true, 0];
+              }
+              return [true, value == true ? misc_1.JsonSize.True : misc_1.JsonSize.False];
+            } else if (typeOfValue === 'number' || value instanceof Number) {
+              if (skipSizing) {
+                return [true, 0];
+              }
+              return [true, (0, misc_1.calculateNumberSize)(value)];
+            } else if (value instanceof Date) {
+              if (skipSizing) {
+                return [true, 0];
+              }
+              return [true, isNaN(value.getDate()) ? misc_1.JsonSize.Null : misc_1.JsonSize.Date + misc_1.JsonSize.Quote * 2];
+            }
+          } catch (_) {
+            return [false, 0];
+          }
+          if (!(0, misc_1.isPlainObject)(value) && !Array.isArray(value)) {
+            return [false, 0];
+          }
+          if (seenObjects.has(value)) {
+            return [false, 0];
+          }
+          seenObjects.add(value);
+          try {
+            return [true, Object.entries(value).reduce((sum, [key, nestedValue], idx, arr) => {
+              let [valid, size] = getJsonSerializableInfo(nestedValue, skipSizing);
+              if (!valid) {
+                throw new Error('JSON validation did not pass. Validation process stopped.');
+              }
+              seenObjects.delete(value);
+              if (skipSizing) {
+                return 0;
+              }
+              const keySize = Array.isArray(value) ? 0 : key.length + misc_1.JsonSize.Comma + misc_1.JsonSize.Colon * 2;
+              const separator = idx < arr.length - 1 ? misc_1.JsonSize.Comma : 0;
+              return sum + keySize + size + separator;
+            }, skipSizing ? 0 : misc_1.JsonSize.Wrapper * 2)];
+          } catch (_) {
+            return [false, 0];
+          }
+        }
+        return getJsonSerializableInfo(jsObject, skipSizingProcess);
+      }
+      exports.validateJsonAndGetSize = validateJsonAndGetSize;
+    }, {
+      "./assert": 47,
+      "./misc": 57,
+      "superstruct": 279
+    }],
+    56: [function (require, module, exports) {
+      arguments[4][25][0].apply(exports, arguments);
+    }, {
+      "debug": 239,
+      "dup": 25
+    }],
+    57: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.calculateNumberSize = exports.calculateStringSize = exports.isASCII = exports.isPlainObject = exports.ESCAPE_CHARACTERS_REGEXP = exports.JsonSize = exports.hasProperty = exports.isObject = exports.isNullOrUndefined = exports.isNonEmptyArray = void 0;
+      function isNonEmptyArray(value) {
+        return Array.isArray(value) && value.length > 0;
+      }
+      exports.isNonEmptyArray = isNonEmptyArray;
+      function isNullOrUndefined(value) {
+        return value === null || value === undefined;
+      }
+      exports.isNullOrUndefined = isNullOrUndefined;
+      function isObject(value) {
+        return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+      }
+      exports.isObject = isObject;
+      const hasProperty = (objectToCheck, name) => Object.hasOwnProperty.call(objectToCheck, name);
+      exports.hasProperty = hasProperty;
+      var JsonSize;
+      (function (JsonSize) {
+        JsonSize[JsonSize["Null"] = 4] = "Null";
+        JsonSize[JsonSize["Comma"] = 1] = "Comma";
+        JsonSize[JsonSize["Wrapper"] = 1] = "Wrapper";
+        JsonSize[JsonSize["True"] = 4] = "True";
+        JsonSize[JsonSize["False"] = 5] = "False";
+        JsonSize[JsonSize["Quote"] = 1] = "Quote";
+        JsonSize[JsonSize["Colon"] = 1] = "Colon";
+        JsonSize[JsonSize["Date"] = 24] = "Date";
+      })(JsonSize = exports.JsonSize || (exports.JsonSize = {}));
+      exports.ESCAPE_CHARACTERS_REGEXP = /"|\\|\n|\r|\t/gu;
+      function isPlainObject(value) {
+        if (typeof value !== 'object' || value === null) {
+          return false;
+        }
+        try {
+          let proto = value;
+          while (Object.getPrototypeOf(proto) !== null) {
+            proto = Object.getPrototypeOf(proto);
+          }
+          return Object.getPrototypeOf(value) === proto;
+        } catch (_) {
+          return false;
+        }
+      }
+      exports.isPlainObject = isPlainObject;
+      function isASCII(character) {
+        return character.charCodeAt(0) <= 127;
+      }
+      exports.isASCII = isASCII;
+      function calculateStringSize(value) {
+        var _a;
+        const size = value.split('').reduce((total, character) => {
+          if (isASCII(character)) {
+            return total + 1;
+          }
+          return total + 2;
+        }, 0);
+        return size + ((_a = value.match(exports.ESCAPE_CHARACTERS_REGEXP)) !== null && _a !== void 0 ? _a : []).length;
+      }
+      exports.calculateStringSize = calculateStringSize;
+      function calculateNumberSize(value) {
+        return value.toString().length;
+      }
+      exports.calculateNumberSize = calculateNumberSize;
+    }, {}],
+    58: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.hexToBigInt = exports.hexToNumber = exports.bigIntToHex = exports.numberToHex = void 0;
+      const assert_1 = require("./assert");
+      const hex_1 = require("./hex");
+      const numberToHex = value => {
+        (0, assert_1.assert)(typeof value === 'number', 'Value must be a number.');
+        (0, assert_1.assert)(value >= 0, 'Value must be a non-negative number.');
+        (0, assert_1.assert)(Number.isSafeInteger(value), 'Value is not a safe integer. Use `bigIntToHex` instead.');
+        return (0, hex_1.add0x)(value.toString(16));
+      };
+      exports.numberToHex = numberToHex;
+      const bigIntToHex = value => {
+        (0, assert_1.assert)(typeof value === 'bigint', 'Value must be a bigint.');
+        (0, assert_1.assert)(value >= 0, 'Value must be a non-negative bigint.');
+        return (0, hex_1.add0x)(value.toString(16));
+      };
+      exports.bigIntToHex = bigIntToHex;
+      const hexToNumber = value => {
+        (0, hex_1.assertIsHexString)(value);
+        const numberValue = parseInt(value, 16);
+        (0, assert_1.assert)(Number.isSafeInteger(numberValue), 'Value is not a safe integer. Use `hexToBigInt` instead.');
+        return numberValue;
+      };
+      exports.hexToNumber = hexToNumber;
+      const hexToBigInt = value => {
+        (0, hex_1.assertIsHexString)(value);
+        return BigInt((0, hex_1.add0x)(value));
+      };
+      exports.hexToBigInt = hexToBigInt;
+    }, {
+      "./assert": 47,
+      "./hex": 53
+    }],
+    59: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+    }, {}],
+    60: [function (require, module, exports) {
+      arguments[4][28][0].apply(exports, arguments);
+    }, {
+      "dup": 28
+    }],
+    61: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.satisfiesVersionRange = exports.gtRange = exports.gtVersion = exports.assertIsSemVerRange = exports.assertIsSemVerVersion = exports.isValidSemVerRange = exports.isValidSemVerVersion = exports.VersionRangeStruct = exports.VersionStruct = void 0;
+      const semver_1 = require("semver");
+      const superstruct_1 = require("superstruct");
+      const assert_1 = require("./assert");
+      exports.VersionStruct = (0, superstruct_1.refine)((0, superstruct_1.string)(), 'Version', value => {
+        if ((0, semver_1.valid)(value) === null) {
+          return `Expected SemVer version, got "${value}"`;
+        }
+        return true;
+      });
+      exports.VersionRangeStruct = (0, superstruct_1.refine)((0, superstruct_1.string)(), 'Version range', value => {
+        if ((0, semver_1.validRange)(value) === null) {
+          return `Expected SemVer range, got "${value}"`;
+        }
+        return true;
+      });
+      function isValidSemVerVersion(version) {
+        return (0, superstruct_1.is)(version, exports.VersionStruct);
+      }
+      exports.isValidSemVerVersion = isValidSemVerVersion;
+      function isValidSemVerRange(versionRange) {
+        return (0, superstruct_1.is)(versionRange, exports.VersionRangeStruct);
+      }
+      exports.isValidSemVerRange = isValidSemVerRange;
+      function assertIsSemVerVersion(version) {
+        (0, assert_1.assertStruct)(version, exports.VersionStruct);
+      }
+      exports.assertIsSemVerVersion = assertIsSemVerVersion;
+      function assertIsSemVerRange(range) {
+        (0, assert_1.assertStruct)(range, exports.VersionRangeStruct);
+      }
+      exports.assertIsSemVerRange = assertIsSemVerRange;
+      function gtVersion(version1, version2) {
+        return (0, semver_1.gt)(version1, version2);
+      }
+      exports.gtVersion = gtVersion;
+      function gtRange(version, range) {
+        return (0, semver_1.gtr)(version, range);
+      }
+      exports.gtRange = gtRange;
+      function satisfiesVersionRange(version, versionRange) {
+        return (0, semver_1.satisfies)(version, versionRange, {
+          includePrerelease: true
+        });
+      }
+      exports.satisfiesVersionRange = satisfiesVersionRange;
+    }, {
+      "./assert": 47,
+      "semver": 89,
+      "superstruct": 279
+    }],
+    62: [function (require, module, exports) {
+      const ANY = Symbol('SemVer ANY');
+      class Comparator {
+        static get ANY() {
+          return ANY;
+        }
+        constructor(comp, options) {
+          options = parseOptions(options);
+          if (comp instanceof Comparator) {
+            if (comp.loose === !!options.loose) {
+              return comp;
+            } else {
+              comp = comp.value;
+            }
+          }
+          debug('comparator', comp, options);
+          this.options = options;
+          this.loose = !!options.loose;
+          this.parse(comp);
+          if (this.semver === ANY) {
+            this.value = '';
+          } else {
+            this.value = this.operator + this.semver.version;
+          }
+          debug('comp', this);
+        }
+        parse(comp) {
+          const r = this.options.loose ? re[t.COMPARATORLOOSE] : re[t.COMPARATOR];
+          const m = comp.match(r);
+          if (!m) {
+            throw new TypeError(`Invalid comparator: ${comp}`);
+          }
+          this.operator = m[1] !== undefined ? m[1] : '';
+          if (this.operator === '=') {
+            this.operator = '';
+          }
+          if (!m[2]) {
+            this.semver = ANY;
+          } else {
+            this.semver = new SemVer(m[2], this.options.loose);
+          }
+        }
+        toString() {
+          return this.value;
+        }
+        test(version) {
+          debug('Comparator.test', version, this.options.loose);
+          if (this.semver === ANY || version === ANY) {
+            return true;
+          }
+          if (typeof version === 'string') {
+            try {
+              version = new SemVer(version, this.options);
+            } catch (er) {
+              return false;
+            }
+          }
+          return cmp(version, this.operator, this.semver, this.options);
+        }
+        intersects(comp, options) {
+          if (!(comp instanceof Comparator)) {
+            throw new TypeError('a Comparator is required');
+          }
+          if (!options || typeof options !== 'object') {
+            options = {
+              loose: !!options,
+              includePrerelease: false
+            };
+          }
+          if (this.operator === '') {
+            if (this.value === '') {
+              return true;
+            }
+            return new Range(comp.value, options).test(this.value);
+          } else if (comp.operator === '') {
+            if (comp.value === '') {
+              return true;
+            }
+            return new Range(this.value, options).test(comp.semver);
+          }
+          const sameDirectionIncreasing = (this.operator === '>=' || this.operator === '>') && (comp.operator === '>=' || comp.operator === '>');
+          const sameDirectionDecreasing = (this.operator === '<=' || this.operator === '<') && (comp.operator === '<=' || comp.operator === '<');
+          const sameSemVer = this.semver.version === comp.semver.version;
+          const differentDirectionsInclusive = (this.operator === '>=' || this.operator === '<=') && (comp.operator === '>=' || comp.operator === '<=');
+          const oppositeDirectionsLessThan = cmp(this.semver, '<', comp.semver, options) && (this.operator === '>=' || this.operator === '>') && (comp.operator === '<=' || comp.operator === '<');
+          const oppositeDirectionsGreaterThan = cmp(this.semver, '>', comp.semver, options) && (this.operator === '<=' || this.operator === '<') && (comp.operator === '>=' || comp.operator === '>');
+          return sameDirectionIncreasing || sameDirectionDecreasing || sameSemVer && differentDirectionsInclusive || oppositeDirectionsLessThan || oppositeDirectionsGreaterThan;
+        }
+      }
+      module.exports = Comparator;
+      const parseOptions = require('../internal/parse-options');
+      const {
+        re,
+        t
+      } = require('../internal/re');
+      const cmp = require('../functions/cmp');
+      const debug = require('../internal/debug');
+      const SemVer = require('./semver');
+      const Range = require('./range');
+    }, {
+      "../functions/cmp": 66,
+      "../internal/debug": 91,
+      "../internal/parse-options": 93,
+      "../internal/re": 94,
+      "./range": 63,
+      "./semver": 64
+    }],
+    63: [function (require, module, exports) {
+      class Range {
+        constructor(range, options) {
+          options = parseOptions(options);
+          if (range instanceof Range) {
+            if (range.loose === !!options.loose && range.includePrerelease === !!options.includePrerelease) {
+              return range;
+            } else {
+              return new Range(range.raw, options);
+            }
+          }
+          if (range instanceof Comparator) {
+            this.raw = range.value;
+            this.set = [[range]];
+            this.format();
+            return this;
+          }
+          this.options = options;
+          this.loose = !!options.loose;
+          this.includePrerelease = !!options.includePrerelease;
+          this.raw = range;
+          this.set = range.split('||').map(r => this.parseRange(r.trim())).filter(c => c.length);
+          if (!this.set.length) {
+            throw new TypeError(`Invalid SemVer Range: ${range}`);
+          }
+          if (this.set.length > 1) {
+            const first = this.set[0];
+            this.set = this.set.filter(c => !isNullSet(c[0]));
+            if (this.set.length === 0) {
+              this.set = [first];
+            } else if (this.set.length > 1) {
+              for (const c of this.set) {
+                if (c.length === 1 && isAny(c[0])) {
+                  this.set = [c];
+                  break;
+                }
+              }
+            }
+          }
+          this.format();
+        }
+        format() {
+          this.range = this.set.map(comps => {
+            return comps.join(' ').trim();
+          }).join('||').trim();
+          return this.range;
+        }
+        toString() {
+          return this.range;
+        }
+        parseRange(range) {
+          range = range.trim();
+          const memoOpts = Object.keys(this.options).join(',');
+          const memoKey = `parseRange:${memoOpts}:${range}`;
+          const cached = cache.get(memoKey);
+          if (cached) {
+            return cached;
+          }
+          const loose = this.options.loose;
+          const hr = loose ? re[t.HYPHENRANGELOOSE] : re[t.HYPHENRANGE];
+          range = range.replace(hr, hyphenReplace(this.options.includePrerelease));
+          debug('hyphen replace', range);
+          range = range.replace(re[t.COMPARATORTRIM], comparatorTrimReplace);
+          debug('comparator trim', range);
+          range = range.replace(re[t.TILDETRIM], tildeTrimReplace);
+          range = range.replace(re[t.CARETTRIM], caretTrimReplace);
+          range = range.split(/\s+/).join(' ');
+          let rangeList = range.split(' ').map(comp => parseComparator(comp, this.options)).join(' ').split(/\s+/).map(comp => replaceGTE0(comp, this.options));
+          if (loose) {
+            rangeList = rangeList.filter(comp => {
+              debug('loose invalid filter', comp, this.options);
+              return !!comp.match(re[t.COMPARATORLOOSE]);
+            });
+          }
+          debug('range list', rangeList);
+          const rangeMap = new Map();
+          const comparators = rangeList.map(comp => new Comparator(comp, this.options));
+          for (const comp of comparators) {
+            if (isNullSet(comp)) {
+              return [comp];
+            }
+            rangeMap.set(comp.value, comp);
+          }
+          if (rangeMap.size > 1 && rangeMap.has('')) {
+            rangeMap.delete('');
+          }
+          const result = [...rangeMap.values()];
+          cache.set(memoKey, result);
+          return result;
+        }
+        intersects(range, options) {
+          if (!(range instanceof Range)) {
+            throw new TypeError('a Range is required');
+          }
+          return this.set.some(thisComparators => {
+            return isSatisfiable(thisComparators, options) && range.set.some(rangeComparators => {
+              return isSatisfiable(rangeComparators, options) && thisComparators.every(thisComparator => {
+                return rangeComparators.every(rangeComparator => {
+                  return thisComparator.intersects(rangeComparator, options);
+                });
+              });
+            });
+          });
+        }
+        test(version) {
+          if (!version) {
+            return false;
+          }
+          if (typeof version === 'string') {
+            try {
+              version = new SemVer(version, this.options);
+            } catch (er) {
+              return false;
+            }
+          }
+          for (let i = 0; i < this.set.length; i++) {
+            if (testSet(this.set[i], version, this.options)) {
+              return true;
+            }
+          }
+          return false;
+        }
+      }
+      module.exports = Range;
+      const LRU = require('lru-cache');
+      const cache = new LRU({
+        max: 1000
+      });
+      const parseOptions = require('../internal/parse-options');
+      const Comparator = require('./comparator');
+      const debug = require('../internal/debug');
+      const SemVer = require('./semver');
+      const {
+        re,
+        t,
+        comparatorTrimReplace,
+        tildeTrimReplace,
+        caretTrimReplace
+      } = require('../internal/re');
+      const isNullSet = c => c.value === '<0.0.0-0';
+      const isAny = c => c.value === '';
+      const isSatisfiable = (comparators, options) => {
+        let result = true;
+        const remainingComparators = comparators.slice();
+        let testComparator = remainingComparators.pop();
+        while (result && remainingComparators.length) {
+          result = remainingComparators.every(otherComparator => {
+            return testComparator.intersects(otherComparator, options);
+          });
+          testComparator = remainingComparators.pop();
+        }
+        return result;
+      };
+      const parseComparator = (comp, options) => {
+        debug('comp', comp, options);
+        comp = replaceCarets(comp, options);
+        debug('caret', comp);
+        comp = replaceTildes(comp, options);
+        debug('tildes', comp);
+        comp = replaceXRanges(comp, options);
+        debug('xrange', comp);
+        comp = replaceStars(comp, options);
+        debug('stars', comp);
+        return comp;
+      };
+      const isX = id => !id || id.toLowerCase() === 'x' || id === '*';
+      const replaceTildes = (comp, options) => comp.trim().split(/\s+/).map(c => {
+        return replaceTilde(c, options);
+      }).join(' ');
+      const replaceTilde = (comp, options) => {
+        const r = options.loose ? re[t.TILDELOOSE] : re[t.TILDE];
+        return comp.replace(r, (_, M, m, p, pr) => {
+          debug('tilde', comp, _, M, m, p, pr);
+          let ret;
+          if (isX(M)) {
+            ret = '';
+          } else if (isX(m)) {
+            ret = `>=${M}.0.0 <${+M + 1}.0.0-0`;
+          } else if (isX(p)) {
+            ret = `>=${M}.${m}.0 <${M}.${+m + 1}.0-0`;
+          } else if (pr) {
+            debug('replaceTilde pr', pr);
+            ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
+          } else {
+            ret = `>=${M}.${m}.${p} <${M}.${+m + 1}.0-0`;
+          }
+          debug('tilde return', ret);
+          return ret;
+        });
+      };
+      const replaceCarets = (comp, options) => comp.trim().split(/\s+/).map(c => {
+        return replaceCaret(c, options);
+      }).join(' ');
+      const replaceCaret = (comp, options) => {
+        debug('caret', comp, options);
+        const r = options.loose ? re[t.CARETLOOSE] : re[t.CARET];
+        const z = options.includePrerelease ? '-0' : '';
+        return comp.replace(r, (_, M, m, p, pr) => {
+          debug('caret', comp, _, M, m, p, pr);
+          let ret;
+          if (isX(M)) {
+            ret = '';
+          } else if (isX(m)) {
+            ret = `>=${M}.0.0${z} <${+M + 1}.0.0-0`;
+          } else if (isX(p)) {
+            if (M === '0') {
+              ret = `>=${M}.${m}.0${z} <${M}.${+m + 1}.0-0`;
+            } else {
+              ret = `>=${M}.${m}.0${z} <${+M + 1}.0.0-0`;
+            }
+          } else if (pr) {
+            debug('replaceCaret pr', pr);
+            if (M === '0') {
+              if (m === '0') {
+                ret = `>=${M}.${m}.${p}-${pr} <${M}.${m}.${+p + 1}-0`;
+              } else {
+                ret = `>=${M}.${m}.${p}-${pr} <${M}.${+m + 1}.0-0`;
+              }
+            } else {
+              ret = `>=${M}.${m}.${p}-${pr} <${+M + 1}.0.0-0`;
+            }
+          } else {
+            debug('no pr');
+            if (M === '0') {
+              if (m === '0') {
+                ret = `>=${M}.${m}.${p}${z} <${M}.${m}.${+p + 1}-0`;
+              } else {
+                ret = `>=${M}.${m}.${p}${z} <${M}.${+m + 1}.0-0`;
+              }
+            } else {
+              ret = `>=${M}.${m}.${p} <${+M + 1}.0.0-0`;
+            }
+          }
+          debug('caret return', ret);
+          return ret;
+        });
+      };
+      const replaceXRanges = (comp, options) => {
+        debug('replaceXRanges', comp, options);
+        return comp.split(/\s+/).map(c => {
+          return replaceXRange(c, options);
+        }).join(' ');
+      };
+      const replaceXRange = (comp, options) => {
+        comp = comp.trim();
+        const r = options.loose ? re[t.XRANGELOOSE] : re[t.XRANGE];
+        return comp.replace(r, (ret, gtlt, M, m, p, pr) => {
+          debug('xRange', comp, ret, gtlt, M, m, p, pr);
+          const xM = isX(M);
+          const xm = xM || isX(m);
+          const xp = xm || isX(p);
+          const anyX = xp;
+          if (gtlt === '=' && anyX) {
+            gtlt = '';
+          }
+          pr = options.includePrerelease ? '-0' : '';
+          if (xM) {
+            if (gtlt === '>' || gtlt === '<') {
+              ret = '<0.0.0-0';
+            } else {
+              ret = '*';
+            }
+          } else if (gtlt && anyX) {
+            if (xm) {
+              m = 0;
+            }
+            p = 0;
+            if (gtlt === '>') {
+              gtlt = '>=';
+              if (xm) {
+                M = +M + 1;
+                m = 0;
+                p = 0;
+              } else {
+                m = +m + 1;
+                p = 0;
+              }
+            } else if (gtlt === '<=') {
+              gtlt = '<';
+              if (xm) {
+                M = +M + 1;
+              } else {
+                m = +m + 1;
+              }
+            }
+            if (gtlt === '<') {
+              pr = '-0';
+            }
+            ret = `${gtlt + M}.${m}.${p}${pr}`;
+          } else if (xm) {
+            ret = `>=${M}.0.0${pr} <${+M + 1}.0.0-0`;
+          } else if (xp) {
+            ret = `>=${M}.${m}.0${pr} <${M}.${+m + 1}.0-0`;
+          }
+          debug('xRange return', ret);
+          return ret;
+        });
+      };
+      const replaceStars = (comp, options) => {
+        debug('replaceStars', comp, options);
+        return comp.trim().replace(re[t.STAR], '');
+      };
+      const replaceGTE0 = (comp, options) => {
+        debug('replaceGTE0', comp, options);
+        return comp.trim().replace(re[options.includePrerelease ? t.GTE0PRE : t.GTE0], '');
+      };
+      const hyphenReplace = incPr => ($0, from, fM, fm, fp, fpr, fb, to, tM, tm, tp, tpr, tb) => {
+        if (isX(fM)) {
+          from = '';
+        } else if (isX(fm)) {
+          from = `>=${fM}.0.0${incPr ? '-0' : ''}`;
+        } else if (isX(fp)) {
+          from = `>=${fM}.${fm}.0${incPr ? '-0' : ''}`;
+        } else if (fpr) {
+          from = `>=${from}`;
+        } else {
+          from = `>=${from}${incPr ? '-0' : ''}`;
+        }
+        if (isX(tM)) {
+          to = '';
+        } else if (isX(tm)) {
+          to = `<${+tM + 1}.0.0-0`;
+        } else if (isX(tp)) {
+          to = `<${tM}.${+tm + 1}.0-0`;
+        } else if (tpr) {
+          to = `<=${tM}.${tm}.${tp}-${tpr}`;
+        } else if (incPr) {
+          to = `<${tM}.${tm}.${+tp + 1}-0`;
+        } else {
+          to = `<=${to}`;
+        }
+        return `${from} ${to}`.trim();
+      };
+      const testSet = (set, version, options) => {
+        for (let i = 0; i < set.length; i++) {
+          if (!set[i].test(version)) {
+            return false;
+          }
+        }
+        if (version.prerelease.length && !options.includePrerelease) {
+          for (let i = 0; i < set.length; i++) {
+            debug(set[i].semver);
+            if (set[i].semver === Comparator.ANY) {
+              continue;
+            }
+            if (set[i].semver.prerelease.length > 0) {
+              const allowed = set[i].semver;
+              if (allowed.major === version.major && allowed.minor === version.minor && allowed.patch === version.patch) {
+                return true;
+              }
+            }
+          }
+          return false;
+        }
+        return true;
+      };
+    }, {
+      "../internal/debug": 91,
+      "../internal/parse-options": 93,
+      "../internal/re": 94,
+      "./comparator": 62,
+      "./semver": 64,
+      "lru-cache": 257
+    }],
+    64: [function (require, module, exports) {
+      const debug = require('../internal/debug');
+      const {
+        MAX_LENGTH,
+        MAX_SAFE_INTEGER
+      } = require('../internal/constants');
+      const {
+        re,
+        t
+      } = require('../internal/re');
+      const parseOptions = require('../internal/parse-options');
+      const {
+        compareIdentifiers
+      } = require('../internal/identifiers');
+      class SemVer {
+        constructor(version, options) {
+          options = parseOptions(options);
+          if (version instanceof SemVer) {
+            if (version.loose === !!options.loose && version.includePrerelease === !!options.includePrerelease) {
+              return version;
+            } else {
+              version = version.version;
+            }
+          } else if (typeof version !== 'string') {
+            throw new TypeError(`Invalid Version: ${version}`);
+          }
+          if (version.length > MAX_LENGTH) {
+            throw new TypeError(`version is longer than ${MAX_LENGTH} characters`);
+          }
+          debug('SemVer', version, options);
+          this.options = options;
+          this.loose = !!options.loose;
+          this.includePrerelease = !!options.includePrerelease;
+          const m = version.trim().match(options.loose ? re[t.LOOSE] : re[t.FULL]);
+          if (!m) {
+            throw new TypeError(`Invalid Version: ${version}`);
+          }
+          this.raw = version;
+          this.major = +m[1];
+          this.minor = +m[2];
+          this.patch = +m[3];
+          if (this.major > MAX_SAFE_INTEGER || this.major < 0) {
+            throw new TypeError('Invalid major version');
+          }
+          if (this.minor > MAX_SAFE_INTEGER || this.minor < 0) {
+            throw new TypeError('Invalid minor version');
+          }
+          if (this.patch > MAX_SAFE_INTEGER || this.patch < 0) {
+            throw new TypeError('Invalid patch version');
+          }
+          if (!m[4]) {
+            this.prerelease = [];
+          } else {
+            this.prerelease = m[4].split('.').map(id => {
+              if (/^[0-9]+$/.test(id)) {
+                const num = +id;
+                if (num >= 0 && num < MAX_SAFE_INTEGER) {
+                  return num;
+                }
+              }
+              return id;
+            });
+          }
+          this.build = m[5] ? m[5].split('.') : [];
+          this.format();
+        }
+        format() {
+          this.version = `${this.major}.${this.minor}.${this.patch}`;
+          if (this.prerelease.length) {
+            this.version += `-${this.prerelease.join('.')}`;
+          }
+          return this.version;
+        }
+        toString() {
+          return this.version;
+        }
+        compare(other) {
+          debug('SemVer.compare', this.version, this.options, other);
+          if (!(other instanceof SemVer)) {
+            if (typeof other === 'string' && other === this.version) {
+              return 0;
+            }
+            other = new SemVer(other, this.options);
+          }
+          if (other.version === this.version) {
+            return 0;
+          }
+          return this.compareMain(other) || this.comparePre(other);
+        }
+        compareMain(other) {
+          if (!(other instanceof SemVer)) {
+            other = new SemVer(other, this.options);
+          }
+          return compareIdentifiers(this.major, other.major) || compareIdentifiers(this.minor, other.minor) || compareIdentifiers(this.patch, other.patch);
+        }
+        comparePre(other) {
+          if (!(other instanceof SemVer)) {
+            other = new SemVer(other, this.options);
+          }
+          if (this.prerelease.length && !other.prerelease.length) {
+            return -1;
+          } else if (!this.prerelease.length && other.prerelease.length) {
+            return 1;
+          } else if (!this.prerelease.length && !other.prerelease.length) {
+            return 0;
+          }
+          let i = 0;
+          do {
+            const a = this.prerelease[i];
+            const b = other.prerelease[i];
+            debug('prerelease compare', i, a, b);
+            if (a === undefined && b === undefined) {
+              return 0;
+            } else if (b === undefined) {
+              return 1;
+            } else if (a === undefined) {
+              return -1;
+            } else if (a === b) {
+              continue;
+            } else {
+              return compareIdentifiers(a, b);
+            }
+          } while (++i);
+        }
+        compareBuild(other) {
+          if (!(other instanceof SemVer)) {
+            other = new SemVer(other, this.options);
+          }
+          let i = 0;
+          do {
+            const a = this.build[i];
+            const b = other.build[i];
+            debug('prerelease compare', i, a, b);
+            if (a === undefined && b === undefined) {
+              return 0;
+            } else if (b === undefined) {
+              return 1;
+            } else if (a === undefined) {
+              return -1;
+            } else if (a === b) {
+              continue;
+            } else {
+              return compareIdentifiers(a, b);
+            }
+          } while (++i);
+        }
+        inc(release, identifier) {
+          switch (release) {
+            case 'premajor':
+              this.prerelease.length = 0;
+              this.patch = 0;
+              this.minor = 0;
+              this.major++;
+              this.inc('pre', identifier);
+              break;
+            case 'preminor':
+              this.prerelease.length = 0;
+              this.patch = 0;
+              this.minor++;
+              this.inc('pre', identifier);
+              break;
+            case 'prepatch':
+              this.prerelease.length = 0;
+              this.inc('patch', identifier);
+              this.inc('pre', identifier);
+              break;
+            case 'prerelease':
+              if (this.prerelease.length === 0) {
+                this.inc('patch', identifier);
+              }
+              this.inc('pre', identifier);
+              break;
+            case 'major':
+              if (this.minor !== 0 || this.patch !== 0 || this.prerelease.length === 0) {
+                this.major++;
+              }
+              this.minor = 0;
+              this.patch = 0;
+              this.prerelease = [];
+              break;
+            case 'minor':
+              if (this.patch !== 0 || this.prerelease.length === 0) {
+                this.minor++;
+              }
+              this.patch = 0;
+              this.prerelease = [];
+              break;
+            case 'patch':
+              if (this.prerelease.length === 0) {
+                this.patch++;
+              }
+              this.prerelease = [];
+              break;
+            case 'pre':
+              if (this.prerelease.length === 0) {
+                this.prerelease = [0];
+              } else {
+                let i = this.prerelease.length;
+                while (--i >= 0) {
+                  if (typeof this.prerelease[i] === 'number') {
+                    this.prerelease[i]++;
+                    i = -2;
+                  }
+                }
+                if (i === -1) {
+                  this.prerelease.push(0);
+                }
+              }
+              if (identifier) {
+                if (compareIdentifiers(this.prerelease[0], identifier) === 0) {
+                  if (isNaN(this.prerelease[1])) {
+                    this.prerelease = [identifier, 0];
+                  }
+                } else {
+                  this.prerelease = [identifier, 0];
+                }
+              }
+              break;
+            default:
+              throw new Error(`invalid increment argument: ${release}`);
+          }
+          this.format();
+          this.raw = this.version;
+          return this;
+        }
+      }
+      module.exports = SemVer;
+    }, {
+      "../internal/constants": 90,
+      "../internal/debug": 91,
+      "../internal/identifiers": 92,
+      "../internal/parse-options": 93,
+      "../internal/re": 94
+    }],
+    65: [function (require, module, exports) {
+      const parse = require('./parse');
+      const clean = (version, options) => {
+        const s = parse(version.trim().replace(/^[=v]+/, ''), options);
+        return s ? s.version : null;
+      };
+      module.exports = clean;
+    }, {
+      "./parse": 81
+    }],
+    66: [function (require, module, exports) {
+      const eq = require('./eq');
+      const neq = require('./neq');
+      const gt = require('./gt');
+      const gte = require('./gte');
+      const lt = require('./lt');
+      const lte = require('./lte');
+      const cmp = (a, op, b, loose) => {
+        switch (op) {
+          case '===':
+            if (typeof a === 'object') {
+              a = a.version;
+            }
+            if (typeof b === 'object') {
+              b = b.version;
+            }
+            return a === b;
+          case '!==':
+            if (typeof a === 'object') {
+              a = a.version;
+            }
+            if (typeof b === 'object') {
+              b = b.version;
+            }
+            return a !== b;
+          case '':
+          case '=':
+          case '==':
+            return eq(a, b, loose);
+          case '!=':
+            return neq(a, b, loose);
+          case '>':
+            return gt(a, b, loose);
+          case '>=':
+            return gte(a, b, loose);
+          case '<':
+            return lt(a, b, loose);
+          case '<=':
+            return lte(a, b, loose);
+          default:
+            throw new TypeError(`Invalid operator: ${op}`);
+        }
+      };
+      module.exports = cmp;
+    }, {
+      "./eq": 72,
+      "./gt": 73,
+      "./gte": 74,
+      "./lt": 76,
+      "./lte": 77,
+      "./neq": 80
+    }],
+    67: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const parse = require('./parse');
+      const {
+        re,
+        t
+      } = require('../internal/re');
+      const coerce = (version, options) => {
+        if (version instanceof SemVer) {
+          return version;
+        }
+        if (typeof version === 'number') {
+          version = String(version);
+        }
+        if (typeof version !== 'string') {
+          return null;
+        }
+        options = options || {};
+        let match = null;
+        if (!options.rtl) {
+          match = version.match(re[t.COERCE]);
+        } else {
+          let next;
+          while ((next = re[t.COERCERTL].exec(version)) && (!match || match.index + match[0].length !== version.length)) {
+            if (!match || next.index + next[0].length !== match.index + match[0].length) {
+              match = next;
+            }
+            re[t.COERCERTL].lastIndex = next.index + next[1].length + next[2].length;
+          }
+          re[t.COERCERTL].lastIndex = -1;
+        }
+        if (match === null) {
+          return null;
+        }
+        return parse(`${match[2]}.${match[3] || '0'}.${match[4] || '0'}`, options);
+      };
+      module.exports = coerce;
+    }, {
+      "../classes/semver": 64,
+      "../internal/re": 94,
+      "./parse": 81
+    }],
+    68: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const compareBuild = (a, b, loose) => {
+        const versionA = new SemVer(a, loose);
+        const versionB = new SemVer(b, loose);
+        return versionA.compare(versionB) || versionA.compareBuild(versionB);
+      };
+      module.exports = compareBuild;
+    }, {
+      "../classes/semver": 64
+    }],
+    69: [function (require, module, exports) {
+      const compare = require('./compare');
+      const compareLoose = (a, b) => compare(a, b, true);
+      module.exports = compareLoose;
+    }, {
+      "./compare": 70
+    }],
+    70: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const compare = (a, b, loose) => new SemVer(a, loose).compare(new SemVer(b, loose));
+      module.exports = compare;
+    }, {
+      "../classes/semver": 64
+    }],
+    71: [function (require, module, exports) {
+      const parse = require('./parse');
+      const eq = require('./eq');
+      const diff = (version1, version2) => {
+        if (eq(version1, version2)) {
+          return null;
+        } else {
+          const v1 = parse(version1);
+          const v2 = parse(version2);
+          const hasPre = v1.prerelease.length || v2.prerelease.length;
+          const prefix = hasPre ? 'pre' : '';
+          const defaultResult = hasPre ? 'prerelease' : '';
+          for (const key in v1) {
+            if (key === 'major' || key === 'minor' || key === 'patch') {
+              if (v1[key] !== v2[key]) {
+                return prefix + key;
+              }
+            }
+          }
+          return defaultResult;
+        }
+      };
+      module.exports = diff;
+    }, {
+      "./eq": 72,
+      "./parse": 81
+    }],
+    72: [function (require, module, exports) {
+      const compare = require('./compare');
+      const eq = (a, b, loose) => compare(a, b, loose) === 0;
+      module.exports = eq;
+    }, {
+      "./compare": 70
+    }],
+    73: [function (require, module, exports) {
+      const compare = require('./compare');
+      const gt = (a, b, loose) => compare(a, b, loose) > 0;
+      module.exports = gt;
+    }, {
+      "./compare": 70
+    }],
+    74: [function (require, module, exports) {
+      const compare = require('./compare');
+      const gte = (a, b, loose) => compare(a, b, loose) >= 0;
+      module.exports = gte;
+    }, {
+      "./compare": 70
+    }],
+    75: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const inc = (version, release, options, identifier) => {
+        if (typeof options === 'string') {
+          identifier = options;
+          options = undefined;
+        }
+        try {
+          return new SemVer(version instanceof SemVer ? version.version : version, options).inc(release, identifier).version;
+        } catch (er) {
+          return null;
+        }
+      };
+      module.exports = inc;
+    }, {
+      "../classes/semver": 64
+    }],
+    76: [function (require, module, exports) {
+      const compare = require('./compare');
+      const lt = (a, b, loose) => compare(a, b, loose) < 0;
+      module.exports = lt;
+    }, {
+      "./compare": 70
+    }],
+    77: [function (require, module, exports) {
+      const compare = require('./compare');
+      const lte = (a, b, loose) => compare(a, b, loose) <= 0;
+      module.exports = lte;
+    }, {
+      "./compare": 70
+    }],
+    78: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const major = (a, loose) => new SemVer(a, loose).major;
+      module.exports = major;
+    }, {
+      "../classes/semver": 64
+    }],
+    79: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const minor = (a, loose) => new SemVer(a, loose).minor;
+      module.exports = minor;
+    }, {
+      "../classes/semver": 64
+    }],
+    80: [function (require, module, exports) {
+      const compare = require('./compare');
+      const neq = (a, b, loose) => compare(a, b, loose) !== 0;
+      module.exports = neq;
+    }, {
+      "./compare": 70
+    }],
+    81: [function (require, module, exports) {
+      const {
+        MAX_LENGTH
+      } = require('../internal/constants');
+      const {
+        re,
+        t
+      } = require('../internal/re');
+      const SemVer = require('../classes/semver');
+      const parseOptions = require('../internal/parse-options');
+      const parse = (version, options) => {
+        options = parseOptions(options);
+        if (version instanceof SemVer) {
+          return version;
+        }
+        if (typeof version !== 'string') {
+          return null;
+        }
+        if (version.length > MAX_LENGTH) {
+          return null;
+        }
+        const r = options.loose ? re[t.LOOSE] : re[t.FULL];
+        if (!r.test(version)) {
+          return null;
+        }
+        try {
+          return new SemVer(version, options);
+        } catch (er) {
+          return null;
+        }
+      };
+      module.exports = parse;
+    }, {
+      "../classes/semver": 64,
+      "../internal/constants": 90,
+      "../internal/parse-options": 93,
+      "../internal/re": 94
+    }],
+    82: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const patch = (a, loose) => new SemVer(a, loose).patch;
+      module.exports = patch;
+    }, {
+      "../classes/semver": 64
+    }],
+    83: [function (require, module, exports) {
+      const parse = require('./parse');
+      const prerelease = (version, options) => {
+        const parsed = parse(version, options);
+        return parsed && parsed.prerelease.length ? parsed.prerelease : null;
+      };
+      module.exports = prerelease;
+    }, {
+      "./parse": 81
+    }],
+    84: [function (require, module, exports) {
+      const compare = require('./compare');
+      const rcompare = (a, b, loose) => compare(b, a, loose);
+      module.exports = rcompare;
+    }, {
+      "./compare": 70
+    }],
+    85: [function (require, module, exports) {
+      const compareBuild = require('./compare-build');
+      const rsort = (list, loose) => list.sort((a, b) => compareBuild(b, a, loose));
+      module.exports = rsort;
+    }, {
+      "./compare-build": 68
+    }],
+    86: [function (require, module, exports) {
+      const Range = require('../classes/range');
+      const satisfies = (version, range, options) => {
+        try {
+          range = new Range(range, options);
+        } catch (er) {
+          return false;
+        }
+        return range.test(version);
+      };
+      module.exports = satisfies;
+    }, {
+      "../classes/range": 63
+    }],
+    87: [function (require, module, exports) {
+      const compareBuild = require('./compare-build');
+      const sort = (list, loose) => list.sort((a, b) => compareBuild(a, b, loose));
+      module.exports = sort;
+    }, {
+      "./compare-build": 68
+    }],
+    88: [function (require, module, exports) {
+      const parse = require('./parse');
+      const valid = (version, options) => {
+        const v = parse(version, options);
+        return v ? v.version : null;
+      };
+      module.exports = valid;
+    }, {
+      "./parse": 81
+    }],
+    89: [function (require, module, exports) {
+      const internalRe = require('./internal/re');
+      const constants = require('./internal/constants');
+      const SemVer = require('./classes/semver');
+      const identifiers = require('./internal/identifiers');
+      const parse = require('./functions/parse');
+      const valid = require('./functions/valid');
+      const clean = require('./functions/clean');
+      const inc = require('./functions/inc');
+      const diff = require('./functions/diff');
+      const major = require('./functions/major');
+      const minor = require('./functions/minor');
+      const patch = require('./functions/patch');
+      const prerelease = require('./functions/prerelease');
+      const compare = require('./functions/compare');
+      const rcompare = require('./functions/rcompare');
+      const compareLoose = require('./functions/compare-loose');
+      const compareBuild = require('./functions/compare-build');
+      const sort = require('./functions/sort');
+      const rsort = require('./functions/rsort');
+      const gt = require('./functions/gt');
+      const lt = require('./functions/lt');
+      const eq = require('./functions/eq');
+      const neq = require('./functions/neq');
+      const gte = require('./functions/gte');
+      const lte = require('./functions/lte');
+      const cmp = require('./functions/cmp');
+      const coerce = require('./functions/coerce');
+      const Comparator = require('./classes/comparator');
+      const Range = require('./classes/range');
+      const satisfies = require('./functions/satisfies');
+      const toComparators = require('./ranges/to-comparators');
+      const maxSatisfying = require('./ranges/max-satisfying');
+      const minSatisfying = require('./ranges/min-satisfying');
+      const minVersion = require('./ranges/min-version');
+      const validRange = require('./ranges/valid');
+      const outside = require('./ranges/outside');
+      const gtr = require('./ranges/gtr');
+      const ltr = require('./ranges/ltr');
+      const intersects = require('./ranges/intersects');
+      const simplifyRange = require('./ranges/simplify');
+      const subset = require('./ranges/subset');
+      module.exports = {
+        parse,
+        valid,
+        clean,
+        inc,
+        diff,
+        major,
+        minor,
+        patch,
+        prerelease,
+        compare,
+        rcompare,
+        compareLoose,
+        compareBuild,
+        sort,
+        rsort,
+        gt,
+        lt,
+        eq,
+        neq,
+        gte,
+        lte,
+        cmp,
+        coerce,
+        Comparator,
+        Range,
+        satisfies,
+        toComparators,
+        maxSatisfying,
+        minSatisfying,
+        minVersion,
+        validRange,
+        outside,
+        gtr,
+        ltr,
+        intersects,
+        simplifyRange,
+        subset,
+        SemVer,
+        re: internalRe.re,
+        src: internalRe.src,
+        tokens: internalRe.t,
+        SEMVER_SPEC_VERSION: constants.SEMVER_SPEC_VERSION,
+        compareIdentifiers: identifiers.compareIdentifiers,
+        rcompareIdentifiers: identifiers.rcompareIdentifiers
+      };
+    }, {
+      "./classes/comparator": 62,
+      "./classes/range": 63,
+      "./classes/semver": 64,
+      "./functions/clean": 65,
+      "./functions/cmp": 66,
+      "./functions/coerce": 67,
+      "./functions/compare": 70,
+      "./functions/compare-build": 68,
+      "./functions/compare-loose": 69,
+      "./functions/diff": 71,
+      "./functions/eq": 72,
+      "./functions/gt": 73,
+      "./functions/gte": 74,
+      "./functions/inc": 75,
+      "./functions/lt": 76,
+      "./functions/lte": 77,
+      "./functions/major": 78,
+      "./functions/minor": 79,
+      "./functions/neq": 80,
+      "./functions/parse": 81,
+      "./functions/patch": 82,
+      "./functions/prerelease": 83,
+      "./functions/rcompare": 84,
+      "./functions/rsort": 85,
+      "./functions/satisfies": 86,
+      "./functions/sort": 87,
+      "./functions/valid": 88,
+      "./internal/constants": 90,
+      "./internal/identifiers": 92,
+      "./internal/re": 94,
+      "./ranges/gtr": 95,
+      "./ranges/intersects": 96,
+      "./ranges/ltr": 97,
+      "./ranges/max-satisfying": 98,
+      "./ranges/min-satisfying": 99,
+      "./ranges/min-version": 100,
+      "./ranges/outside": 101,
+      "./ranges/simplify": 102,
+      "./ranges/subset": 103,
+      "./ranges/to-comparators": 104,
+      "./ranges/valid": 105
+    }],
+    90: [function (require, module, exports) {
+      const SEMVER_SPEC_VERSION = '2.0.0';
+      const MAX_LENGTH = 256;
+      const MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || 9007199254740991;
+      const MAX_SAFE_COMPONENT_LENGTH = 16;
+      module.exports = {
+        SEMVER_SPEC_VERSION,
+        MAX_LENGTH,
+        MAX_SAFE_INTEGER,
+        MAX_SAFE_COMPONENT_LENGTH
+      };
+    }, {}],
+    91: [function (require, module, exports) {
+      (function (process) {
+        (function () {
+          const debug = typeof process === 'object' && process.env && process.env.NODE_DEBUG && /\bsemver\b/i.test(process.env.NODE_DEBUG) ? (...args) => console.error('SEMVER', ...args) : () => {};
+          module.exports = debug;
+        }).call(this);
+      }).call(this, require('_process'));
+    }, {
+      "_process": 261
+    }],
+    92: [function (require, module, exports) {
+      const numeric = /^[0-9]+$/;
+      const compareIdentifiers = (a, b) => {
+        const anum = numeric.test(a);
+        const bnum = numeric.test(b);
+        if (anum && bnum) {
+          a = +a;
+          b = +b;
+        }
+        return a === b ? 0 : anum && !bnum ? -1 : bnum && !anum ? 1 : a < b ? -1 : 1;
+      };
+      const rcompareIdentifiers = (a, b) => compareIdentifiers(b, a);
+      module.exports = {
+        compareIdentifiers,
+        rcompareIdentifiers
+      };
+    }, {}],
+    93: [function (require, module, exports) {
+      const opts = ['includePrerelease', 'loose', 'rtl'];
+      const parseOptions = options => !options ? {} : typeof options !== 'object' ? {
+        loose: true
+      } : opts.filter(k => options[k]).reduce((o, k) => {
+        o[k] = true;
+        return o;
+      }, {});
+      module.exports = parseOptions;
+    }, {}],
+    94: [function (require, module, exports) {
+      const {
+        MAX_SAFE_COMPONENT_LENGTH
+      } = require('./constants');
+      const debug = require('./debug');
+      exports = module.exports = {};
+      const re = exports.re = [];
+      const src = exports.src = [];
+      const t = exports.t = {};
+      let R = 0;
+      const createToken = (name, value, isGlobal) => {
+        const index = R++;
+        debug(name, index, value);
+        t[name] = index;
+        src[index] = value;
+        re[index] = new RegExp(value, isGlobal ? 'g' : undefined);
+      };
+      createToken('NUMERICIDENTIFIER', '0|[1-9]\\d*');
+      createToken('NUMERICIDENTIFIERLOOSE', '[0-9]+');
+      createToken('NONNUMERICIDENTIFIER', '\\d*[a-zA-Z-][a-zA-Z0-9-]*');
+      createToken('MAINVERSION', `(${src[t.NUMERICIDENTIFIER]})\\.` + `(${src[t.NUMERICIDENTIFIER]})\\.` + `(${src[t.NUMERICIDENTIFIER]})`);
+      createToken('MAINVERSIONLOOSE', `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.` + `(${src[t.NUMERICIDENTIFIERLOOSE]})\\.` + `(${src[t.NUMERICIDENTIFIERLOOSE]})`);
+      createToken('PRERELEASEIDENTIFIER', `(?:${src[t.NUMERICIDENTIFIER]}|${src[t.NONNUMERICIDENTIFIER]})`);
+      createToken('PRERELEASEIDENTIFIERLOOSE', `(?:${src[t.NUMERICIDENTIFIERLOOSE]}|${src[t.NONNUMERICIDENTIFIER]})`);
+      createToken('PRERELEASE', `(?:-(${src[t.PRERELEASEIDENTIFIER]}(?:\\.${src[t.PRERELEASEIDENTIFIER]})*))`);
+      createToken('PRERELEASELOOSE', `(?:-?(${src[t.PRERELEASEIDENTIFIERLOOSE]}(?:\\.${src[t.PRERELEASEIDENTIFIERLOOSE]})*))`);
+      createToken('BUILDIDENTIFIER', '[0-9A-Za-z-]+');
+      createToken('BUILD', `(?:\\+(${src[t.BUILDIDENTIFIER]}(?:\\.${src[t.BUILDIDENTIFIER]})*))`);
+      createToken('FULLPLAIN', `v?${src[t.MAINVERSION]}${src[t.PRERELEASE]}?${src[t.BUILD]}?`);
+      createToken('FULL', `^${src[t.FULLPLAIN]}$`);
+      createToken('LOOSEPLAIN', `[v=\\s]*${src[t.MAINVERSIONLOOSE]}${src[t.PRERELEASELOOSE]}?${src[t.BUILD]}?`);
+      createToken('LOOSE', `^${src[t.LOOSEPLAIN]}$`);
+      createToken('GTLT', '((?:<|>)?=?)');
+      createToken('XRANGEIDENTIFIERLOOSE', `${src[t.NUMERICIDENTIFIERLOOSE]}|x|X|\\*`);
+      createToken('XRANGEIDENTIFIER', `${src[t.NUMERICIDENTIFIER]}|x|X|\\*`);
+      createToken('XRANGEPLAIN', `[v=\\s]*(${src[t.XRANGEIDENTIFIER]})` + `(?:\\.(${src[t.XRANGEIDENTIFIER]})` + `(?:\\.(${src[t.XRANGEIDENTIFIER]})` + `(?:${src[t.PRERELEASE]})?${src[t.BUILD]}?` + `)?)?`);
+      createToken('XRANGEPLAINLOOSE', `[v=\\s]*(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:\\.(${src[t.XRANGEIDENTIFIERLOOSE]})` + `(?:${src[t.PRERELEASELOOSE]})?${src[t.BUILD]}?` + `)?)?`);
+      createToken('XRANGE', `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAIN]}$`);
+      createToken('XRANGELOOSE', `^${src[t.GTLT]}\\s*${src[t.XRANGEPLAINLOOSE]}$`);
+      createToken('COERCE', `${'(^|[^\\d])' + '(\\d{1,'}${MAX_SAFE_COMPONENT_LENGTH}})` + `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` + `(?:\\.(\\d{1,${MAX_SAFE_COMPONENT_LENGTH}}))?` + `(?:$|[^\\d])`);
+      createToken('COERCERTL', src[t.COERCE], true);
+      createToken('LONETILDE', '(?:~>?)');
+      createToken('TILDETRIM', `(\\s*)${src[t.LONETILDE]}\\s+`, true);
+      exports.tildeTrimReplace = '$1~';
+      createToken('TILDE', `^${src[t.LONETILDE]}${src[t.XRANGEPLAIN]}$`);
+      createToken('TILDELOOSE', `^${src[t.LONETILDE]}${src[t.XRANGEPLAINLOOSE]}$`);
+      createToken('LONECARET', '(?:\\^)');
+      createToken('CARETTRIM', `(\\s*)${src[t.LONECARET]}\\s+`, true);
+      exports.caretTrimReplace = '$1^';
+      createToken('CARET', `^${src[t.LONECARET]}${src[t.XRANGEPLAIN]}$`);
+      createToken('CARETLOOSE', `^${src[t.LONECARET]}${src[t.XRANGEPLAINLOOSE]}$`);
+      createToken('COMPARATORLOOSE', `^${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]})$|^$`);
+      createToken('COMPARATOR', `^${src[t.GTLT]}\\s*(${src[t.FULLPLAIN]})$|^$`);
+      createToken('COMPARATORTRIM', `(\\s*)${src[t.GTLT]}\\s*(${src[t.LOOSEPLAIN]}|${src[t.XRANGEPLAIN]})`, true);
+      exports.comparatorTrimReplace = '$1$2$3';
+      createToken('HYPHENRANGE', `^\\s*(${src[t.XRANGEPLAIN]})` + `\\s+-\\s+` + `(${src[t.XRANGEPLAIN]})` + `\\s*$`);
+      createToken('HYPHENRANGELOOSE', `^\\s*(${src[t.XRANGEPLAINLOOSE]})` + `\\s+-\\s+` + `(${src[t.XRANGEPLAINLOOSE]})` + `\\s*$`);
+      createToken('STAR', '(<|>)?=?\\s*\\*');
+      createToken('GTE0', '^\\s*>=\\s*0\\.0\\.0\\s*$');
+      createToken('GTE0PRE', '^\\s*>=\\s*0\\.0\\.0-0\\s*$');
+    }, {
+      "./constants": 90,
+      "./debug": 91
+    }],
+    95: [function (require, module, exports) {
+      const outside = require('./outside');
+      const gtr = (version, range, options) => outside(version, range, '>', options);
+      module.exports = gtr;
+    }, {
+      "./outside": 101
+    }],
+    96: [function (require, module, exports) {
+      const Range = require('../classes/range');
+      const intersects = (r1, r2, options) => {
+        r1 = new Range(r1, options);
+        r2 = new Range(r2, options);
+        return r1.intersects(r2);
+      };
+      module.exports = intersects;
+    }, {
+      "../classes/range": 63
+    }],
+    97: [function (require, module, exports) {
+      const outside = require('./outside');
+      const ltr = (version, range, options) => outside(version, range, '<', options);
+      module.exports = ltr;
+    }, {
+      "./outside": 101
+    }],
+    98: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const Range = require('../classes/range');
+      const maxSatisfying = (versions, range, options) => {
+        let max = null;
+        let maxSV = null;
+        let rangeObj = null;
+        try {
+          rangeObj = new Range(range, options);
+        } catch (er) {
+          return null;
+        }
+        versions.forEach(v => {
+          if (rangeObj.test(v)) {
+            if (!max || maxSV.compare(v) === -1) {
+              max = v;
+              maxSV = new SemVer(max, options);
+            }
+          }
+        });
+        return max;
+      };
+      module.exports = maxSatisfying;
+    }, {
+      "../classes/range": 63,
+      "../classes/semver": 64
+    }],
+    99: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const Range = require('../classes/range');
+      const minSatisfying = (versions, range, options) => {
+        let min = null;
+        let minSV = null;
+        let rangeObj = null;
+        try {
+          rangeObj = new Range(range, options);
+        } catch (er) {
+          return null;
+        }
+        versions.forEach(v => {
+          if (rangeObj.test(v)) {
+            if (!min || minSV.compare(v) === 1) {
+              min = v;
+              minSV = new SemVer(min, options);
+            }
+          }
+        });
+        return min;
+      };
+      module.exports = minSatisfying;
+    }, {
+      "../classes/range": 63,
+      "../classes/semver": 64
+    }],
+    100: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const Range = require('../classes/range');
+      const gt = require('../functions/gt');
+      const minVersion = (range, loose) => {
+        range = new Range(range, loose);
+        let minver = new SemVer('0.0.0');
+        if (range.test(minver)) {
+          return minver;
+        }
+        minver = new SemVer('0.0.0-0');
+        if (range.test(minver)) {
+          return minver;
+        }
+        minver = null;
+        for (let i = 0; i < range.set.length; ++i) {
+          const comparators = range.set[i];
+          let setMin = null;
+          comparators.forEach(comparator => {
+            const compver = new SemVer(comparator.semver.version);
+            switch (comparator.operator) {
+              case '>':
+                if (compver.prerelease.length === 0) {
+                  compver.patch++;
+                } else {
+                  compver.prerelease.push(0);
+                }
+                compver.raw = compver.format();
+              case '':
+              case '>=':
+                if (!setMin || gt(compver, setMin)) {
+                  setMin = compver;
+                }
+                break;
+              case '<':
+              case '<=':
+                break;
+              default:
+                throw new Error(`Unexpected operation: ${comparator.operator}`);
+            }
+          });
+          if (setMin && (!minver || gt(minver, setMin))) {
+            minver = setMin;
+          }
+        }
+        if (minver && range.test(minver)) {
+          return minver;
+        }
+        return null;
+      };
+      module.exports = minVersion;
+    }, {
+      "../classes/range": 63,
+      "../classes/semver": 64,
+      "../functions/gt": 73
+    }],
+    101: [function (require, module, exports) {
+      const SemVer = require('../classes/semver');
+      const Comparator = require('../classes/comparator');
+      const {
+        ANY
+      } = Comparator;
+      const Range = require('../classes/range');
+      const satisfies = require('../functions/satisfies');
+      const gt = require('../functions/gt');
+      const lt = require('../functions/lt');
+      const lte = require('../functions/lte');
+      const gte = require('../functions/gte');
+      const outside = (version, range, hilo, options) => {
+        version = new SemVer(version, options);
+        range = new Range(range, options);
+        let gtfn, ltefn, ltfn, comp, ecomp;
+        switch (hilo) {
+          case '>':
+            gtfn = gt;
+            ltefn = lte;
+            ltfn = lt;
+            comp = '>';
+            ecomp = '>=';
+            break;
+          case '<':
+            gtfn = lt;
+            ltefn = gte;
+            ltfn = gt;
+            comp = '<';
+            ecomp = '<=';
+            break;
+          default:
+            throw new TypeError('Must provide a hilo val of "<" or ">"');
+        }
+        if (satisfies(version, range, options)) {
+          return false;
+        }
+        for (let i = 0; i < range.set.length; ++i) {
+          const comparators = range.set[i];
+          let high = null;
+          let low = null;
+          comparators.forEach(comparator => {
+            if (comparator.semver === ANY) {
+              comparator = new Comparator('>=0.0.0');
+            }
+            high = high || comparator;
+            low = low || comparator;
+            if (gtfn(comparator.semver, high.semver, options)) {
+              high = comparator;
+            } else if (ltfn(comparator.semver, low.semver, options)) {
+              low = comparator;
+            }
+          });
+          if (high.operator === comp || high.operator === ecomp) {
+            return false;
+          }
+          if ((!low.operator || low.operator === comp) && ltefn(version, low.semver)) {
+            return false;
+          } else if (low.operator === ecomp && ltfn(version, low.semver)) {
+            return false;
+          }
+        }
+        return true;
+      };
+      module.exports = outside;
+    }, {
+      "../classes/comparator": 62,
+      "../classes/range": 63,
+      "../classes/semver": 64,
+      "../functions/gt": 73,
+      "../functions/gte": 74,
+      "../functions/lt": 76,
+      "../functions/lte": 77,
+      "../functions/satisfies": 86
+    }],
+    102: [function (require, module, exports) {
+      const satisfies = require('../functions/satisfies.js');
+      const compare = require('../functions/compare.js');
+      module.exports = (versions, range, options) => {
+        const set = [];
+        let first = null;
+        let prev = null;
+        const v = versions.sort((a, b) => compare(a, b, options));
+        for (const version of v) {
+          const included = satisfies(version, range, options);
+          if (included) {
+            prev = version;
+            if (!first) {
+              first = version;
+            }
+          } else {
+            if (prev) {
+              set.push([first, prev]);
+            }
+            prev = null;
+            first = null;
+          }
+        }
+        if (first) {
+          set.push([first, null]);
+        }
+        const ranges = [];
+        for (const [min, max] of set) {
+          if (min === max) {
+            ranges.push(min);
+          } else if (!max && min === v[0]) {
+            ranges.push('*');
+          } else if (!max) {
+            ranges.push(`>=${min}`);
+          } else if (min === v[0]) {
+            ranges.push(`<=${max}`);
+          } else {
+            ranges.push(`${min} - ${max}`);
+          }
+        }
+        const simplified = ranges.join(' || ');
+        const original = typeof range.raw === 'string' ? range.raw : String(range);
+        return simplified.length < original.length ? simplified : range;
+      };
+    }, {
+      "../functions/compare.js": 70,
+      "../functions/satisfies.js": 86
+    }],
+    103: [function (require, module, exports) {
+      const Range = require('../classes/range.js');
+      const Comparator = require('../classes/comparator.js');
+      const {
+        ANY
+      } = Comparator;
+      const satisfies = require('../functions/satisfies.js');
+      const compare = require('../functions/compare.js');
+      const subset = (sub, dom, options = {}) => {
+        if (sub === dom) {
+          return true;
+        }
+        sub = new Range(sub, options);
+        dom = new Range(dom, options);
+        let sawNonNull = false;
+        OUTER: for (const simpleSub of sub.set) {
+          for (const simpleDom of dom.set) {
+            const isSub = simpleSubset(simpleSub, simpleDom, options);
+            sawNonNull = sawNonNull || isSub !== null;
+            if (isSub) {
+              continue OUTER;
+            }
+          }
+          if (sawNonNull) {
+            return false;
+          }
+        }
+        return true;
+      };
+      const simpleSubset = (sub, dom, options) => {
+        if (sub === dom) {
+          return true;
+        }
+        if (sub.length === 1 && sub[0].semver === ANY) {
+          if (dom.length === 1 && dom[0].semver === ANY) {
+            return true;
+          } else if (options.includePrerelease) {
+            sub = [new Comparator('>=0.0.0-0')];
+          } else {
+            sub = [new Comparator('>=0.0.0')];
+          }
+        }
+        if (dom.length === 1 && dom[0].semver === ANY) {
+          if (options.includePrerelease) {
+            return true;
+          } else {
+            dom = [new Comparator('>=0.0.0')];
+          }
+        }
+        const eqSet = new Set();
+        let gt, lt;
+        for (const c of sub) {
+          if (c.operator === '>' || c.operator === '>=') {
+            gt = higherGT(gt, c, options);
+          } else if (c.operator === '<' || c.operator === '<=') {
+            lt = lowerLT(lt, c, options);
+          } else {
+            eqSet.add(c.semver);
+          }
+        }
+        if (eqSet.size > 1) {
+          return null;
+        }
+        let gtltComp;
+        if (gt && lt) {
+          gtltComp = compare(gt.semver, lt.semver, options);
+          if (gtltComp > 0) {
+            return null;
+          } else if (gtltComp === 0 && (gt.operator !== '>=' || lt.operator !== '<=')) {
+            return null;
+          }
+        }
+        for (const eq of eqSet) {
+          if (gt && !satisfies(eq, String(gt), options)) {
+            return null;
+          }
+          if (lt && !satisfies(eq, String(lt), options)) {
+            return null;
+          }
+          for (const c of dom) {
+            if (!satisfies(eq, String(c), options)) {
+              return false;
+            }
+          }
+          return true;
+        }
+        let higher, lower;
+        let hasDomLT, hasDomGT;
+        let needDomLTPre = lt && !options.includePrerelease && lt.semver.prerelease.length ? lt.semver : false;
+        let needDomGTPre = gt && !options.includePrerelease && gt.semver.prerelease.length ? gt.semver : false;
+        if (needDomLTPre && needDomLTPre.prerelease.length === 1 && lt.operator === '<' && needDomLTPre.prerelease[0] === 0) {
+          needDomLTPre = false;
+        }
+        for (const c of dom) {
+          hasDomGT = hasDomGT || c.operator === '>' || c.operator === '>=';
+          hasDomLT = hasDomLT || c.operator === '<' || c.operator === '<=';
+          if (gt) {
+            if (needDomGTPre) {
+              if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomGTPre.major && c.semver.minor === needDomGTPre.minor && c.semver.patch === needDomGTPre.patch) {
+                needDomGTPre = false;
+              }
+            }
+            if (c.operator === '>' || c.operator === '>=') {
+              higher = higherGT(gt, c, options);
+              if (higher === c && higher !== gt) {
+                return false;
+              }
+            } else if (gt.operator === '>=' && !satisfies(gt.semver, String(c), options)) {
+              return false;
+            }
+          }
+          if (lt) {
+            if (needDomLTPre) {
+              if (c.semver.prerelease && c.semver.prerelease.length && c.semver.major === needDomLTPre.major && c.semver.minor === needDomLTPre.minor && c.semver.patch === needDomLTPre.patch) {
+                needDomLTPre = false;
+              }
+            }
+            if (c.operator === '<' || c.operator === '<=') {
+              lower = lowerLT(lt, c, options);
+              if (lower === c && lower !== lt) {
+                return false;
+              }
+            } else if (lt.operator === '<=' && !satisfies(lt.semver, String(c), options)) {
+              return false;
+            }
+          }
+          if (!c.operator && (lt || gt) && gtltComp !== 0) {
+            return false;
+          }
+        }
+        if (gt && hasDomLT && !lt && gtltComp !== 0) {
+          return false;
+        }
+        if (lt && hasDomGT && !gt && gtltComp !== 0) {
+          return false;
+        }
+        if (needDomGTPre || needDomLTPre) {
+          return false;
+        }
+        return true;
+      };
+      const higherGT = (a, b, options) => {
+        if (!a) {
+          return b;
+        }
+        const comp = compare(a.semver, b.semver, options);
+        return comp > 0 ? a : comp < 0 ? b : b.operator === '>' && a.operator === '>=' ? b : a;
+      };
+      const lowerLT = (a, b, options) => {
+        if (!a) {
+          return b;
+        }
+        const comp = compare(a.semver, b.semver, options);
+        return comp < 0 ? a : comp > 0 ? b : b.operator === '<' && a.operator === '<=' ? b : a;
+      };
+      module.exports = subset;
+    }, {
+      "../classes/comparator.js": 62,
+      "../classes/range.js": 63,
+      "../functions/compare.js": 70,
+      "../functions/satisfies.js": 86
+    }],
+    104: [function (require, module, exports) {
+      const Range = require('../classes/range');
+      const toComparators = (range, options) => new Range(range, options).set.map(comp => comp.map(c => c.value).join(' ').trim().split(' '));
+      module.exports = toComparators;
+    }, {
+      "../classes/range": 63
+    }],
+    105: [function (require, module, exports) {
+      const Range = require('../classes/range');
+      const validRange = (range, options) => {
+        try {
+          return new Range(range, options).range || '*';
+        } catch (er) {
+          return null;
+        }
+      };
+      module.exports = validRange;
+    }, {
+      "../classes/range": 63
+    }],
     106: [function (require, module, exports) {
+      "use strict";
+
+      Object.defineProperty(exports, "__esModule", {
+        value: true
+      });
+      exports.utils = exports.curve25519 = exports.getSharedSecret = exports.sync = exports.verify = exports.sign = exports.getPublicKey = exports.Signature = exports.Point = exports.RistrettoPoint = exports.ExtendedPoint = exports.CURVE = void 0;
+      const nodeCrypto = require("crypto");
+      const _0n = BigInt(0);
+      const _1n = BigInt(1);
+      const _2n = BigInt(2);
+      const CU_O = BigInt('7237005577332262213973186563042994240857116359379907606001950938285454250989');
+      const CURVE = Object.freeze({
+        a: BigInt(-1),
+        d: BigInt('37095705934669439343138083508754565189542113879843219016388785533085940283555'),
+        P: BigInt('57896044618658097711785492504343953926634992332820282019728792003956564819949'),
+        l: CU_O,
+        n: CU_O,
+        h: BigInt(8),
+        Gx: BigInt('15112221349535400772501151409588531511454012693041857206046113283949847762202'),
+        Gy: BigInt('46316835694926478169428394003475163141307993866256225615783033603165251855960')
+      });
+      exports.CURVE = CURVE;
+      const POW_2_256 = BigInt('0x10000000000000000000000000000000000000000000000000000000000000000');
+      const SQRT_M1 = BigInt('19681161376707505956807079304988542015446066515923890162744021073123829784752');
+      const SQRT_D = BigInt('6853475219497561581579357271197624642482790079785650197046958215289687604742');
+      const SQRT_AD_MINUS_ONE = BigInt('25063068953384623474111414158702152701244531502492656460079210482610430750235');
+      const INVSQRT_A_MINUS_D = BigInt('54469307008909316920995813868745141605393597292927456921205312896311721017578');
+      const ONE_MINUS_D_SQ = BigInt('1159843021668779879193775521855586647937357759715417654439879720876111806838');
+      const D_MINUS_ONE_SQ = BigInt('40440834346308536858101042469323190826248399146238708352240133220865137265952');
+      class ExtendedPoint {
+        constructor(x, y, z, t) {
+          this.x = x;
+          this.y = y;
+          this.z = z;
+          this.t = t;
+        }
+        static fromAffine(p) {
+          if (!(p instanceof Point)) {
+            throw new TypeError('ExtendedPoint#fromAffine: expected Point');
+          }
+          if (p.equals(Point.ZERO)) return ExtendedPoint.ZERO;
+          return new ExtendedPoint(p.x, p.y, _1n, mod(p.x * p.y));
+        }
+        static toAffineBatch(points) {
+          const toInv = invertBatch(points.map(p => p.z));
+          return points.map((p, i) => p.toAffine(toInv[i]));
+        }
+        static normalizeZ(points) {
+          return this.toAffineBatch(points).map(this.fromAffine);
+        }
+        equals(other) {
+          assertExtPoint(other);
+          const {
+            x: X1,
+            y: Y1,
+            z: Z1
+          } = this;
+          const {
+            x: X2,
+            y: Y2,
+            z: Z2
+          } = other;
+          const X1Z2 = mod(X1 * Z2);
+          const X2Z1 = mod(X2 * Z1);
+          const Y1Z2 = mod(Y1 * Z2);
+          const Y2Z1 = mod(Y2 * Z1);
+          return X1Z2 === X2Z1 && Y1Z2 === Y2Z1;
+        }
+        negate() {
+          return new ExtendedPoint(mod(-this.x), this.y, this.z, mod(-this.t));
+        }
+        double() {
+          const {
+            x: X1,
+            y: Y1,
+            z: Z1
+          } = this;
+          const {
+            a
+          } = CURVE;
+          const A = mod(X1 * X1);
+          const B = mod(Y1 * Y1);
+          const C = mod(_2n * mod(Z1 * Z1));
+          const D = mod(a * A);
+          const x1y1 = X1 + Y1;
+          const E = mod(mod(x1y1 * x1y1) - A - B);
+          const G = D + B;
+          const F = G - C;
+          const H = D - B;
+          const X3 = mod(E * F);
+          const Y3 = mod(G * H);
+          const T3 = mod(E * H);
+          const Z3 = mod(F * G);
+          return new ExtendedPoint(X3, Y3, Z3, T3);
+        }
+        add(other) {
+          assertExtPoint(other);
+          const {
+            x: X1,
+            y: Y1,
+            z: Z1,
+            t: T1
+          } = this;
+          const {
+            x: X2,
+            y: Y2,
+            z: Z2,
+            t: T2
+          } = other;
+          const A = mod((Y1 - X1) * (Y2 + X2));
+          const B = mod((Y1 + X1) * (Y2 - X2));
+          const F = mod(B - A);
+          if (F === _0n) return this.double();
+          const C = mod(Z1 * _2n * T2);
+          const D = mod(T1 * _2n * Z2);
+          const E = D + C;
+          const G = B + A;
+          const H = D - C;
+          const X3 = mod(E * F);
+          const Y3 = mod(G * H);
+          const T3 = mod(E * H);
+          const Z3 = mod(F * G);
+          return new ExtendedPoint(X3, Y3, Z3, T3);
+        }
+        subtract(other) {
+          return this.add(other.negate());
+        }
+        precomputeWindow(W) {
+          const windows = 1 + 256 / W;
+          const points = [];
+          let p = this;
+          let base = p;
+          for (let window = 0; window < windows; window++) {
+            base = p;
+            points.push(base);
+            for (let i = 1; i < 2 ** (W - 1); i++) {
+              base = base.add(p);
+              points.push(base);
+            }
+            p = base.double();
+          }
+          return points;
+        }
+        wNAF(n, affinePoint) {
+          if (!affinePoint && this.equals(ExtendedPoint.BASE)) affinePoint = Point.BASE;
+          const W = affinePoint && affinePoint._WINDOW_SIZE || 1;
+          if (256 % W) {
+            throw new Error('Point#wNAF: Invalid precomputation window, must be power of 2');
+          }
+          let precomputes = affinePoint && pointPrecomputes.get(affinePoint);
+          if (!precomputes) {
+            precomputes = this.precomputeWindow(W);
+            if (affinePoint && W !== 1) {
+              precomputes = ExtendedPoint.normalizeZ(precomputes);
+              pointPrecomputes.set(affinePoint, precomputes);
+            }
+          }
+          let p = ExtendedPoint.ZERO;
+          let f = ExtendedPoint.ZERO;
+          const windows = 1 + 256 / W;
+          const windowSize = 2 ** (W - 1);
+          const mask = BigInt(2 ** W - 1);
+          const maxNumber = 2 ** W;
+          const shiftBy = BigInt(W);
+          for (let window = 0; window < windows; window++) {
+            const offset = window * windowSize;
+            let wbits = Number(n & mask);
+            n >>= shiftBy;
+            if (wbits > windowSize) {
+              wbits -= maxNumber;
+              n += _1n;
+            }
+            if (wbits === 0) {
+              let pr = precomputes[offset];
+              if (window % 2) pr = pr.negate();
+              f = f.add(pr);
+            } else {
+              let cached = precomputes[offset + Math.abs(wbits) - 1];
+              if (wbits < 0) cached = cached.negate();
+              p = p.add(cached);
+            }
+          }
+          return ExtendedPoint.normalizeZ([p, f])[0];
+        }
+        multiply(scalar, affinePoint) {
+          return this.wNAF(normalizeScalar(scalar, CURVE.l), affinePoint);
+        }
+        multiplyUnsafe(scalar) {
+          let n = normalizeScalar(scalar, CURVE.l, false);
+          const G = ExtendedPoint.BASE;
+          const P0 = ExtendedPoint.ZERO;
+          if (n === _0n) return P0;
+          if (this.equals(P0) || n === _1n) return this;
+          if (this.equals(G)) return this.wNAF(n);
+          let p = P0;
+          let d = this;
+          while (n > _0n) {
+            if (n & _1n) p = p.add(d);
+            d = d.double();
+            n >>= _1n;
+          }
+          return p;
+        }
+        isSmallOrder() {
+          return this.multiplyUnsafe(CURVE.h).equals(ExtendedPoint.ZERO);
+        }
+        isTorsionFree() {
+          return this.multiplyUnsafe(CURVE.l).equals(ExtendedPoint.ZERO);
+        }
+        toAffine(invZ = invert(this.z)) {
+          const {
+            x,
+            y,
+            z
+          } = this;
+          const ax = mod(x * invZ);
+          const ay = mod(y * invZ);
+          const zz = mod(z * invZ);
+          if (zz !== _1n) throw new Error('invZ was invalid');
+          return new Point(ax, ay);
+        }
+        fromRistrettoBytes() {
+          legacyRist();
+        }
+        toRistrettoBytes() {
+          legacyRist();
+        }
+        fromRistrettoHash() {
+          legacyRist();
+        }
+      }
+      exports.ExtendedPoint = ExtendedPoint;
+      ExtendedPoint.BASE = new ExtendedPoint(CURVE.Gx, CURVE.Gy, _1n, mod(CURVE.Gx * CURVE.Gy));
+      ExtendedPoint.ZERO = new ExtendedPoint(_0n, _1n, _1n, _0n);
+      function assertExtPoint(other) {
+        if (!(other instanceof ExtendedPoint)) throw new TypeError('ExtendedPoint expected');
+      }
+      function assertRstPoint(other) {
+        if (!(other instanceof RistrettoPoint)) throw new TypeError('RistrettoPoint expected');
+      }
+      function legacyRist() {
+        throw new Error('Legacy method: switch to RistrettoPoint');
+      }
+      class RistrettoPoint {
+        constructor(ep) {
+          this.ep = ep;
+        }
+        static calcElligatorRistrettoMap(r0) {
+          const {
+            d
+          } = CURVE;
+          const r = mod(SQRT_M1 * r0 * r0);
+          const Ns = mod((r + _1n) * ONE_MINUS_D_SQ);
+          let c = BigInt(-1);
+          const D = mod((c - d * r) * mod(r + d));
+          let {
+            isValid: Ns_D_is_sq,
+            value: s
+          } = uvRatio(Ns, D);
+          let s_ = mod(s * r0);
+          if (!edIsNegative(s_)) s_ = mod(-s_);
+          if (!Ns_D_is_sq) s = s_;
+          if (!Ns_D_is_sq) c = r;
+          const Nt = mod(c * (r - _1n) * D_MINUS_ONE_SQ - D);
+          const s2 = s * s;
+          const W0 = mod((s + s) * D);
+          const W1 = mod(Nt * SQRT_AD_MINUS_ONE);
+          const W2 = mod(_1n - s2);
+          const W3 = mod(_1n + s2);
+          return new ExtendedPoint(mod(W0 * W3), mod(W2 * W1), mod(W1 * W3), mod(W0 * W2));
+        }
+        static hashToCurve(hex) {
+          hex = ensureBytes(hex, 64);
+          const r1 = bytes255ToNumberLE(hex.slice(0, 32));
+          const R1 = this.calcElligatorRistrettoMap(r1);
+          const r2 = bytes255ToNumberLE(hex.slice(32, 64));
+          const R2 = this.calcElligatorRistrettoMap(r2);
+          return new RistrettoPoint(R1.add(R2));
+        }
+        static fromHex(hex) {
+          hex = ensureBytes(hex, 32);
+          const {
+            a,
+            d
+          } = CURVE;
+          const emsg = 'RistrettoPoint.fromHex: the hex is not valid encoding of RistrettoPoint';
+          const s = bytes255ToNumberLE(hex);
+          if (!equalBytes(numberTo32BytesLE(s), hex) || edIsNegative(s)) throw new Error(emsg);
+          const s2 = mod(s * s);
+          const u1 = mod(_1n + a * s2);
+          const u2 = mod(_1n - a * s2);
+          const u1_2 = mod(u1 * u1);
+          const u2_2 = mod(u2 * u2);
+          const v = mod(a * d * u1_2 - u2_2);
+          const {
+            isValid,
+            value: I
+          } = invertSqrt(mod(v * u2_2));
+          const Dx = mod(I * u2);
+          const Dy = mod(I * Dx * v);
+          let x = mod((s + s) * Dx);
+          if (edIsNegative(x)) x = mod(-x);
+          const y = mod(u1 * Dy);
+          const t = mod(x * y);
+          if (!isValid || edIsNegative(t) || y === _0n) throw new Error(emsg);
+          return new RistrettoPoint(new ExtendedPoint(x, y, _1n, t));
+        }
+        toRawBytes() {
+          let {
+            x,
+            y,
+            z,
+            t
+          } = this.ep;
+          const u1 = mod(mod(z + y) * mod(z - y));
+          const u2 = mod(x * y);
+          const u2sq = mod(u2 * u2);
+          const {
+            value: invsqrt
+          } = invertSqrt(mod(u1 * u2sq));
+          const D1 = mod(invsqrt * u1);
+          const D2 = mod(invsqrt * u2);
+          const zInv = mod(D1 * D2 * t);
+          let D;
+          if (edIsNegative(t * zInv)) {
+            let _x = mod(y * SQRT_M1);
+            let _y = mod(x * SQRT_M1);
+            x = _x;
+            y = _y;
+            D = mod(D1 * INVSQRT_A_MINUS_D);
+          } else {
+            D = D2;
+          }
+          if (edIsNegative(x * zInv)) y = mod(-y);
+          let s = mod((z - y) * D);
+          if (edIsNegative(s)) s = mod(-s);
+          return numberTo32BytesLE(s);
+        }
+        toHex() {
+          return bytesToHex(this.toRawBytes());
+        }
+        toString() {
+          return this.toHex();
+        }
+        equals(other) {
+          assertRstPoint(other);
+          const a = this.ep;
+          const b = other.ep;
+          const one = mod(a.x * b.y) === mod(a.y * b.x);
+          const two = mod(a.y * b.y) === mod(a.x * b.x);
+          return one || two;
+        }
+        add(other) {
+          assertRstPoint(other);
+          return new RistrettoPoint(this.ep.add(other.ep));
+        }
+        subtract(other) {
+          assertRstPoint(other);
+          return new RistrettoPoint(this.ep.subtract(other.ep));
+        }
+        multiply(scalar) {
+          return new RistrettoPoint(this.ep.multiply(scalar));
+        }
+        multiplyUnsafe(scalar) {
+          return new RistrettoPoint(this.ep.multiplyUnsafe(scalar));
+        }
+      }
+      exports.RistrettoPoint = RistrettoPoint;
+      RistrettoPoint.BASE = new RistrettoPoint(ExtendedPoint.BASE);
+      RistrettoPoint.ZERO = new RistrettoPoint(ExtendedPoint.ZERO);
+      const pointPrecomputes = new WeakMap();
+      class Point {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+        }
+        _setWindowSize(windowSize) {
+          this._WINDOW_SIZE = windowSize;
+          pointPrecomputes.delete(this);
+        }
+        static fromHex(hex, strict = true) {
+          const {
+            d,
+            P
+          } = CURVE;
+          hex = ensureBytes(hex, 32);
+          const normed = hex.slice();
+          normed[31] = hex[31] & ~0x80;
+          const y = bytesToNumberLE(normed);
+          if (strict && y >= P) throw new Error('Expected 0 < hex < P');
+          if (!strict && y >= POW_2_256) throw new Error('Expected 0 < hex < 2**256');
+          const y2 = mod(y * y);
+          const u = mod(y2 - _1n);
+          const v = mod(d * y2 + _1n);
+          let {
+            isValid,
+            value: x
+          } = uvRatio(u, v);
+          if (!isValid) throw new Error('Point.fromHex: invalid y coordinate');
+          const isXOdd = (x & _1n) === _1n;
+          const isLastByteOdd = (hex[31] & 0x80) !== 0;
+          if (isLastByteOdd !== isXOdd) {
+            x = mod(-x);
+          }
+          return new Point(x, y);
+        }
+        static async fromPrivateKey(privateKey) {
+          return (await getExtendedPublicKey(privateKey)).point;
+        }
+        toRawBytes() {
+          const bytes = numberTo32BytesLE(this.y);
+          bytes[31] |= this.x & _1n ? 0x80 : 0;
+          return bytes;
+        }
+        toHex() {
+          return bytesToHex(this.toRawBytes());
+        }
+        toX25519() {
+          const {
+            y
+          } = this;
+          const u = mod((_1n + y) * invert(_1n - y));
+          return numberTo32BytesLE(u);
+        }
+        isTorsionFree() {
+          return ExtendedPoint.fromAffine(this).isTorsionFree();
+        }
+        equals(other) {
+          return this.x === other.x && this.y === other.y;
+        }
+        negate() {
+          return new Point(mod(-this.x), this.y);
+        }
+        add(other) {
+          return ExtendedPoint.fromAffine(this).add(ExtendedPoint.fromAffine(other)).toAffine();
+        }
+        subtract(other) {
+          return this.add(other.negate());
+        }
+        multiply(scalar) {
+          return ExtendedPoint.fromAffine(this).multiply(scalar, this).toAffine();
+        }
+      }
+      exports.Point = Point;
+      Point.BASE = new Point(CURVE.Gx, CURVE.Gy);
+      Point.ZERO = new Point(_0n, _1n);
+      class Signature {
+        constructor(r, s) {
+          this.r = r;
+          this.s = s;
+          this.assertValidity();
+        }
+        static fromHex(hex) {
+          const bytes = ensureBytes(hex, 64);
+          const r = Point.fromHex(bytes.slice(0, 32), false);
+          const s = bytesToNumberLE(bytes.slice(32, 64));
+          return new Signature(r, s);
+        }
+        assertValidity() {
+          const {
+            r,
+            s
+          } = this;
+          if (!(r instanceof Point)) throw new Error('Expected Point instance');
+          normalizeScalar(s, CURVE.l, false);
+          return this;
+        }
+        toRawBytes() {
+          const u8 = new Uint8Array(64);
+          u8.set(this.r.toRawBytes());
+          u8.set(numberTo32BytesLE(this.s), 32);
+          return u8;
+        }
+        toHex() {
+          return bytesToHex(this.toRawBytes());
+        }
+      }
+      exports.Signature = Signature;
+      function concatBytes(...arrays) {
+        if (!arrays.every(a => a instanceof Uint8Array)) throw new Error('Expected Uint8Array list');
+        if (arrays.length === 1) return arrays[0];
+        const length = arrays.reduce((a, arr) => a + arr.length, 0);
+        const result = new Uint8Array(length);
+        for (let i = 0, pad = 0; i < arrays.length; i++) {
+          const arr = arrays[i];
+          result.set(arr, pad);
+          pad += arr.length;
+        }
+        return result;
+      }
+      const hexes = Array.from({
+        length: 256
+      }, (v, i) => i.toString(16).padStart(2, '0'));
+      function bytesToHex(uint8a) {
+        if (!(uint8a instanceof Uint8Array)) throw new Error('Uint8Array expected');
+        let hex = '';
+        for (let i = 0; i < uint8a.length; i++) {
+          hex += hexes[uint8a[i]];
+        }
+        return hex;
+      }
+      function hexToBytes(hex) {
+        if (typeof hex !== 'string') {
+          throw new TypeError('hexToBytes: expected string, got ' + typeof hex);
+        }
+        if (hex.length % 2) throw new Error('hexToBytes: received invalid unpadded hex');
+        const array = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < array.length; i++) {
+          const j = i * 2;
+          const hexByte = hex.slice(j, j + 2);
+          const byte = Number.parseInt(hexByte, 16);
+          if (Number.isNaN(byte) || byte < 0) throw new Error('Invalid byte sequence');
+          array[i] = byte;
+        }
+        return array;
+      }
+      function numberTo32BytesBE(num) {
+        const length = 32;
+        const hex = num.toString(16).padStart(length * 2, '0');
+        return hexToBytes(hex);
+      }
+      function numberTo32BytesLE(num) {
+        return numberTo32BytesBE(num).reverse();
+      }
+      function edIsNegative(num) {
+        return (mod(num) & _1n) === _1n;
+      }
+      function bytesToNumberLE(uint8a) {
+        if (!(uint8a instanceof Uint8Array)) throw new Error('Expected Uint8Array');
+        return BigInt('0x' + bytesToHex(Uint8Array.from(uint8a).reverse()));
+      }
+      const MAX_255B = BigInt('0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+      function bytes255ToNumberLE(bytes) {
+        return mod(bytesToNumberLE(bytes) & MAX_255B);
+      }
+      function mod(a, b = CURVE.P) {
+        const res = a % b;
+        return res >= _0n ? res : b + res;
+      }
+      function invert(number, modulo = CURVE.P) {
+        if (number === _0n || modulo <= _0n) {
+          throw new Error(`invert: expected positive integers, got n=${number} mod=${modulo}`);
+        }
+        let a = mod(number, modulo);
+        let b = modulo;
+        let x = _0n,
+          y = _1n,
+          u = _1n,
+          v = _0n;
+        while (a !== _0n) {
+          const q = b / a;
+          const r = b % a;
+          const m = x - u * q;
+          const n = y - v * q;
+          b = a, a = r, x = u, y = v, u = m, v = n;
+        }
+        const gcd = b;
+        if (gcd !== _1n) throw new Error('invert: does not exist');
+        return mod(x, modulo);
+      }
+      function invertBatch(nums, p = CURVE.P) {
+        const tmp = new Array(nums.length);
+        const lastMultiplied = nums.reduce((acc, num, i) => {
+          if (num === _0n) return acc;
+          tmp[i] = acc;
+          return mod(acc * num, p);
+        }, _1n);
+        const inverted = invert(lastMultiplied, p);
+        nums.reduceRight((acc, num, i) => {
+          if (num === _0n) return acc;
+          tmp[i] = mod(acc * tmp[i], p);
+          return mod(acc * num, p);
+        }, inverted);
+        return tmp;
+      }
+      function pow2(x, power) {
+        const {
+          P
+        } = CURVE;
+        let res = x;
+        while (power-- > _0n) {
+          res *= res;
+          res %= P;
+        }
+        return res;
+      }
+      function pow_2_252_3(x) {
+        const {
+          P
+        } = CURVE;
+        const _5n = BigInt(5);
+        const _10n = BigInt(10);
+        const _20n = BigInt(20);
+        const _40n = BigInt(40);
+        const _80n = BigInt(80);
+        const x2 = x * x % P;
+        const b2 = x2 * x % P;
+        const b4 = pow2(b2, _2n) * b2 % P;
+        const b5 = pow2(b4, _1n) * x % P;
+        const b10 = pow2(b5, _5n) * b5 % P;
+        const b20 = pow2(b10, _10n) * b10 % P;
+        const b40 = pow2(b20, _20n) * b20 % P;
+        const b80 = pow2(b40, _40n) * b40 % P;
+        const b160 = pow2(b80, _80n) * b80 % P;
+        const b240 = pow2(b160, _80n) * b80 % P;
+        const b250 = pow2(b240, _10n) * b10 % P;
+        const pow_p_5_8 = pow2(b250, _2n) * x % P;
+        return {
+          pow_p_5_8,
+          b2
+        };
+      }
+      function uvRatio(u, v) {
+        const v3 = mod(v * v * v);
+        const v7 = mod(v3 * v3 * v);
+        const pow = pow_2_252_3(u * v7).pow_p_5_8;
+        let x = mod(u * v3 * pow);
+        const vx2 = mod(v * x * x);
+        const root1 = x;
+        const root2 = mod(x * SQRT_M1);
+        const useRoot1 = vx2 === u;
+        const useRoot2 = vx2 === mod(-u);
+        const noRoot = vx2 === mod(-u * SQRT_M1);
+        if (useRoot1) x = root1;
+        if (useRoot2 || noRoot) x = root2;
+        if (edIsNegative(x)) x = mod(-x);
+        return {
+          isValid: useRoot1 || useRoot2,
+          value: x
+        };
+      }
+      function invertSqrt(number) {
+        return uvRatio(_1n, number);
+      }
+      function modlLE(hash) {
+        return mod(bytesToNumberLE(hash), CURVE.l);
+      }
+      function equalBytes(b1, b2) {
+        if (b1.length !== b2.length) {
+          return false;
+        }
+        for (let i = 0; i < b1.length; i++) {
+          if (b1[i] !== b2[i]) {
+            return false;
+          }
+        }
+        return true;
+      }
+      function ensureBytes(hex, expectedLength) {
+        const bytes = hex instanceof Uint8Array ? Uint8Array.from(hex) : hexToBytes(hex);
+        if (typeof expectedLength === 'number' && bytes.length !== expectedLength) throw new Error(`Expected ${expectedLength} bytes`);
+        return bytes;
+      }
+      function normalizeScalar(num, max, strict = true) {
+        if (!max) throw new TypeError('Specify max value');
+        if (typeof num === 'number' && Number.isSafeInteger(num)) num = BigInt(num);
+        if (typeof num === 'bigint' && num < max) {
+          if (strict) {
+            if (_0n < num) return num;
+          } else {
+            if (_0n <= num) return num;
+          }
+        }
+        throw new TypeError('Expected valid scalar: 0 < scalar < max');
+      }
+      function adjustBytes25519(bytes) {
+        bytes[0] &= 248;
+        bytes[31] &= 127;
+        bytes[31] |= 64;
+        return bytes;
+      }
+      function decodeScalar25519(n) {
+        return bytesToNumberLE(adjustBytes25519(ensureBytes(n, 32)));
+      }
+      function checkPrivateKey(key) {
+        key = typeof key === 'bigint' || typeof key === 'number' ? numberTo32BytesBE(normalizeScalar(key, POW_2_256)) : ensureBytes(key);
+        if (key.length !== 32) throw new Error(`Expected 32 bytes`);
+        return key;
+      }
+      function getKeyFromHash(hashed) {
+        const head = adjustBytes25519(hashed.slice(0, 32));
+        const prefix = hashed.slice(32, 64);
+        const scalar = modlLE(head);
+        const point = Point.BASE.multiply(scalar);
+        const pointBytes = point.toRawBytes();
+        return {
+          head,
+          prefix,
+          scalar,
+          point,
+          pointBytes
+        };
+      }
+      let _sha512Sync;
+      function sha512s(...m) {
+        if (typeof _sha512Sync !== 'function') throw new Error('utils.sha512Sync must be set to use sync methods');
+        return _sha512Sync(...m);
+      }
+      async function getExtendedPublicKey(key) {
+        return getKeyFromHash(await exports.utils.sha512(checkPrivateKey(key)));
+      }
+      function getExtendedPublicKeySync(key) {
+        return getKeyFromHash(sha512s(checkPrivateKey(key)));
+      }
+      async function getPublicKey(privateKey) {
+        return (await getExtendedPublicKey(privateKey)).pointBytes;
+      }
+      exports.getPublicKey = getPublicKey;
+      function getPublicKeySync(privateKey) {
+        return getExtendedPublicKeySync(privateKey).pointBytes;
+      }
+      async function sign(message, privateKey) {
+        message = ensureBytes(message);
+        const {
+          prefix,
+          scalar,
+          pointBytes
+        } = await getExtendedPublicKey(privateKey);
+        const r = modlLE(await exports.utils.sha512(prefix, message));
+        const R = Point.BASE.multiply(r);
+        const k = modlLE(await exports.utils.sha512(R.toRawBytes(), pointBytes, message));
+        const s = mod(r + k * scalar, CURVE.l);
+        return new Signature(R, s).toRawBytes();
+      }
+      exports.sign = sign;
+      function signSync(message, privateKey) {
+        message = ensureBytes(message);
+        const {
+          prefix,
+          scalar,
+          pointBytes
+        } = getExtendedPublicKeySync(privateKey);
+        const r = modlLE(sha512s(prefix, message));
+        const R = Point.BASE.multiply(r);
+        const k = modlLE(sha512s(R.toRawBytes(), pointBytes, message));
+        const s = mod(r + k * scalar, CURVE.l);
+        return new Signature(R, s).toRawBytes();
+      }
+      function prepareVerification(sig, message, publicKey) {
+        message = ensureBytes(message);
+        if (!(publicKey instanceof Point)) publicKey = Point.fromHex(publicKey, false);
+        const {
+          r,
+          s
+        } = sig instanceof Signature ? sig.assertValidity() : Signature.fromHex(sig);
+        const SB = ExtendedPoint.BASE.multiplyUnsafe(s);
+        return {
+          r,
+          s,
+          SB,
+          pub: publicKey,
+          msg: message
+        };
+      }
+      function finishVerification(publicKey, r, SB, hashed) {
+        const k = modlLE(hashed);
+        const kA = ExtendedPoint.fromAffine(publicKey).multiplyUnsafe(k);
+        const RkA = ExtendedPoint.fromAffine(r).add(kA);
+        return RkA.subtract(SB).multiplyUnsafe(CURVE.h).equals(ExtendedPoint.ZERO);
+      }
+      async function verify(sig, message, publicKey) {
+        const {
+          r,
+          SB,
+          msg,
+          pub
+        } = prepareVerification(sig, message, publicKey);
+        const hashed = await exports.utils.sha512(r.toRawBytes(), pub.toRawBytes(), msg);
+        return finishVerification(pub, r, SB, hashed);
+      }
+      exports.verify = verify;
+      function verifySync(sig, message, publicKey) {
+        const {
+          r,
+          SB,
+          msg,
+          pub
+        } = prepareVerification(sig, message, publicKey);
+        const hashed = sha512s(r.toRawBytes(), pub.toRawBytes(), msg);
+        return finishVerification(pub, r, SB, hashed);
+      }
+      exports.sync = {
+        getExtendedPublicKey: getExtendedPublicKeySync,
+        getPublicKey: getPublicKeySync,
+        sign: signSync,
+        verify: verifySync
+      };
+      async function getSharedSecret(privateKey, publicKey) {
+        const {
+          head
+        } = await getExtendedPublicKey(privateKey);
+        const u = Point.fromHex(publicKey).toX25519();
+        return exports.curve25519.scalarMult(head, u);
+      }
+      exports.getSharedSecret = getSharedSecret;
+      Point.BASE._setWindowSize(8);
+      function cswap(swap, x_2, x_3) {
+        const dummy = mod(swap * (x_2 - x_3));
+        x_2 = mod(x_2 - dummy);
+        x_3 = mod(x_3 + dummy);
+        return [x_2, x_3];
+      }
+      function montgomeryLadder(pointU, scalar) {
+        const {
+          P
+        } = CURVE;
+        const u = normalizeScalar(pointU, P);
+        const k = normalizeScalar(scalar, P);
+        const a24 = BigInt(121665);
+        const x_1 = u;
+        let x_2 = _1n;
+        let z_2 = _0n;
+        let x_3 = u;
+        let z_3 = _1n;
+        let swap = _0n;
+        let sw;
+        for (let t = BigInt(255 - 1); t >= _0n; t--) {
+          const k_t = k >> t & _1n;
+          swap ^= k_t;
+          sw = cswap(swap, x_2, x_3);
+          x_2 = sw[0];
+          x_3 = sw[1];
+          sw = cswap(swap, z_2, z_3);
+          z_2 = sw[0];
+          z_3 = sw[1];
+          swap = k_t;
+          const A = x_2 + z_2;
+          const AA = mod(A * A);
+          const B = x_2 - z_2;
+          const BB = mod(B * B);
+          const E = AA - BB;
+          const C = x_3 + z_3;
+          const D = x_3 - z_3;
+          const DA = mod(D * A);
+          const CB = mod(C * B);
+          const dacb = DA + CB;
+          const da_cb = DA - CB;
+          x_3 = mod(dacb * dacb);
+          z_3 = mod(x_1 * mod(da_cb * da_cb));
+          x_2 = mod(AA * BB);
+          z_2 = mod(E * (AA + mod(a24 * E)));
+        }
+        sw = cswap(swap, x_2, x_3);
+        x_2 = sw[0];
+        x_3 = sw[1];
+        sw = cswap(swap, z_2, z_3);
+        z_2 = sw[0];
+        z_3 = sw[1];
+        const {
+          pow_p_5_8,
+          b2
+        } = pow_2_252_3(z_2);
+        const xp2 = mod(pow2(pow_p_5_8, BigInt(3)) * b2);
+        return mod(x_2 * xp2);
+      }
+      function encodeUCoordinate(u) {
+        return numberTo32BytesLE(mod(u, CURVE.P));
+      }
+      function decodeUCoordinate(uEnc) {
+        const u = ensureBytes(uEnc, 32);
+        u[31] &= 127;
+        return bytesToNumberLE(u);
+      }
+      exports.curve25519 = {
+        BASE_POINT_U: '0900000000000000000000000000000000000000000000000000000000000000',
+        scalarMult(privateKey, publicKey) {
+          const u = decodeUCoordinate(publicKey);
+          const p = decodeScalar25519(privateKey);
+          const pu = montgomeryLadder(u, p);
+          if (pu === _0n) throw new Error('Invalid private or public key received');
+          return encodeUCoordinate(pu);
+        },
+        scalarMultBase(privateKey) {
+          return exports.curve25519.scalarMult(privateKey, exports.curve25519.BASE_POINT_U);
+        }
+      };
+      const crypto = {
+        node: nodeCrypto,
+        web: typeof self === 'object' && 'crypto' in self ? self.crypto : undefined
+      };
+      exports.utils = {
+        bytesToHex,
+        hexToBytes,
+        concatBytes,
+        getExtendedPublicKey,
+        mod,
+        invert,
+        TORSION_SUBGROUP: ['0100000000000000000000000000000000000000000000000000000000000000', 'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac037a', '0000000000000000000000000000000000000000000000000000000000000080', '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc05', 'ecffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f', '26e8958fc2b227b045c3f489f2ef98f0d5dfac05d3c63339b13802886d53fc85', '0000000000000000000000000000000000000000000000000000000000000000', 'c7176a703d4dd84fba3c0b760d10670f2a2053fa2c39ccc64ec7fd7792ac03fa'],
+        hashToPrivateScalar: hash => {
+          hash = ensureBytes(hash);
+          if (hash.length < 40 || hash.length > 1024) throw new Error('Expected 40-1024 bytes of private key as per FIPS 186');
+          return mod(bytesToNumberLE(hash), CURVE.l - _1n) + _1n;
+        },
+        randomBytes: (bytesLength = 32) => {
+          if (crypto.web) {
+            return crypto.web.getRandomValues(new Uint8Array(bytesLength));
+          } else if (crypto.node) {
+            const {
+              randomBytes
+            } = crypto.node;
+            return new Uint8Array(randomBytes(bytesLength).buffer);
+          } else {
+            throw new Error("The environment doesn't have randomBytes function");
+          }
+        },
+        randomPrivateKey: () => {
+          return exports.utils.randomBytes(32);
+        },
+        sha512: async (...messages) => {
+          const message = concatBytes(...messages);
+          if (crypto.web) {
+            const buffer = await crypto.web.subtle.digest('SHA-512', message.buffer);
+            return new Uint8Array(buffer);
+          } else if (crypto.node) {
+            return Uint8Array.from(crypto.node.createHash('sha512').update(message).digest());
+          } else {
+            throw new Error("The environment doesn't have sha512 function");
+          }
+        },
+        precompute(windowSize = 8, point = Point.BASE) {
+          const cached = point.equals(Point.BASE) ? point : new Point(point.x, point.y);
+          cached._setWindowSize(windowSize);
+          cached.multiply(_2n);
+          return cached;
+        },
+        sha512Sync: undefined
+      };
+      Object.defineProperties(exports.utils, {
+        sha512Sync: {
+          configurable: false,
+          get() {
+            return _sha512Sync;
+          },
+          set(val) {
+            if (!_sha512Sync) _sha512Sync = val;
+          }
+        }
+      });
+    }, {
+      "crypto": 198
+    }],
+    107: [function (require, module, exports) {
       "use strict";
 
       Object.defineProperty(exports, "__esModule", {
@@ -9842,100 +9936,6 @@
       exports.stringToBytes = stringToBytes;
       exports.bytes = exports.stringToBytes;
     }, {}],
-    107: [function (require, module, exports) {
-      "use strict";
-
-      Object.defineProperty(exports, "__esModule", {
-        value: true
-      });
-      exports.mnemonicToSeedSync = exports.mnemonicToSeed = exports.validateMnemonic = exports.entropyToMnemonic = exports.mnemonicToEntropy = exports.generateMnemonic = void 0;
-      const _assert_1 = require("@noble/hashes/_assert");
-      const pbkdf2_1 = require("@noble/hashes/pbkdf2");
-      const sha256_1 = require("@noble/hashes/sha256");
-      const sha512_1 = require("@noble/hashes/sha512");
-      const utils_1 = require("@noble/hashes/utils");
-      const base_1 = require("@scure/base");
-      const isJapanese = wordlist => wordlist[0] === '\u3042\u3044\u3053\u304f\u3057\u3093';
-      function nfkd(str) {
-        if (typeof str !== 'string') throw new TypeError(`Invalid mnemonic type: ${typeof str}`);
-        return str.normalize('NFKD');
-      }
-      function normalize(str) {
-        const norm = nfkd(str);
-        const words = norm.split(' ');
-        if (![12, 15, 18, 21, 24].includes(words.length)) throw new Error('Invalid mnemonic');
-        return {
-          nfkd: norm,
-          words
-        };
-      }
-      function assertEntropy(entropy) {
-        _assert_1.default.bytes(entropy, 16, 20, 24, 28, 32);
-      }
-      function generateMnemonic(wordlist, strength = 128) {
-        _assert_1.default.number(strength);
-        if (strength % 32 !== 0 || strength > 256) throw new TypeError('Invalid entropy');
-        return entropyToMnemonic((0, utils_1.randomBytes)(strength / 8), wordlist);
-      }
-      exports.generateMnemonic = generateMnemonic;
-      const calcChecksum = entropy => {
-        const bitsLeft = 8 - entropy.length / 4;
-        return new Uint8Array([(0, sha256_1.sha256)(entropy)[0] >> bitsLeft << bitsLeft]);
-      };
-      function getCoder(wordlist) {
-        if (!Array.isArray(wordlist) || wordlist.length !== 2 ** 11 || typeof wordlist[0] !== 'string') throw new Error('Worlist: expected array of 2048 strings');
-        wordlist.forEach(i => {
-          if (typeof i !== 'string') throw new Error(`Wordlist: non-string element: ${i}`);
-        });
-        return base_1.utils.chain(base_1.utils.checksum(1, calcChecksum), base_1.utils.radix2(11, true), base_1.utils.alphabet(wordlist));
-      }
-      function mnemonicToEntropy(mnemonic, wordlist) {
-        const {
-          words
-        } = normalize(mnemonic);
-        const entropy = getCoder(wordlist).decode(words);
-        assertEntropy(entropy);
-        return entropy;
-      }
-      exports.mnemonicToEntropy = mnemonicToEntropy;
-      function entropyToMnemonic(entropy, wordlist) {
-        assertEntropy(entropy);
-        const words = getCoder(wordlist).encode(entropy);
-        return words.join(isJapanese(wordlist) ? '\u3000' : ' ');
-      }
-      exports.entropyToMnemonic = entropyToMnemonic;
-      function validateMnemonic(mnemonic, wordlist) {
-        try {
-          mnemonicToEntropy(mnemonic, wordlist);
-        } catch (e) {
-          return false;
-        }
-        return true;
-      }
-      exports.validateMnemonic = validateMnemonic;
-      const salt = passphrase => nfkd(`mnemonic${passphrase}`);
-      function mnemonicToSeed(mnemonic, passphrase = '') {
-        return (0, pbkdf2_1.pbkdf2Async)(sha512_1.sha512, normalize(mnemonic).nfkd, salt(passphrase), {
-          c: 2048,
-          dkLen: 64
-        });
-      }
-      exports.mnemonicToSeed = mnemonicToSeed;
-      function mnemonicToSeedSync(mnemonic, passphrase = '') {
-        return (0, pbkdf2_1.pbkdf2)(sha512_1.sha512, normalize(mnemonic).nfkd, salt(passphrase), {
-          c: 2048,
-          dkLen: 64
-        });
-      }
-      exports.mnemonicToSeedSync = mnemonicToSeedSync;
-    }, {
-      "@noble/hashes/_assert": 94,
-      "@noble/hashes/pbkdf2": 99,
-      "@noble/hashes/sha256": 101,
-      "@noble/hashes/sha512": 103,
-      "@noble/hashes/utils": 104,
-      "@scure/base": 106
-    }],
     108: [function (require, module, exports) {
       (function (process) {
         (function () {
@@ -43563,7 +43563,7 @@
       }
       exports.default = Utils;
     }, {
-      "@metamask/snaps-ui": 31
+      "@metamask/snaps-ui": 44
     }],
     292: [function (require, module, exports) {
       (function () {
@@ -43825,7 +43825,7 @@
     }, {
       "./Utils": 291,
       "@babel/runtime/helpers/interopRequireDefault": 2,
-      "@metamask/snaps-ui": 31,
+      "@metamask/snaps-ui": 44,
       "algosdk/dist/cjs": 109,
       "bignumber.js": 197,
       "buffer": 199
@@ -43973,7 +43973,7 @@
       "./Utils": 291,
       "./WalletFuncs": 292,
       "@babel/runtime/helpers/interopRequireDefault": 2,
-      "@metamask/snaps-ui": 31,
+      "@metamask/snaps-ui": 44,
       "buffer/": 200
     }],
     294: [function (require, module, exports) {
