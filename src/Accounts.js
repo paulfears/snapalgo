@@ -1,7 +1,7 @@
 import nacl from 'tweetnacl';
 const algo =  require('algosdk/dist/cjs');
 import { getBIP44AddressKeyDeriver, JsonBIP44CoinTypeNode} from '@metamask/key-tree';
-import {AES, SHA256, enc} from "crypto-js";
+import {SHA256, enc} from "crypto-js";
 import Utils from './Utils';
 /*
 This class defines handles storing keys, and all account related code
@@ -29,6 +29,42 @@ This object is encrypted by metamask.
     }
 }
 */
+
+// Function for Encrypting Data using TweetNaCl:
+function encryptNACL(secretKey, message) {
+  const nonce = nacl.randomBytes(24);
+  const secretKeyUint8Array = new Uint8Array(secretKey);
+  const messageUint8Array = new TextEncoder().encode(message);
+
+  const encryptedMessage = nacl.secretbox(messageUint8Array, nonce, secretKeyUint8Array);
+  const fullMessage = new Uint8Array(nonce.length + encryptedMessage.length);
+
+  fullMessage.set(nonce);
+  fullMessage.set(encryptedMessage, nonce.length);
+
+  const base64Encoded = buffer.from(fullMessage).toString('base64');
+  return base64Encoded;
+}
+
+// Function for Decrypting Data using TweetNaCl:
+function decryptNACL(secretKey, encryptedData) {
+  const secretKeyUint8Array = new Uint8Array(secretKey);
+  const messageWithNonceAsBuffer = buffer.from(encryptedData, 'base64');
+  const messageWithNonceAsUint8Array = new Uint8Array(messageWithNonceAsBuffer);
+
+  const nonce = messageWithNonceAsUint8Array.slice(0, 24);
+  const message = messageWithNonceAsUint8Array.slice(24);
+
+  const decryptedMessage = nacl.secretbox.open(message, nonce, secretKeyUint8Array);
+  const decryptedMessageString = new TextDecoder().decode(decryptedMessage);
+
+  return decryptedMessageString;
+}
+
+
+
+
+
 export default class Accounts{
     constructor(wallet){
         
@@ -94,7 +130,7 @@ export default class Accounts{
             else if(tempAccount.type === 'imported'){
                 const key = await this.#getencryptionKey();
                 let b64Seed = tempAccount.seed;
-                b64Seed = AES.decrypt(b64Seed, key).toString(enc.Utf8);
+                b64Seed = decryptNACL(b64Seed, key);
                 const seed = new Uint8Array(Buffer.from(b64Seed, 'base64'));
                 const keys = nacl.sign.keyPair.fromSeed(seed);
                 const Account = {}
@@ -230,7 +266,8 @@ export default class Accounts{
         const address = algo.encodeAddress(keys.publicKey);
         let b64Seed = Buffer.from(seed).toString('base64');
         const key = await this.#getencryptionKey();
-        const encryptedSeed = AES.encrypt(b64Seed, key).toString();
+        const encryptedSeed = encryptNACL(b64Seed, key).toString();
+
 
         this.accounts[address] = {type: 'imported', seed:encryptedSeed, name:name, addr: address, swaps: []};
         await this.wallet.request({

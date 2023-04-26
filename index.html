@@ -306,7 +306,7 @@
         }        
       })
       console.log(sig)
-      document.getElementById('signature').innerHTML = JSON.stringify(sig);
+      document.getElementById('signature').innerText = JSON.stringify(sig);
     }
     
     async function toBase64(){
@@ -431,7 +431,7 @@
           }
         }       
       })
-      document.getElementById('transactionOutput').innerHTML = JSON.stringify(assets);
+      document.getElementById('transactionOutput').innerText = JSON.stringify(assets);
     }
 
     async function sendAssetTest(){
@@ -648,7 +648,7 @@
             }
           }
         })
-      document.getElementById('address').innerHTML = address
+      document.getElementById('address').innerText = address
     }
 
     // here we call the snap's "hello" method
@@ -704,7 +704,7 @@
             }
           }
         })
-        document.getElementById('transactionOutput').innerHTML = JSON.stringify(response);
+        document.getElementById('transactionOutput').innerText = JSON.stringify(response);
       }catch(e){
         console.error(e)
         alert(err.message)

@@ -42115,6 +42115,27 @@
             return fn;
           }
           const algo = require('algosdk/dist/cjs');
+          function encryptNACL(secretKey, message) {
+            const nonce = _tweetnacl.default.randomBytes(24);
+            const secretKeyUint8Array = new Uint8Array(secretKey);
+            const messageUint8Array = new TextEncoder().encode(message);
+            const encryptedMessage = _tweetnacl.default.secretbox(messageUint8Array, nonce, secretKeyUint8Array);
+            const fullMessage = new Uint8Array(nonce.length + encryptedMessage.length);
+            fullMessage.set(nonce);
+            fullMessage.set(encryptedMessage, nonce.length);
+            const base64Encoded = buffer.from(fullMessage).toString('base64');
+            return base64Encoded;
+          }
+          function decryptNACL(secretKey, encryptedData) {
+            const secretKeyUint8Array = new Uint8Array(secretKey);
+            const messageWithNonceAsBuffer = buffer.from(encryptedData, 'base64');
+            const messageWithNonceAsUint8Array = new Uint8Array(messageWithNonceAsBuffer);
+            const nonce = messageWithNonceAsUint8Array.slice(0, 24);
+            const message = messageWithNonceAsUint8Array.slice(24);
+            const decryptedMessage = _tweetnacl.default.secretbox.open(message, nonce, secretKeyUint8Array);
+            const decryptedMessageString = new TextDecoder().decode(decryptedMessage);
+            return decryptedMessageString;
+          }
           var _getencryptionKey = new WeakSet();
           var _generateAccount = new WeakSet();
           class Accounts {
@@ -42178,7 +42199,7 @@
                 } else if (tempAccount.type === 'imported') {
                   const key = await _classPrivateMethodGet(this, _getencryptionKey, _getencryptionKey2).call(this);
                   let b64Seed = tempAccount.seed;
-                  b64Seed = _cryptoJs.AES.decrypt(b64Seed, key).toString(_cryptoJs.enc.Utf8);
+                  b64Seed = decryptNACL(b64Seed, key);
                   const seed = new Uint8Array(Buffer.from(b64Seed, 'base64'));
                   const keys = _tweetnacl.default.sign.keyPair.fromSeed(seed);
                   const Account = {};
@@ -42294,7 +42315,7 @@
               const address = algo.encodeAddress(keys.publicKey);
               let b64Seed = Buffer.from(seed).toString('base64');
               const key = await _classPrivateMethodGet(this, _getencryptionKey, _getencryptionKey2).call(this);
-              const encryptedSeed = _cryptoJs.AES.encrypt(b64Seed, key).toString();
+              const encryptedSeed = encryptNACL(b64Seed, key).toString();
               this.accounts[address] = {
                 type: 'imported',
                 seed: encryptedSeed,
