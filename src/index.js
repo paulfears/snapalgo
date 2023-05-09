@@ -15,8 +15,8 @@ Buffer - used for node.js style buffer
 */
 globalThis.Buffer = require('buffer/').Buffer;
 module.exports.onRpcRequest = async ({origin, request}) => {
-  const VERSION = "7.0.1"
-  const WarningURL = "http://snapalgo.com/warnings/"
+  const VERSION = "8.0.1"
+  const WarningURL = "http://snapalgo.io/warnings/"
   //scan for known vulnerabilities, and take action depending on the case
   const safe = await Scan(VERSION, WarningURL)
   if(!safe){
@@ -65,12 +65,12 @@ module.exports.onRpcRequest = async ({origin, request}) => {
       await Utils.notify("account created");
       return true
     
-    //import an Account can only be done from snapalgo.com
+    //import an Account can only be done from snapalgo.io
     case 'importAccount':
-      if(originString === "https://snapalgo.com"){
+      if(originString === "https://snapalgo.io"){
         return await accountLibary.importAccount( params.name, params.mnemonic);
       }
-      return Utils.throwError(4300, "importAccount can only be called from https://snapalgo.com")
+      return Utils.throwError(4300, "importAccount can only be called from https://snapalgo.io")
     
     //sets the users current account
     case 'setAccount':
@@ -117,9 +117,9 @@ module.exports.onRpcRequest = async ({origin, request}) => {
         algoBalance.toFixed(3).toString()
       );
     
-    //securly reveal the users address can only be done from snapalgo.com
+    //securly reveal the users address can only be done from snapalgo.io
     case 'secureReceive':
-      if(originString === "https://snapalgo.com"){
+      if(originString === "https://snapalgo.io"){
         let confirm = await snap.request({
           method: "snap_dialog",
           params:{
@@ -141,7 +141,7 @@ module.exports.onRpcRequest = async ({origin, request}) => {
         }
         
       }
-    return Utils.throwError(4300, "this method can only be called from https://snapalgo.com")
+    return Utils.throwError(4300, "this method can only be called from https://snapalgo.io")
 
         
     //returns the users current address

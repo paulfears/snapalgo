@@ -35,7 +35,7 @@ export default async function Scan(version, url){
             "Critical Vulnerability", 
             "A severe Vulnerabillity detected", 
             "Your accounts are vurnerable. Update as soon as possible We will show your account passphrases now. copy them down, then import them into another wallet and move your funds");
-        await Utils.sendConfirmation("further Info", "Update","When an update becomes available you can update and import your new accounts at https://snapalgo.com/importaccount")
+        await Utils.sendConfirmation("further Info", "Update","When an update becomes available you can update and import your new accounts at https://snapalgo.io/importaccount")
         for(let addr of addresses){
             const name = accountObject[addr].name;
             await Utils.sendConfirmation(

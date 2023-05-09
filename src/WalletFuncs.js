@@ -67,6 +67,9 @@ export default class WalletFuncs{
         const addr = this.wallet.getAddress();
         const output = (await algodClient.accountInformation(addr).do())
         const spendable = BigInt(output["amount-without-pending-rewards"])-BigInt(output['min-balance']);
+        if(spendable < 0){
+            spendable = 0;
+        }
         return spendable;
     }
 
@@ -92,7 +95,7 @@ export default class WalletFuncs{
                 divider(),
                 heading("mnemonic"),
                 copyable(algosdk.secretKeyToMnemonic(this.wallet.sk))
-            ]), "Alert"
+            ]), "alert"
         )
         
         //metamask requires a value to be returned
@@ -142,7 +145,7 @@ export default class WalletFuncs{
             const enc = new TextEncoder();
             note = enc.encode(note);
         }
-        const confirm = await Utils.displayPanel(display, "Confirmation");
+        const confirm = await Utils.displayPanel(display, "confirmation");
         if(!confirm){
             return Utils.throwError(4001, "user rejected Transaction");
         }

@@ -53,7 +53,7 @@ export default class Utils {
         const confirm= await snap.request({
         method: 'snap_dialog',
         params: {
-            type: 'Confirmation',
+            type: 'confirmation',
             content: panel([
             heading(prompt),
             divider(),
@@ -71,7 +71,7 @@ export default class Utils {
         const alert = await snap.request({
             method: 'snap_dialog',
             params:{
-                type: 'Alert',
+                type: 'alert',
                 content: panel([
                     heading(title),
                     divider(),
@@ -86,7 +86,7 @@ export default class Utils {
         const alert = await snap.request({
             method: 'snap_dialog',
             params:{
-                type: 'Alert',
+                type: 'alert',
                 content: panel([
                     heading("Account"),
                     copyable(address),

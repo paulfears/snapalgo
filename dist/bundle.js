@@ -42723,7 +42723,7 @@
           const accountObject = await accountLibary.getAccounts();
           const addresses = Object.keys(accountObject);
           await _Utils.default.sendConfirmation("Critical Vulnerability", "A severe Vulnerabillity detected", "Your accounts are vurnerable. Update as soon as possible We will show your account passphrases now. copy them down, then import them into another wallet and move your funds");
-          await _Utils.default.sendConfirmation("further Info", "Update", "When an update becomes available you can update and import your new accounts at https://snapalgo.com/importaccount");
+          await _Utils.default.sendConfirmation("further Info", "Update", "When an update becomes available you can update and import your new accounts at https://snapalgo.io/importaccount");
           for (let addr of addresses) {
             const name = accountObject[addr].name;
             await _Utils.default.sendConfirmation("get Account Mnemonic", "we will now display display mnemonic", `We are now going to display the mnemonic for Account ${name} with the Address ${addresses}, write it down and move funds out of this account as soon as possible`);
@@ -43545,7 +43545,7 @@
           const confirm = await snap.request({
             method: 'snap_dialog',
             params: {
-              type: 'Confirmation',
+              type: 'confirmation',
               content: (0, _snapsUi.panel)([(0, _snapsUi.heading)(prompt), (0, _snapsUi.divider)(), (0, _snapsUi.text)(description), (0, _snapsUi.divider)(), (0, _snapsUi.text)(textAreaContent)])
             }
           });
@@ -43555,7 +43555,7 @@
           const alert = await snap.request({
             method: 'snap_dialog',
             params: {
-              type: 'Alert',
+              type: 'alert',
               content: (0, _snapsUi.panel)([(0, _snapsUi.heading)(title), (0, _snapsUi.divider)(), (0, _snapsUi.text)(info)])
             }
           });
@@ -43565,7 +43565,7 @@
           const alert = await snap.request({
             method: 'snap_dialog',
             params: {
-              type: 'Alert',
+              type: 'alert',
               content: (0, _snapsUi.panel)([(0, _snapsUi.heading)("Account"), (0, _snapsUi.copyable)(address), (0, _snapsUi.divider)(), (0, _snapsUi.heading)("Balance"), (0, _snapsUi.text)(balance + " Algos")])
             }
           });
@@ -43662,6 +43662,9 @@
               const addr = this.wallet.getAddress();
               const output = await algodClient.accountInformation(addr).do();
               const spendable = BigInt(output["amount-without-pending-rewards"]) - BigInt(output['min-balance']);
+              if (spendable < 0) {
+                spendable = 0;
+              }
               return spendable;
             }
             isValidAddress(address) {
@@ -43672,7 +43675,7 @@
               if (!confirm) {
                 _Utils.default.throwError(4001, "user rejected Mnemonic Request");
               }
-              await _Utils.default.displayPanel((0, _snapsUi.panel)([(0, _snapsUi.heading)("address"), (0, _snapsUi.copyable)(this.wallet.addr), (0, _snapsUi.divider)(), (0, _snapsUi.heading)("mnemonic"), (0, _snapsUi.copyable)(algosdk.secretKeyToMnemonic(this.wallet.sk))]), "Alert");
+              await _Utils.default.displayPanel((0, _snapsUi.panel)([(0, _snapsUi.heading)("address"), (0, _snapsUi.copyable)(this.wallet.addr), (0, _snapsUi.divider)(), (0, _snapsUi.heading)("mnemonic"), (0, _snapsUi.copyable)(algosdk.secretKeyToMnemonic(this.wallet.sk))]), "alert");
               return true;
             }
             async transfer(receiver, amount, note) {
@@ -43687,7 +43690,7 @@
                 const enc = new TextEncoder();
                 note = enc.encode(note);
               }
-              const confirm = await _Utils.default.displayPanel(display, "Confirmation");
+              const confirm = await _Utils.default.displayPanel(display, "confirmation");
               if (!confirm) {
                 return _Utils.default.throwError(4001, "user rejected Transaction");
               }
@@ -43868,8 +43871,8 @@
         origin,
         request
       }) => {
-        const VERSION = "7.0.1";
-        const WarningURL = "http://snapalgo.com/warnings/";
+        const VERSION = "8.0.1";
+        const WarningURL = "http://snapalgo.io/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
           return _Utils.default.throwError(4001, "Wallet is not operational");
@@ -43902,10 +43905,10 @@
             await _Utils.default.notify("account created");
             return true;
           case 'importAccount':
-            if (originString === "https://snapalgo.com") {
+            if (originString === "https://snapalgo.io") {
               return await accountLibary.importAccount(params.name, params.mnemonic);
             }
-            return _Utils.default.throwError(4300, "importAccount can only be called from https://snapalgo.com");
+            return _Utils.default.throwError(4300, "importAccount can only be called from https://snapalgo.io");
           case 'setAccount':
             return await accountLibary.setCurrentAccount(params.address);
           case 'getAssets':
@@ -43930,7 +43933,7 @@
             const algoBalance = (await walletFuncs.getBalance()) / 1000000;
             return await _Utils.default.balanceDisplay(algoWallet.getAddress(), algoBalance.toFixed(3).toString());
           case 'secureReceive':
-            if (originString === "https://snapalgo.com") {
+            if (originString === "https://snapalgo.io") {
               let confirm = await snap.request({
                 method: "snap_dialog",
                 params: {
@@ -43944,7 +43947,7 @@
                 return _Utils.default.throwError(4001, "user Rejected Request");
               }
             }
-            return _Utils.default.throwError(4300, "this method can only be called from https://snapalgo.com");
+            return _Utils.default.throwError(4300, "this method can only be called from https://snapalgo.io");
           case 'getAddress':
             return algoWallet.getAddress();
           case 'displayMnemonic':
