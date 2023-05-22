@@ -330,6 +330,7 @@
       let client = await algorand.getAlgorandV2Client();
       const algodClient = new algosdk.Algodv2(client);
       let params = await algodClient.getTransactionParams().do();
+      console.log(params);
       const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
       const sender = 'RQM3BAZ4WENFTGYW2MR5UR2BOGIR7KVM2HUYMPM47JCCL2W5XHN5LGW4EY';
       let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({

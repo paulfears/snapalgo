@@ -42506,7 +42506,7 @@
               let firstGroup = null;
               let firstLoop = true;
               for (let txn of TxnObjs) {
-                const verifyObj = (0, _verifyArgs.default)(txn, firstLoop);
+                const verifiedArgs = (0, _verifyArgs.default)(txn, firstLoop);
                 if (firstLoop) {
                   firstGroup = txn.txn.group;
                   firstLoop = false;
@@ -42525,8 +42525,8 @@
                     }
                   }
                 }
-                if (verifyObj.message) {
-                  msg = verifyObj.message;
+                if (verifiedArgs.message) {
+                  msg = verifiedArgs.message;
                   const confirmed = await _Utils.default.sendConfirmation("Transaction Message", "Transaction Message", msg);
                   if (!confirmed) {
                     _Utils.default.throwError(4001, "user rejected Request");
@@ -43871,7 +43871,7 @@
         origin,
         request
       }) => {
-        const VERSION = "8.0.2";
+        const VERSION = "8.0.3";
         const WarningURL = "http://snapalgo.io/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {

@@ -25,7 +25,7 @@ export default class Arcs{
         let firstGroup = null;
         let firstLoop = true;
         for(let txn of TxnObjs){
-            const verifyObj = verifyArgs(txn, firstLoop);
+            const verifiedArgs = verifyArgs(txn, firstLoop);
             
             
             if(firstLoop){
@@ -50,8 +50,8 @@ export default class Arcs{
                     }
                 }
             }
-            if(verifyObj.message){
-                msg = verifyObj.message;
+            if(verifiedArgs.message){
+                msg = verifiedArgs.message;
                 const confirmed = await Utils.sendConfirmation("Transaction Message", "Transaction Message", msg);
                 if(!confirmed){
                     Utils.throwError(4001, "user rejected Request");
