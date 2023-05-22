@@ -43071,7 +43071,8 @@
               this.throw(4300, 'Required field missing: ' + requirement);
             } else {
               if (requirement === "fee") {
-                const fee = requirement;
+                console.log("checking requirement FEE");
+                let fee = requirement;
                 if (!this.checkInt({
                   value: txn[fee],
                   min: 1000
@@ -43087,6 +43088,7 @@
                 }
               }
               if (requirement === "firstRound") {
+                console.log("checking requirement firstRound");
                 if (!this.checkInt({
                   value: txn[requirement],
                   min: 1
@@ -43095,6 +43097,7 @@
                 }
               }
               if (requirement === "genesisHash") {
+                console.log("checking requirement genesisHash");
                 if (txn[requirement] instanceof Uint32Array) {
                   this.throw(4300, 'genesisHash must be Uint32Array');
                 }
@@ -43104,6 +43107,7 @@
                 }
               }
               if (requirement === "lastRound") {
+                console.log("checking requirement lastRound");
                 if (!this.checkInt({
                   value: txn[requirement],
                   min: 1
@@ -43115,11 +43119,13 @@
                 }
               }
               if (requirement === "from") {
+                console.log("checking requirement from");
                 if (!this.checkAddress(txn[requirement])) {
                   this.throw(4300, 'from must be a valid sender address');
                 }
               }
               if (requirement === "type") {
+                console.log("checking requirement type");
                 if (!this.checkString({
                   value: txn[requirement]
                 })) {
@@ -43172,14 +43178,14 @@
                 }
                 if (option === "amount") {
                   let amount;
-                  let fee;
+                  let intFee;
                   try {
                     amount = BigInt(txn[option]);
-                    fee = BigInt(txn['fee']);
+                    intFee = BigInt(txn['fee']);
                   } catch (e) {
                     this.throw(4300, "Invalid Amount parameter");
                   }
-                  if (amount + fee > BigInt(balance)) {
+                  if (amount + intFee > BigInt(balance)) {
                     this.throw(4100, "not a large enough spendable balance");
                   }
                 }
@@ -43875,7 +43881,7 @@
         origin,
         request
       }) => {
-        const VERSION = "8.0.5";
+        const VERSION = "8.0.6";
         const WarningURL = "http://snapalgo.io/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
