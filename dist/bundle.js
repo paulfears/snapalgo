@@ -42535,7 +42535,7 @@
                 let txnBuffer = Buffer.from(txn.txn, 'base64');
                 let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
                 console.log("decoded Txn");
-                const verifiedObj = Txn_Verifer.verifyTxn(decoded_txn, await this.walletFuncs.getSpendable());
+                let verifiedObj = Txn_Verifer.verifyTxn(decoded_txn, await this.walletFuncs.getSpendable());
                 console.log("verification done");
                 if (txn.message) {
                   const msgConfirmation = await _Utils.default.sendConfirmation("Untrusted Message", originString + " says:", txn.message);
@@ -43875,7 +43875,7 @@
         origin,
         request
       }) => {
-        const VERSION = "8.0.4";
+        const VERSION = "8.0.5";
         const WarningURL = "http://snapalgo.io/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
