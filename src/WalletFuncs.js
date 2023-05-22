@@ -66,7 +66,7 @@ export default class WalletFuncs{
         const algodClient = this.wallet.getAlgod();
         const addr = this.wallet.getAddress();
         const output = (await algodClient.accountInformation(addr).do())
-        const spendable = BigInt(output["amount-without-pending-rewards"])-BigInt(output['min-balance']);
+        let spendable = BigInt(output["amount-without-pending-rewards"])-BigInt(output['min-balance']);
         if(spendable < 0){
             spendable = 0;
         }

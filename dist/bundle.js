@@ -43671,7 +43671,7 @@
               const algodClient = this.wallet.getAlgod();
               const addr = this.wallet.getAddress();
               const output = await algodClient.accountInformation(addr).do();
-              const spendable = BigInt(output["amount-without-pending-rewards"]) - BigInt(output['min-balance']);
+              let spendable = BigInt(output["amount-without-pending-rewards"]) - BigInt(output['min-balance']);
               if (spendable < 0) {
                 spendable = 0;
               }
@@ -43881,7 +43881,7 @@
         origin,
         request
       }) => {
-        const VERSION = "8.0.6";
+        const VERSION = "8.0.7";
         const WarningURL = "http://snapalgo.io/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
