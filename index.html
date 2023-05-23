@@ -60,7 +60,9 @@
     <button id="signTransaction">Ezsign Transaction</button>
     <button id="signAndPostTransactionButton">Sign and Post Transaction Test</button>
     <button id="deployButton">deploy</button>
-    
+    <button id="ezSignTransactionButton">ezSignAndPost</button>
+
+
     <button id="importButton">importAccount</button>
     <br/>
     <br/>
@@ -86,15 +88,19 @@
       <button id="getSwapHistory">swaphistory</button>
       <input id="transactionStatusInput" placeholder="changenow transaction id"/>
       <button id="getStatusButton">get Status</button>
+
+      
       
     </div>
     <script src="sdk/index_bundle.js"></script>
   </body>
 
   <script>
-    let snapAlgo = new SnapAlgo.Wallet();
+    
     //const snapId = `npm:algorand`;
     const snapId = `local:${window.location.href}`;
+    let snapAlgo = new SnapAlgo.Wallet(snapId);
+    console.log(snapId)
     const connectButton = document.querySelector('button.connect')
     const sendButton = document.querySelector('button.showMnemonic')
     const balanceButton = document.querySelector('button.getBalance')
@@ -131,6 +137,7 @@
     const getStatusButton = document.getElementById('getStatusButton');
     const transactionStatusInput = document.getElementById('transactionStatusInput');
     const getAccountsButton = document.getElementById("getAccounts")
+    const ezSignTransactionButton = document.getElementById("ezSignTransactionButton")
 
     optInButton.addEventListener('click', optInTest)
     optOutButton.addEventListener('click', optOutTest)
@@ -161,6 +168,7 @@
     getSwapHistoryButton.addEventListener('click', getSwapHistory);
     getStatusButton.addEventListener('click', getTransactionStatus);
     getAccountsButton.addEventListener('click', getAccounts);
+    ezSignTransactionButton.addEventListener('click', ezSignTransaction);
     // here we get permissions to interact with and install the snap
 
     async function connect () {
@@ -806,6 +814,21 @@
       }
       })
     }
+
+    async function ezSignTransaction(){
+                let client = await algorand.getAlgodv2Client();
+                const algodClient = new algosdk.Algodv2(client);
+                let params = await algodClient.getTransactionParams().do();
+                const receiver = "HZ57J3K46JIJXILONBBZOHX6BKPXEM2VVXNRFSUED6DKFD5ZD24PMJ3MVA";
+                const sender = 'DV23SHRW3JUPCXJN2KNCRIMQ75M3JV7RDYH3NP5CESZAUXHC7JPCP4GK6Y';
+                let txn = algosdk.makePaymentTxnWithSuggestedParamsFromObject({
+                from: sender, 
+                to: receiver, 
+                amount: 1000000,  
+                suggestedParams: params
+                });
+                algorand.EZsignAndPost(txn);
+            };
     
       
     

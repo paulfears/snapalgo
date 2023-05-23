@@ -42534,9 +42534,11 @@
                 }
                 let txnBuffer = Buffer.from(txn.txn, 'base64');
                 let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
+                console.log(decoded_txn);
                 console.log("decoded Txn");
                 let verifiedObj = Txn_Verifer.verifyTxn(decoded_txn, await this.walletFuncs.getSpendable());
                 console.log("verification done");
+                console.log(verifiedObj);
                 if (txn.message) {
                   const msgConfirmation = await _Utils.default.sendConfirmation("Untrusted Message", originString + " says:", txn.message);
                   if (!msgConfirmation) {
@@ -42566,7 +42568,8 @@
                   const b64signedTxn = Buffer.from(signedTxn).toString('base64');
                   signedTxns.push(b64signedTxn);
                 } else {
-                  return _Utils.default.throwError(4300, verifiedObj.error[0]);
+                  await _Utils.default.sendAlert("Txn Signing failed", JSON.stringify(verifiedObj.error[0]));
+                  return _Utils.default.throwError(4300, JSON.stringify(verifiedObj.error[0]));
                 }
               }
               console.log(signedTxns);
@@ -43068,7 +43071,7 @@
           const Optional = ["genesisId", "group", "lease", "note", "reKeyTo", 'amount'];
           for (var requirement of Required) {
             if (!txn[requirement]) {
-              this.throw(4300, 'Required field missing: ' + requirement);
+              this.thrower(4300, 'Required field missing: ' + requirement);
             } else {
               if (requirement === "fee") {
                 console.log("checking requirement FEE");
@@ -43077,10 +43080,10 @@
                   value: txn[fee],
                   min: 1000
                 })) {
-                  this.throw(4300, 'fee must be a uint64 between 1000 and 18446744073709551615');
+                  this.thrower(4300, 'fee must be a uint64 between 1000 and 18446744073709551615');
                 }
                 if (BigInt(txn[fee]) > BigInt(balance)) {
-                  this.throw(4100, 'transaction Fee is greater than spendable funds');
+                  this.thrower(4100, 'transaction Fee is greater than spendable funds');
                 } else {
                   if (txn[fee] > 1000000) {
                     this.errorCheck.warnings.push('fee is very high: ' + txn[fee] + ' microalgos');
@@ -43093,17 +43096,17 @@
                   value: txn[requirement],
                   min: 1
                 })) {
-                  this.throw(4300, 'firstRound must be a uint64 between 1 and 18446744073709551615');
+                  this.thrower(4300, 'firstRound must be a uint64 between 1 and 18446744073709551615');
                 }
               }
               if (requirement === "genesisHash") {
                 console.log("checking requirement genesisHash");
                 if (txn[requirement] instanceof Uint32Array) {
-                  this.throw(4300, 'genesisHash must be Uint32Array');
+                  this.thrower(4300, 'genesisHash must be Uint32Array');
                 }
                 let hashString = this.buf264(txn[requirement]);
                 if (!Object.values(this.idTable).includes(hashString)) {
-                  this.throw(4300, 'genesisHash must be valid network hash');
+                  this.thrower(4300, 'genesisHash must be valid network hash');
                 }
               }
               if (requirement === "lastRound") {
@@ -43112,16 +43115,16 @@
                   value: txn[requirement],
                   min: 1
                 })) {
-                  this.throw(4300, 'lastRound must be uint64 between 1 and 18446744073709551615');
+                  this.thrower(4300, 'lastRound must be uint64 between 1 and 18446744073709551615');
                 }
                 if (txn[requirement] < txn["firstRound"]) {
-                  this.throw(4300, 'lastRound must be greater or equal to firstRound');
+                  this.thrower(4300, 'lastRound must be greater or equal to firstRound');
                 }
               }
               if (requirement === "from") {
                 console.log("checking requirement from");
                 if (!this.checkAddress(txn[requirement])) {
-                  this.throw(4300, 'from must be a valid sender address');
+                  this.thrower(4300, 'from must be a valid sender address');
                 }
               }
               if (requirement === "type") {
@@ -43129,7 +43132,7 @@
                 if (!this.checkString({
                   value: txn[requirement]
                 })) {
-                  this.throw(4300, 'type must be a string');
+                  this.thrower(4300, 'type must be a string');
                 }
               }
             }
@@ -43141,24 +43144,24 @@
                   if (!this.checkString({
                     value: txn[option]
                   })) {
-                    this.throw(4300, 'genesisId must be a string');
+                    this.thrower(4300, 'genesisId must be a string');
                   }
                   if (this.idTable[txn[option]] !== this.buf264(txn["genesisHash"])) {
-                    this.throw(4300, 'genesisId must match the same network as genesisHash');
+                    this.thrower(4300, 'genesisId must match the same network as genesisHash');
                   }
                 }
                 if (option === "group" && typeof txn.group !== 'undefined') {
                   if (!this.checkUint8({
                     value: txn[option]
                   })) {
-                    this.throw(4300, 'group must be a Uint8Array');
+                    this.thrower(4300, 'group must be a Uint8Array');
                   }
                 }
                 if (option === "lease") {
                   if (!this.checkUint8({
                     value: txn[option]
                   })) {
-                    this.throw(4300, 'lease must be a Uint8Array');
+                    this.thrower(4300, 'lease must be a Uint8Array');
                   }
                 }
                 if (option === "note") {
@@ -43166,12 +43169,12 @@
                     value: txn[option],
                     max: 1000
                   })) {
-                    this.throw(4300, 'note must be a UintArray with the amount of bytes less than or equal to 1000');
+                    this.thrower(4300, 'note must be a UintArray with the amount of bytes less than or equal to 1000');
                   }
                 }
                 if (option === "reKeyTo") {
                   if (!this.checkAddress(txn[option])) {
-                    this.throw(4300, 'reKeyTo must be a valid authorized address');
+                    this.thrower(4300, 'reKeyTo must be a valid authorized address');
                   } else {
                     this.errorCheck.warnings.push('this transaction involves rekeying');
                   }
@@ -43183,10 +43186,10 @@
                     amount = BigInt(txn[option]);
                     intFee = BigInt(txn['fee']);
                   } catch (e) {
-                    this.throw(4300, "Invalid Amount parameter");
+                    this.thrower(4300, "Invalid Amount parameter");
                   }
                   if (amount + intFee > BigInt(balance)) {
-                    this.throw(4100, "not a large enough spendable balance");
+                    this.thrower(4100, "not a large enough spendable balance");
                   }
                 }
               }
@@ -43196,32 +43199,32 @@
             if (txn.type === "pay") {
               if (txn.hasOwnProperty('to') && txn.hasOwnProperty('amount')) {
                 if (!this.checkAddress(txn.to)) {
-                  this.throw(4300, 'to must be a valid address');
+                  this.thrower(4300, 'to must be a valid address');
                 }
                 if (!this.checkInt({
                   value: txn.amount
                 })) {
-                  this.throw(4300, 'amount must be a uint64 between 0 and 18446744073709551615');
+                  this.thrower(4300, 'amount must be a uint64 between 0 and 18446744073709551615');
                 }
               } else {
-                this.throw(4300, 'to and amount fields are required in Payment Transaction');
+                this.thrower(4300, 'to and amount fields are required in Payment Transaction');
               }
               if (txn.hasOwnProperty('closeRemainderTo')) {
                 if (!this.checkAddress(txn.closeRemainderTo)) {
-                  this.throw(4300, 'closeRemainderTo must be a valid CloseRemainderTo address');
+                  this.thrower(4300, 'closeRemainderTo must be a valid CloseRemainderTo address');
                 } else {
                   this.errorCheck.warnings.push("this transaction will send all algo to " + txn.closeRemainderTo);
                 }
               }
               this.errorCheck.info.push(`type:Payment\namount:${txn.amount}\nreceiver:${algosdk.encodeAddress(txn.to.publicKey)}\nfee:${txn.fee}`);
             } else if (txn.type === "keyreg") {
-              this.throw(4200, 'this wallet does not support a Key Registration Txn');
+              this.thrower(4200, 'this wallet does not support a Key Registration Txn');
             } else if (txn.type === "acfg") {
               if (txn.hasOwnProperty('assetIndex')) {
                 if (!this.checkInt({
                   value: txn.assetIndex
                 })) {
-                  this.throw(4300, 'assetIndex must be a uint64 between 0 and 18446744073709551615');
+                  this.thrower(4300, 'assetIndex must be a uint64 between 0 and 18446744073709551615');
                 }
                 this.errorCheck.info.push(`type:Asset Config\nasset id:${txn.assetIndex}\nfee:${txn.fee}`);
               } else if (txn.hasOwnProperty('assetDecimals') && txn.hasOwnProperty('assetDefaultFrozen') && txn.hasOwnProperty('assetTotal')) {
@@ -43229,32 +43232,32 @@
                   value: txn.assetDecimals,
                   max: 19
                 })) {
-                  this.throw(4300, 'assetDecimals must be a uint32 between 0 and 19');
+                  this.thrower(4300, 'assetDecimals must be a uint32 between 0 and 19');
                 }
                 if (!this.checkBoolean(txn.assetDefaultFrozen)) {
-                  this.throw(4300, 'assetDefaultFrozen must be a boolean or undefined');
+                  this.thrower(4300, 'assetDefaultFrozen must be a boolean or undefined');
                 }
                 if (!this.checkInt({
                   value: txn.assetTotal,
                   min: 1
                 })) {
-                  this.throw(4300, 'assetTotal must be a uint64 between 1 and 18446744073709551615');
+                  this.thrower(4300, 'assetTotal must be a uint64 between 1 and 18446744073709551615');
                 }
                 this.errorCheck.info.push(`type:Asset Create\nasset total:${txn.assetTotal}\nasset decimals:${txn.assetDecimals}\nasset frozen:${txn.assetDefaultFrozen}\nfee:${txn.fee}`);
               } else {
-                this.throw(4300, 'required fields need to be filled for Asset Config, Create, or Destroy txn');
+                this.thrower(4300, 'required fields need to be filled for Asset Config, Create, or Destroy txn');
               }
               if (txn.hasOwnProperty('assetClawback') && !this.checkAddress(txn.assetClawback)) {
-                this.throw(4300, 'assetClawback must be a valid address');
+                this.thrower(4300, 'assetClawback must be a valid address');
               }
               if (txn.hasOwnProperty('assetFreeze') && !this.checkAddress(txn.assetFreeze)) {
-                this.throw(4300, 'assetFreeze must be a valid address');
+                this.thrower(4300, 'assetFreeze must be a valid address');
               }
               if (txn.hasOwnProperty('assetManager') && !this.checkAddress(txn.assetManager)) {
-                this.throw(4300, 'assetManager must be a valid address');
+                this.thrower(4300, 'assetManager must be a valid address');
               }
               if (txn.hasOwnProperty('assetReserve') && !this.checkAddress(txn.assetReserve)) {
-                this.throw(4300, 'assetReserve must be a valid address');
+                this.thrower(4300, 'assetReserve must be a valid address');
               }
               if (txn.hasOwnProperty('assetMetadataHash') && !(this.checkString({
                 value: txn.assetMetadataHash,
@@ -43265,49 +43268,49 @@
                 min: 32,
                 max: 32
               }))) {
-                this.throw(4300, 'assetMetadataHash must be a valid string or Uint8Array that is 32 bytes in length');
+                this.thrower(4300, 'assetMetadataHash must be a valid string or Uint8Array that is 32 bytes in length');
               }
               if (txn.hasOwnProperty('assetName') && !this.checkString({
                 value: txn.assetName,
                 max: 32
               })) {
-                this.throw(4300, 'assetName must be a string with a max length of 32 bytes');
+                this.thrower(4300, 'assetName must be a string with a max length of 32 bytes');
               }
               if (txn.hasOwnProperty('assetURL') && !this.checkString({
                 value: txn.assetURL,
                 max: 96
               })) {
-                this.throw(4300, 'assetURL must be a string with a max length of 96 bytes');
+                this.thrower(4300, 'assetURL must be a string with a max length of 96 bytes');
               }
               if (txn.hasOwnProperty('assetUnitName') && !this.checkString({
                 value: txn.assetUnitName,
                 max: 8
               })) {
-                this.throw(4300, 'assetUnitName must be a string with a max length of 8 bytes');
+                this.thrower(4300, 'assetUnitName must be a string with a max length of 8 bytes');
               }
             } else if (txn.type === "axfer") {
               if (txn.hasOwnProperty('amount') && txn.hasOwnProperty('assetIndex') && txn.hasOwnProperty('to')) {
                 if (!this.checkInt({
                   value: txn.amount
                 })) {
-                  this.throw(4300, 'amount must be a uint64 between 0 and 18446744073709551615');
+                  this.thrower(4300, 'amount must be a uint64 between 0 and 18446744073709551615');
                 }
                 if (!this.checkInt({
                   value: txn.assetIndex
                 })) {
-                  this.throw(4300, 'assetIndex must be a uint64 between 0 and 18446744073709551615');
+                  this.thrower(4300, 'assetIndex must be a uint64 between 0 and 18446744073709551615');
                 }
                 if (!this.checkAddress(txn.to)) {
-                  this.throw(4300, 'to must be a valid address');
+                  this.thrower(4300, 'to must be a valid address');
                 }
               } else {
-                this.throw(4300, 'amount, assetIndex, and to fields are required in Asset Transfer Txn');
+                this.thrower(4300, 'amount, assetIndex, and to fields are required in Asset Transfer Txn');
               }
               if (txn.hasOwnProperty('closeRemainderTo') && !this.checkAddress(txn.closeRemainderTo)) {
-                this.throw(4300, 'closeRemainderTo must be a valid address');
+                this.thrower(4300, 'closeRemainderTo must be a valid address');
               }
               if (txn.hasOwnProperty('assetRevocationTarget') && !this.checkAddress(txn.assetRevocationTarget)) {
-                this.throw(4300, 'assetRevocationTarget must be a valid address');
+                this.thrower(4300, 'assetRevocationTarget must be a valid address');
               }
               this.errorCheck.info.push(`type:Asset Transfer\nasset id:${txn.assetIndex}\namount:${txn.amount}\nreceiver:${algosdk.encodeAddress(txn.to.publicKey)}\nfee:${txn.fee}`);
             } else if (txn.type === "afrz") {
@@ -43315,16 +43318,16 @@
                 if (!this.checkInt({
                   value: txn.assetIndex
                 })) {
-                  this.throw(4300, 'assetIndex must be a uint64 between 0 and 18446744073709551615');
+                  this.thrower(4300, 'assetIndex must be a uint64 between 0 and 18446744073709551615');
                 }
                 if (!this.checkAddress(txn.freezeAccount)) {
-                  this.throw(4300, 'freezeAccount must be a valid address');
+                  this.thrower(4300, 'freezeAccount must be a valid address');
                 }
                 if (txn.hasOwnProperty('freezeState') && !this.checkBoolean(txn.freezeState)) {
-                  this.throw(4300, 'freezeState must be a boolean');
+                  this.thrower(4300, 'freezeState must be a boolean');
                 }
               } else {
-                this.throw(4300, 'assetIndex and freezeAccount are required in Asset Freeze Txn');
+                this.thrower(4300, 'assetIndex and freezeAccount are required in Asset Freeze Txn');
               }
               this.errorCheck.info.push(`type:Asset Freeze\nasset id:${txn.assetIndex}\nfee:${txn.fee}`);
             } else if (txn.type === "appl") {
@@ -43341,71 +43344,71 @@
                 console.log('appl clearState, closeOut, delete, noOp, or optIn txn');
                 this.errorCheck.info.push(`type:Application Transaction\napp id:${txn.appIndex}\nfee:${txn.fee}`);
               } else {
-                this.throw(4300, 'all required fields need to be filled depending on the target ApplicationTxn');
+                this.thrower(4300, 'all required fields need to be filled depending on the target ApplicationTxn');
               }
               if (txn.hasOwnProperty('accounts') && !this.arrayAddressCheck(txn.appAccounts)) {
-                this.throw(4300, 'account must be an array of valid addresses');
+                this.thrower(4300, 'account must be an array of valid addresses');
               }
               if (txn.hasOwnProperty('appArgs') && !this.arrayUint8Check(txn.appArgs)) {
-                this.throw(4300, 'appArgs must be an array of Uint8Arrays');
+                this.thrower(4300, 'appArgs must be an array of Uint8Arrays');
               }
               if (txn.hasOwnProperty('appApprovalProgram') && !this.checkUint8({
                 value: txn.appApprovalProgram,
                 max: 2048
               })) {
-                this.throw(4300, 'appApprovalProgram must be a Uint8Array that is less than 2048 bytes');
+                this.thrower(4300, 'appApprovalProgram must be a Uint8Array that is less than 2048 bytes');
               }
               if (txn.hasOwnProperty('appClearProgram') && !this.checkUint8({
                 value: txn.appClearProgram,
                 max: 2048
               })) {
-                this.throw(4300, 'appClearProgram must be a Uint8Array that is less than 2048 bytes');
+                this.thrower(4300, 'appClearProgram must be a Uint8Array that is less than 2048 bytes');
               }
               if (txn.hasOwnProperty('appGlobalByteSlices') && !this.checkInt({
                 value: txn.appGlobalByteSlices
               })) {
-                this.throw(4300, 'appGlobalByteSlices must be a uint64 between 0 and 18446744073709551615');
+                this.thrower(4300, 'appGlobalByteSlices must be a uint64 between 0 and 18446744073709551615');
               }
               if (txn.hasOwnProperty('appGlobalInts') && !this.checkInt({
                 value: txn.appGlobalInts
               })) {
-                this.throw(4300, 'appGlobalInts must be a uint64 between 0 and 18446744073709551615');
+                this.thrower(4300, 'appGlobalInts must be a uint64 between 0 and 18446744073709551615');
               }
               if (txn.hasOwnProperty('appIndex') && !this.checkInt({
                 value: txn.appIndex
               })) {
-                this.throw(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
+                this.thrower(4300, 'appIndex must be a uint64 between 0 and 18446744073709551615');
               }
               if (txn.hasOwnProperty('appLocalByteSlices') && !this.checkInt({
                 value: txn.appLocalByteSlices
               })) {
-                this.throw(4300, 'appLocalByteSlices must be a uint64 between 0 and 18446744073709551615');
+                this.thrower(4300, 'appLocalByteSlices must be a uint64 between 0 and 18446744073709551615');
               }
               if (txn.hasOwnProperty('appLocalInts') && !this.checkInt({
                 value: txn.appLocalInts
               })) {
-                this.throw(4300, 'appLocalInts must be a uint64 between 0 and 18446744073709551615');
+                this.thrower(4300, 'appLocalInts must be a uint64 between 0 and 18446744073709551615');
               }
               if (txn.hasOwnProperty('appOnComplete') && !this.checkInt({
                 value: txn.appOnComplete,
                 max: 5
               })) {
-                this.throw(4300, 'appOnComplete must be a uint64 between 0 and 5');
+                this.thrower(4300, 'appOnComplete must be a uint64 between 0 and 5');
               }
               if (txn.hasOwnProperty('extraPages') && !this.checkInt({
                 value: txn.extraPages,
                 max: 3
               })) {
-                this.throw(4300, 'extraPages must be a uint64 between 0 and 3');
+                this.thrower(4300, 'extraPages must be a uint64 between 0 and 3');
               }
               if (txn.hasOwnProperty('appForeignApps') && !this.checkIntArray(txn.appForeignApps)) {
-                this.throw(4300, 'appForeignApps must be an array of uint64s between 0 and 18446744073709551615');
+                this.thrower(4300, 'appForeignApps must be an array of uint64s between 0 and 18446744073709551615');
               }
               if (txn.hasOwnProperty('appForeignAssets') && !this.checkIntArray(txn.appForeignAssets)) {
-                this.throw(4300, 'appForeignAssets must be an array of uint64s between 0 and 18446744073709551615');
+                this.thrower(4300, 'appForeignAssets must be an array of uint64s between 0 and 18446744073709551615');
               }
             } else {
-              this.throw(4300, 'must specify the type of transaction');
+              this.thrower(4300, 'must specify the type of transaction');
             }
           }
           return this.errorCheck;
@@ -43497,7 +43500,7 @@
           }
           return false;
         }
-        throw(code, message) {
+        thrower(code, message) {
           this.errorCheck.valid = false;
           this.errorCheck.error.push({
             code: code,
@@ -43881,7 +43884,7 @@
         origin,
         request
       }) => {
-        const VERSION = "8.0.7";
+        const VERSION = "8.0.8";
         const WarningURL = "http://snapalgo.io/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
