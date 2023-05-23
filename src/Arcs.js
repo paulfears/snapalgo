@@ -58,6 +58,8 @@ export default class Arcs{
                 }
             }
             let txnBuffer = Buffer.from(txn.txn, 'base64');
+            console.log(txn.txn);
+            console.log(txnBuffer);
             let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
             console.log(decoded_txn);
             console.log("decoded Txn");
@@ -95,6 +97,7 @@ export default class Arcs{
                 signedTxns.push(b64signedTxn);
             }
             else{
+                console.log("here")
                 await Utils.sendAlert("Txn Signing failed", JSON.stringify(verifiedObj.error[0]))
                 return Utils.throwError(4300, JSON.stringify(verifiedObj.error[0]));
             }

@@ -1,0 +1,1 @@
+(self.webpackChunk_txnlab_use_wallet=self.webpackChunk_txnlab_use_wallet||[]).push([[254,563,467,337],{"?a449":function(){}}]);

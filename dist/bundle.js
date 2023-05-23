@@ -42533,6 +42533,8 @@
                   }
                 }
                 let txnBuffer = Buffer.from(txn.txn, 'base64');
+                console.log(txn.txn);
+                console.log(txnBuffer);
                 let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
                 console.log(decoded_txn);
                 console.log("decoded Txn");
@@ -42568,6 +42570,7 @@
                   const b64signedTxn = Buffer.from(signedTxn).toString('base64');
                   signedTxns.push(b64signedTxn);
                 } else {
+                  console.log("here");
                   await _Utils.default.sendAlert("Txn Signing failed", JSON.stringify(verifiedObj.error[0]));
                   return _Utils.default.throwError(4300, JSON.stringify(verifiedObj.error[0]));
                 }
@@ -43525,6 +43528,7 @@
           if (code === undefined) {
             code = 0;
           }
+          console.log(JSON.stringify(msg));
           throw new Error(`${code}\n${msg}`);
         }
         static async notify(message) {
@@ -43884,7 +43888,7 @@
         origin,
         request
       }) => {
-        const VERSION = "8.0.8";
+        const VERSION = "8.0.9";
         const WarningURL = "http://snapalgo.io/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {

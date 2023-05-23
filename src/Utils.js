@@ -14,6 +14,7 @@ export default class Utils {
         //metamask overrides Error codes
         //This function encodes an arc complient error code
         //into the error message, and is then seperated by the SDK
+        console.log(JSON.stringify(msg));
         throw new Error(`${code}\n${msg}`);
     }
 
