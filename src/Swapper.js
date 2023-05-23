@@ -154,7 +154,6 @@ export default class Swapper{
         "from":chains[from].changeNowName,
         "to":chains[to].changeNowName,
       })
-      console.log(data);
       return data.body;
     }
 

@@ -42533,13 +42533,9 @@
                   }
                 }
                 let txnBuffer = Buffer.from(txn.txn, 'base64');
-                console.log(txn.txn);
-                console.log(txnBuffer);
                 let decoded_txn = algosdk.decodeUnsignedTransaction(txnBuffer);
                 console.log(decoded_txn);
-                console.log("decoded Txn");
                 let verifiedObj = Txn_Verifer.verifyTxn(decoded_txn, await this.walletFuncs.getSpendable());
-                console.log("verification done");
                 console.log(verifiedObj);
                 if (txn.message) {
                   const msgConfirmation = await _Utils.default.sendConfirmation("Untrusted Message", originString + " says:", txn.message);
@@ -42549,7 +42545,6 @@
                 }
                 if (txn.signers) {
                   if (Array.isArray(txn.signers) && txn.signers.length === 0) {
-                    console.log("null txn");
                     signedTxns.push(null);
                   }
                 }
@@ -42570,12 +42565,10 @@
                   const b64signedTxn = Buffer.from(signedTxn).toString('base64');
                   signedTxns.push(b64signedTxn);
                 } else {
-                  console.log("here");
                   await _Utils.default.sendAlert("Txn Signing failed", JSON.stringify(verifiedObj.error[0]));
                   return _Utils.default.throwError(4300, JSON.stringify(verifiedObj.error[0]));
                 }
               }
-              console.log(signedTxns);
               return signedTxns;
             }
             async postTxns(stxns) {
@@ -42901,7 +42894,6 @@
             "from": chains[from].changeNowName,
             "to": chains[to].changeNowName
           });
-          console.log(data);
           return data.body;
         }
         async getSwapHistory() {
@@ -43888,7 +43880,7 @@
         origin,
         request
       }) => {
-        const VERSION = "8.0.9";
+        const VERSION = "8.1.0";
         const WarningURL = "http://snapalgo.io/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
