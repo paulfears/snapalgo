@@ -1,12 +1,12 @@
 {
   "name": "algorand",
-  "version": "8.1.0",
+  "version": "10.0.0",
   "description": "algorand on metamask",
   "main": "src/index.js",
   "scripts": {
     "test": "yarn build && yarn serve",
     "postinstall": "patch-package",
-    "testUseWallet": "npx mm-snap build && npx mm-snap serve --root=useWalletIntegration_test/" 
+    "testUseWallet": "npx mm-snap build && npx mm-snap serve --root=useWalletIntegration_test/"
   },
   "repository": {
     "type": "git",

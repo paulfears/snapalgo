@@ -1,5 +1,5 @@
 {
-  "version": "8.1.0",
+  "version": "10.0.0",
   "description": "Algorand on Metamask",
   "proposedName": "algorand",
   "repository": {
@@ -7,7 +7,7 @@
     "url": "https://github.com/paulfears/snapalgo.git"
   },
   "source": {
-    "shasum": "lrg19E4hdp4o7fcayPkgu3CxjwTdjg/d7JDmmclY10U=",
+    "shasum": "LpGf8y92FHQfuZXp+JM3/1CKJANZhPWLUwyYIfZ5W+I=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -27,7 +27,6 @@
     ],
     "snap_notify": {},
     "snap_manageState": {},
-    "endowment:long-running": {},
     "endowment:rpc": {
       "dapps": true,
       "snaps": false

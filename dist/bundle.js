@@ -43880,7 +43880,7 @@
         origin,
         request
       }) => {
-        const VERSION = "8.1.0";
+        const VERSION = "10.0.0";
         const WarningURL = "http://snapalgo.io/warnings/";
         const safe = await (0, _Scan.default)(VERSION, WarningURL);
         if (!safe) {
